@@ -42,6 +42,8 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::get('/main-dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory');
         Route::get('/reports', [ReportController::class, 'index'])->name('reports');
+        Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
+        Route::get('/reports/export/excel', [ReportController::class, 'exportExcel'])->name('reports.export.excel');
     });
 
     // Inventory API CRUD (Accessible by Super Admin and Manager)

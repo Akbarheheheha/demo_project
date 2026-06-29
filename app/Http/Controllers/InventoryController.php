@@ -11,10 +11,14 @@ class InventoryController extends Controller
     /**
      * Display inventory page.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Ambil data produk asli dari database
-        $inventoryFromDb = Product::orderBy('sku', 'asc')->get();
+        $search = $request->search;
+
+        $inventoryFromDb = Product::when($search, function ($query, $search) {
+            return $query->where('name', 'like', '%' . $search . '%')
+                         ->orWhere('sku', 'like', '%' . $search . '%');
+        })->orderBy('sku', 'asc')->get();
 
         $inventory = $inventoryFromDb->map(function ($item) {
             return [

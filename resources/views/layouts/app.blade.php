@@ -6,21 +6,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Mini ERP & POS') - SmartBiz UMKM</title>
     
-    <!-- Google Fonts: Outfit for Modern ERP Theme -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Tailwind CSS & Vite Assets -->
+    <!-- Vite Assets (CSS & JS) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
-    <!-- Lucide Icons CDN -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
     <style>
-        body {
-            font-family: 'Outfit', sans-serif;
-        }
         /* Custom scrollbar for better visual look */
         ::-webkit-scrollbar {
             width: 6px;
@@ -47,7 +36,7 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased" 
+<body class="bg-slate-50 text-slate-800 antialiased font-sans" 
       data-active-page="@yield('active_page', 'dashboard')"
       x-data="{ sidebarOpen: false, activePage: '@yield('active_page', 'dashboard')' }"
       @set-active-page.window="activePage = $event.detail"
@@ -151,6 +140,7 @@
                 <!-- Inventaris Link -->
                 @hasanyrole('Super Admin|Manager')
                 <a href="{{ route('inventory') }}" 
+                   data-spa-ignore
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
                    :class="activePage === 'inventory' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'">
                     <i data-lucide="package" class="w-5 h-5"></i>
@@ -171,6 +161,7 @@
                 <!-- Pengaturan Link (Super Admin Only) -->
                 @role('Super Admin')
                 <a href="{{ route('settings') }}" 
+                   data-spa-ignore
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
                    :class="activePage === 'settings' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'">
                     <i data-lucide="settings" class="w-5 h-5"></i>
@@ -205,11 +196,11 @@
                         <i data-lucide="menu" class="h-6 w-6"></i>
                     </button>
                     
-                    <!-- Search Bar (Dummy) -->
-                    <div class="hidden sm:flex items-center gap-2 bg-slate-100 rounded-xl px-3 py-1.5 w-64 text-slate-500 border border-slate-100 hover:border-slate-200 transition-colors">
+                    <!-- Search Bar -->
+                    <form action="{{ route('inventory') }}" method="GET" class="hidden sm:flex items-center gap-2 bg-slate-100 rounded-xl px-3 py-1.5 w-64 text-slate-500 border border-slate-100 hover:border-slate-200 transition-colors">
                         <i data-lucide="search" class="w-4 h-4"></i>
-                        <input type="text" placeholder="Cari transaksi, barang..." class="bg-transparent border-none text-xs focus:outline-none w-full text-slate-700">
-                    </div>
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari barang berdasarkan nama atau SKU..." class="bg-transparent border-none text-xs focus:outline-none w-full text-slate-700">
+                    </form>
                 </div>
                 
                 <!-- Topbar Actions -->
@@ -297,10 +288,10 @@
                                 Profil Saya
                             </a>
                             
-                            <a href="#" @click.prevent="$dispatch('show-toast', { message: 'Pengaturan Toko akan hadir pada versi berikutnya!', type: 'info' })"
+                            <a href="{{ route('settings') }}"
                                class="flex items-center gap-2.5 px-3 py-2.5 text-xs text-slate-700 hover:bg-slate-50 rounded-xl transition-colors">
-                                <i data-lucide="sliders" class="w-4 h-4 text-slate-400"></i>
-                                Pengaturan Toko
+                                <i data-lucide="settings" class="w-4 h-4 text-slate-400"></i>
+                                Pengaturan
                             </a>
                             
                             <hr class="my-1 border-slate-100">
@@ -333,14 +324,8 @@
     </div>
     
     <script>
-        // Initialize Lucide icons on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.lucide) {
-                window.lucide.createIcons();
-            }
-            // Save initial state for browser navigation
-            window.history.replaceState({ url: window.location.href }, document.title, window.location.href);
-        });
+        // Save initial state for browser navigation
+        window.history.replaceState({ url: window.location.href }, document.title, window.location.href);
 
         // Intercept navigation clicks
         document.addEventListener('click', function(e) {
@@ -350,8 +335,8 @@
             const href = link.getAttribute('href');
             if (!href) return;
             
-            // Ignore hashes, javascript:, external links, and logout
-            if (href.startsWith('#') || href.startsWith('javascript:') || href.includes('logout') || link.getAttribute('target') === '_blank') return;
+            // Ignore hashes, javascript:, external links, logout, and data-spa-ignore links
+            if (href.startsWith('#') || href.startsWith('javascript:') || href.includes('logout') || link.getAttribute('target') === '_blank' || link.hasAttribute('data-spa-ignore')) return;
             
             // Validate internal origin
             try {
@@ -496,13 +481,9 @@
                 try { await Promise.all(externalLoads); } catch(e) { console.error('Failed to load external script:', e); }
             }
 
-            // Phase 2: Initialize Alpine on new content BEFORE running inline scripts
-            // This ensures x-data components are alive and functional
-            if (window.Alpine) {
-                Alpine.initTree(container);
-            }
-
-            // Phase 3: Run inline scripts (with DOMContentLoaded unwrapped)
+            // Phase 2: Run inline scripts FIRST (with DOMContentLoaded unwrapped)
+            // This ensures component functions (e.g., inventoryComponent) are
+            // registered globally BEFORE Alpine tries to initialize x-data.
             scripts.forEach(function(oldScript) {
                 if (oldScript.src) return; // Skip externals, already loaded
                 const newScript = document.createElement('script');
@@ -514,14 +495,24 @@
                 newScript.appendChild(document.createTextNode(code));
                 oldScript.parentNode.replaceChild(newScript, oldScript);
             });
-            
-            // Phase 4: Re-create Lucide icons after Alpine has rendered all templates
-            // Use a generous delay to let Alpine finish processing x-for loops etc.
+
+            // Phase 3: Initialize Alpine on new content AFTER inline scripts
+            // This ensures x-data="someFunction()" can find the function definition
+            if (window.Alpine) {
+                Alpine.initTree(container);
+            }
+
+            // Re-create Lucide icons immediately (for sidebar & existing content)
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+
+            // Phase 4: Re-create Lucide icons again after Alpine x-for/x-if templates render
             setTimeout(function() {
                 if (window.lucide) {
                     window.lucide.createIcons();
                 }
-            }, 150);
+            }, 100);
         }
 
         // Popstate listener for back/forward browser actions
@@ -533,5 +524,8 @@
             }
         });
     </script>
+    
+    <!-- Stack for page-specific scripts pushed via @push('scripts') -->
+    @stack('scripts')
 </body>
 </html>

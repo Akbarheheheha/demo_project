@@ -4,7 +4,9 @@
 @section('active_page', 'inventory')
 
 @section('content')
-<div class="space-y-6" x-data="inventoryComponent()">
+<div class="space-y-6"
+     x-data="inventoryComponent()"
+     x-effect="stockFilter; selectedCategory; searchQuery; filteredInventory.length; refreshIcons()">
 
     <!-- Page Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -482,6 +484,14 @@ function inventoryComponent() {
             if (item.stock <= item.min_stock) return 'low';
             return 'normal';
         },
+
+        refreshIcons() {
+            this.$nextTick(() => {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            });
+        },
         
         // Reset Form Fields
         resetForm() {
@@ -504,19 +514,21 @@ function inventoryComponent() {
             const random = Math.floor(1000 + Math.random() * 9000);
             this.form.sku = 'SKU-' + random;
             this.showAddModal = true;
+            this.refreshIcons();
         },
         
         // Open Edit Modal
         openEditModal(item) {
             this.form = { ...item };
             this.showEditModal = true;
+            this.refreshIcons();
         },
         
         // Open Mutation Modal
         openMutationModal(item) {
             this.selectedProductForMutation = item;
             this.showMutationModal = true;
-            setTimeout(() => lucide.createIcons(), 50);
+            this.refreshIcons();
         },
         
         // Save New Product (Axios Mock)
@@ -549,12 +561,6 @@ function inventoryComponent() {
                 this.$dispatch('show-toast', { message: 'Barang ' + newProduct.name + ' berhasil ditambahkan!', type: 'success' });
                 this.showAddModal = false;
                 this.resetForm();
-
-                setTimeout(() => {
-                    if (window.lucide) {
-                        window.lucide.createIcons();
-                    }
-                }, 50);
             } catch (error) {
                 console.error(error);
                 this.$dispatch('show-toast', { message: 'Gagal menambahkan barang.', type: 'danger' });

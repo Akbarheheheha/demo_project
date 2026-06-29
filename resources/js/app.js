@@ -1,6 +1,6 @@
 import axios from 'axios';
 import Alpine from 'alpinejs';
-import { createIcons } from 'lucide';
+import { createIcons, icons } from 'lucide';
 
 window.Alpine = Alpine;
 Alpine.start();
@@ -15,8 +15,12 @@ if (token) {
     console.error('CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token');
 }
 
-window.lucide = { createIcons };
+function renderLucideIcons(options = {}) {
+    createIcons({ icons, ...options });
+}
+
+window.lucide = { createIcons: renderLucideIcons, icons };
 
 document.addEventListener('DOMContentLoaded', () => {
-    createIcons();
+    renderLucideIcons();
 });

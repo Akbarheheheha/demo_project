@@ -4,29 +4,7 @@
 @section('active_page', 'reports')
 
 @section('content')
-<div class="space-y-6" x-data="{ 
-    dateFilter: 'this_month',
-    isExportingPDF: false,
-    isExportingExcel: false,
-    async exportReport(type) {
-        if (type === 'pdf') this.isExportingPDF = true;
-        if (type === 'excel') this.isExportingExcel = true;
-        
-        try {
-            const response = await axios.post('/api/reports/export', { type: type, range: this.dateFilter });
-            this.$dispatch('show-toast', { 
-                message: 'Laporan berhasil diexport ke format ' + type.toUpperCase() + '!', 
-                type: 'success' 
-            });
-        } catch (error) {
-            console.error(error);
-            this.$dispatch('show-toast', { message: 'Gagal mengexport laporan.', type: 'danger' });
-        } finally {
-            this.isExportingPDF = false;
-            this.isExportingExcel = false;
-        }
-    }
-}">
+<div class="space-y-6" x-data="{ dateFilter: 'this_month' }">
 
     <!-- Welcome Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -38,28 +16,18 @@
         <!-- Action Buttons (Export) -->
         <div class="flex items-center gap-2">
             <!-- Export PDF -->
-            <button @click="exportReport('pdf')"
-                    :disabled="isExportingPDF || isExportingExcel"
-                    class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-sm">
-                <svg x-show="isExportingPDF" class="animate-spin h-3.5 w-3.5 text-slate-700" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <i x-show="!isExportingPDF" data-lucide="file-text" class="w-4 h-4 text-rose-500"></i>
-                <span x-text="isExportingPDF ? 'Mengekspor...' : 'Export PDF'"></span>
-            </button>
+            <a href="{{ route('reports.export.pdf') }}"
+               class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-sm">
+                <i data-lucide="file-text" class="w-4 h-4 text-rose-500"></i>
+                <span>Export PDF</span>
+            </a>
             
             <!-- Export Excel -->
-            <button @click="exportReport('excel')"
-                    :disabled="isExportingPDF || isExportingExcel"
-                    class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-sm">
-                <svg x-show="isExportingExcel" class="animate-spin h-3.5 w-3.5 text-slate-700" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <i x-show="!isExportingExcel" data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-500"></i>
-                <span x-text="isExportingExcel ? 'Mengekspor...' : 'Export Excel'"></span>
-            </button>
+            <a href="{{ route('reports.export.excel') }}"
+               class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-sm">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-500"></i>
+                <span>Export Excel</span>
+            </a>
         </div>
     </div>
 
@@ -89,9 +57,22 @@
     </div>
 
     <!-- Financial Statistics Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-6">
+        <!-- Card 1: Total Omzet -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
+            <div class="flex items-start justify-between">
+                <div>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Omzet</span>
+                    <h3 class="text-xl font-bold text-slate-800 mt-2">Rp {{ number_format($financialSummary['total_omzet'], 0, ',', '.') }}</h3>
+                    <p class="text-[10px] text-slate-400 mt-2">{{ number_format($financialSummary['jumlah_transaksi'], 0, ',', '.') }} transaksi sukses bulan ini</p>
+                </div>
+                <div class="p-2.5 bg-sky-50 text-sky-600 rounded-xl">
+                    <i data-lucide="banknote" class="w-5.5 h-5.5"></i>
+                </div>
+            </div>
+        </div>
         
-        <!-- Card 1: Pendapatan Bersih -->
+        <!-- Card 2: Pendapatan Bersih -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
             <div class="flex items-start justify-between">
                 <div>
@@ -111,7 +92,7 @@
             </div>
         </div>
 
-        <!-- Card 2: Laba Kotor -->
+        <!-- Card 3: Laba Kotor -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
             <div class="flex items-start justify-between">
                 <div>
@@ -131,13 +112,13 @@
             </div>
         </div>
 
-        <!-- Card 3: Total Pengeluaran (HPP) -->
+        <!-- Card 4: Total Pengeluaran -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
             <div class="flex items-start justify-between">
                 <div>
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Pengeluaran (HPP)</span>
-                    <h3 class="text-xl font-bold text-slate-800 mt-2">Rp {{ number_format($financialSummary['cogs'], 0, ',', '.') }}</h3>
-                    <p class="text-[10px] text-slate-400 mt-2">Setara <span class="font-bold text-slate-700">80.9%</span> dari total pendapatan</p>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Pengeluaran</span>
+                    <h3 class="text-xl font-bold text-slate-800 mt-2">Rp {{ number_format($financialSummary['total_pengeluaran'], 0, ',', '.') }}</h3>
+                    <p class="text-[10px] text-slate-400 mt-2">Biaya operasional bulan berjalan</p>
                 </div>
                 <div class="p-2.5 bg-rose-50 text-rose-600 rounded-xl">
                     <i data-lucide="shopping-bag" class="w-5.5 h-5.5"></i>
@@ -145,7 +126,7 @@
             </div>
         </div>
 
-        <!-- Card 4: Rata-rata Transaksi -->
+        <!-- Card 5: Rata-rata Transaksi -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
             <div class="flex items-start justify-between">
                 <div>
