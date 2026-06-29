@@ -549,6 +549,12 @@ function inventoryComponent() {
                 this.$dispatch('show-toast', { message: 'Barang ' + newProduct.name + ' berhasil ditambahkan!', type: 'success' });
                 this.showAddModal = false;
                 this.resetForm();
+
+                setTimeout(() => {
+                    if (window.lucide) {
+                        window.lucide.createIcons();
+                    }
+                }, 50);
             } catch (error) {
                 console.error(error);
                 this.$dispatch('show-toast', { message: 'Gagal menambahkan barang.', type: 'danger' });

@@ -5,43 +5,18 @@ import Alpine from 'alpinejs';
 window.Alpine = Alpine;
 Alpine.start();
 
-// Mock Axios API responses to demonstrate Async states & loading animations
-const mockApiDelay = 1200; // 1.2 seconds delay
+// Bind Axios globally
+window.axios = axios;
 
-const mockAxiosHandler = (method, url, data = null) => {
-    console.log(`%c[Mock Axios API] %c${method.toUpperCase()} %c-> ${url}`, 'color: #6366f1; font-weight: bold', 'color: #10b981; font-weight: bold', 'color: #475569', data);
-    
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve({
-                status: 200,
-                statusText: 'OK',
-                data: {
-                    success: true,
-                    message: `Simulasi request ${method.toUpperCase()} berhasil diproses oleh backend.`,
-                    timestamp: new Date().toISOString(),
-                    data: data
-                }
-            });
-        }, mockApiDelay);
-    });
-};
+// Configure default headers
+window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
-// Replace standard axios calls with mocked handlers for frontend demo safety
-window.axios = {
-    post: (url, data) => mockAxiosHandler('post', url, data),
-    put: (url, data) => mockAxiosHandler('put', url, data),
-    delete: (url, data) => mockAxiosHandler('delete', url, data),
-    get: (url, params) => mockAxiosHandler('get', url, params),
-    
-    // Maintain standard configuration defaults structure
-    defaults: {
-        headers: {
-            common: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        }
-    }
-};
+// Configure CSRF Token for Axios from meta tag
+const token = document.head.querySelector('meta[name="csrf-token"]');
+if (token) {
+    window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token.content;
+} else {
+    console.error('CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token');
+}
 
-console.log('SmartBiz ERP App loaded. Axios Mock and AlpineJS initialized successfully.');
+console.log('SmartBiz ERP App loaded. Axios and AlpineJS initialized successfully.');

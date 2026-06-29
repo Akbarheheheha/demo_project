@@ -71,7 +71,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($products as $prodData) {
-            Product::updateOrCreate(['sku' => $prodData['sku']], $prodData);
+            \App\Models\Product::updateOrCreate(['sku' => $prodData['sku']], $prodData);
         }
 
         // Seed dummy transactions for the last 7 days

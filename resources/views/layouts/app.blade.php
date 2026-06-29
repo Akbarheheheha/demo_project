@@ -33,13 +33,24 @@
             background: #cbd5e1;
             border-radius: 4px;
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+        /* Custom progress bar for SPA loader */
+        #spa-progressbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3.5px;
+            background: linear-gradient(to right, #4f46e5, #8b5cf6);
+            z-index: 9999;
+            transition: width 0.3s ease, opacity 0.3s ease;
+            width: 0%;
+            pointer-events: none;
         }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased" 
+      data-active-page="@yield('active_page', 'dashboard')"
       x-data="{ sidebarOpen: false, activePage: '@yield('active_page', 'dashboard')' }"
+      @set-active-page.window="activePage = $event.detail"
       x-init="
         @if(session('login_success'))
             setTimeout(() => { $dispatch('show-toast', { message: '{{ session('login_success') }}', type: 'success' }) }, 400);
@@ -324,12 +335,202 @@
     <script>
         // Initialize Lucide icons on page load
         document.addEventListener('DOMContentLoaded', function() {
-            lucide.createIcons();
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+            // Save initial state for browser navigation
+            window.history.replaceState({ url: window.location.href }, document.title, window.location.href);
         });
-        
-        // Auto reinizialize icons on Alpine modifications if needed
-        document.addEventListener('alpine:initialized', () => {
-            lucide.createIcons();
+
+        // Intercept navigation clicks
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a');
+            if (!link) return;
+            
+            const href = link.getAttribute('href');
+            if (!href) return;
+            
+            // Ignore hashes, javascript:, external links, and logout
+            if (href.startsWith('#') || href.startsWith('javascript:') || href.includes('logout') || link.getAttribute('target') === '_blank') return;
+            
+            // Validate internal origin
+            try {
+                const url = new URL(link.href, window.location.href);
+                if (url.origin !== window.location.origin) return;
+                if (url.pathname === '/login' || url.pathname === '/logout') return;
+                
+                e.preventDefault();
+                spaNavigate(url.href);
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        // Cache of already-loaded external script URLs
+        const _loadedScripts = new Set();
+
+        // Load an external script by URL, returns a Promise
+        function loadExternalScript(src) {
+            // If already loaded (or currently in page), resolve immediately
+            if (_loadedScripts.has(src)) return Promise.resolve();
+            // Also check if it already exists in the page <head>
+            if (document.querySelector('script[src="' + src + '"]')) {
+                _loadedScripts.add(src);
+                return Promise.resolve();
+            }
+            return new Promise(function(resolve, reject) {
+                const s = document.createElement('script');
+                s.src = src;
+                s.onload = function() { _loadedScripts.add(src); resolve(); };
+                s.onerror = reject;
+                document.head.appendChild(s);
+            });
+        }
+
+        // Unwrap DOMContentLoaded listeners from inline script text so they run immediately
+        function unwrapDCL(code) {
+            // Pattern: document.addEventListener('DOMContentLoaded', function() { ... });
+            const re = /document\.addEventListener\(\s*['"]DOMContentLoaded['"]\s*,\s*function\s*\(\s*\)\s*\{/;
+            if (!re.test(code)) return code;
+            // Remove the wrapper – find the opening and strip it, then remove the trailing });
+            let unwrapped = code.replace(re, '(function(){');
+            // The closing of the wrapper is    });   at the end – replace last }); with })();
+            const lastIdx = unwrapped.lastIndexOf('});');
+            if (lastIdx !== -1) {
+                unwrapped = unwrapped.substring(0, lastIdx) + '})();';
+            }
+            return unwrapped;
+        }
+
+        // SPA Navigation Function
+        function spaNavigate(url, pushState) {
+            if (pushState === undefined) pushState = true;
+            
+            let progress = document.getElementById('spa-progressbar');
+            if (!progress) {
+                progress = document.createElement('div');
+                progress.id = 'spa-progressbar';
+                document.body.appendChild(progress);
+            }
+            progress.style.width = '10%';
+            progress.style.opacity = '1';
+            
+            let w = 10;
+            const interval = setInterval(function() {
+                if (w < 80) {
+                    w += 10;
+                    progress.style.width = w + '%';
+                }
+            }, 100);
+            
+            axios.get(url)
+                .then(function(response) {
+                    clearInterval(interval);
+                    progress.style.width = '100%';
+                    
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(response.data, 'text/html');
+                    
+                    // --- Clean up existing Alpine components inside <main> ---
+                    const currentMain = document.querySelector('main');
+                    if (currentMain && window.Alpine) {
+                        // Destroy Alpine trees attached to old content
+                        currentMain.querySelectorAll('[x-data]').forEach(function(el) {
+                            if (el._x_dataStack) {
+                                try { Alpine.destroyTree(el); } catch(e) {}
+                            }
+                        });
+                    }
+                    
+                    // Swap main content
+                    const newMain = doc.querySelector('main');
+                    if (newMain && currentMain) {
+                        currentMain.innerHTML = newMain.innerHTML;
+                    }
+                    
+                    // Update Title
+                    document.title = doc.title;
+                    
+                    // Update history
+                    if (pushState) {
+                        window.history.pushState({ url: url }, doc.title, url);
+                    }
+                    
+                    // Update active page sidebar tab
+                    const activePage = doc.body.getAttribute('data-active-page') || 'dashboard';
+                    window.dispatchEvent(new CustomEvent('set-active-page', { detail: activePage }));
+                    
+                    // --- Execute scripts inside swapped content ---
+                    // Separate external and inline scripts, maintain order
+                    if (currentMain) {
+                        executeScriptsAsync(currentMain);
+                    }
+                    
+                    setTimeout(function() {
+                        progress.style.opacity = '0';
+                        setTimeout(function() {
+                            progress.style.width = '0%';
+                        }, 300);
+                    }, 100);
+                })
+                .catch(function(err) {
+                    clearInterval(interval);
+                    console.error('SPA load error, redirecting:', err);
+                    window.location.href = url;
+                });
+        }
+
+        // Async script executor – loads external scripts first, then runs inline scripts
+        async function executeScriptsAsync(container) {
+            const scripts = Array.from(container.querySelectorAll('script'));
+            
+            // Phase 1: Load all external scripts (CDNs like Chart.js)
+            const externalLoads = [];
+            scripts.forEach(function(s) {
+                if (s.src) {
+                    externalLoads.push(loadExternalScript(s.src));
+                }
+            });
+            // Wait for all external scripts to finish loading
+            if (externalLoads.length > 0) {
+                try { await Promise.all(externalLoads); } catch(e) { console.error('Failed to load external script:', e); }
+            }
+
+            // Phase 2: Initialize Alpine on new content BEFORE running inline scripts
+            // This ensures x-data components are alive and functional
+            if (window.Alpine) {
+                Alpine.initTree(container);
+            }
+
+            // Phase 3: Run inline scripts (with DOMContentLoaded unwrapped)
+            scripts.forEach(function(oldScript) {
+                if (oldScript.src) return; // Skip externals, already loaded
+                const newScript = document.createElement('script');
+                Array.from(oldScript.attributes).forEach(function(attr) {
+                    newScript.setAttribute(attr.name, attr.value);
+                });
+                // Unwrap DOMContentLoaded so the code executes immediately
+                const code = unwrapDCL(oldScript.innerHTML);
+                newScript.appendChild(document.createTextNode(code));
+                oldScript.parentNode.replaceChild(newScript, oldScript);
+            });
+            
+            // Phase 4: Re-create Lucide icons after Alpine has rendered all templates
+            // Use a generous delay to let Alpine finish processing x-for loops etc.
+            setTimeout(function() {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }, 150);
+        }
+
+        // Popstate listener for back/forward browser actions
+        window.addEventListener('popstate', function(event) {
+            if (event.state && event.state.url) {
+                spaNavigate(event.state.url, false);
+            } else {
+                spaNavigate(window.location.href, false);
+            }
         });
     </script>
 </body>
