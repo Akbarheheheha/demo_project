@@ -206,21 +206,24 @@
 
 </div>
 
+@push('scripts')
 <!-- Chart.js Library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const ctx = document.getElementById('weeklySalesChart').getContext('2d');
+        const canvas = document.getElementById('weeklySalesChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
         
         // Setup gradient background untuk chart
         const gradient = ctx.createLinearGradient(0, 0, 0, 300);
         gradient.addColorStop(0, 'rgba(79, 70, 229, 0.3)');  // Indigo dengan transparansi
         gradient.addColorStop(1, 'rgba(79, 70, 229, 0.00)'); // Pudar ke transparan
-
+ 
         // Injeksi data tren mingguan dari backend menggunakan directive json
         const weeklySalesData = @json($tren_penjualan_mingguan);
-
+ 
         new Chart(ctx, {
             type: 'line',
             data: {
@@ -315,4 +318,5 @@
         });
     });
 </script>
+@endpush
 @endsection

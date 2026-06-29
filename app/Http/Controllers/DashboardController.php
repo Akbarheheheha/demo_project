@@ -45,7 +45,16 @@ class DashboardController extends Controller
             ->where('status', 'success')
             ->sum('total_harga');
 
-        // g. $tren_penjualan_mingguan (Mengelompokkan total penjualan per hari selama 7 hari terakhir)
+        // g. $tren_penjualan_mingguan (Mengelompokkan total penjualan per hari selama 7 hari terakhir - Efisien / No N+1 Query)
+        $sevenDaysAgo = Carbon::now()->subDays(6)->startOfDay();
+        
+        $salesData = Transaction::where('status', 'success')
+            ->where('created_at', '>=', $sevenDaysAgo)
+            ->selectRaw('DATE(created_at) as date, SUM(total_harga) as total')
+            ->groupBy('date')
+            ->pluck('total', 'date')
+            ->toArray();
+
         $tren_penjualan_mingguan = [
             'labels' => [],
             'data' => []
@@ -53,14 +62,19 @@ class DashboardController extends Controller
 
         // Set locale ke Bahasa Indonesia untuk penamaan hari
         Carbon::setLocale('id');
-
-        $now = Carbon::now();
         for ($i = 6; $i >= 0; $i--) {
-            $date = (clone $now)->subDays($i);
+            $date = Carbon::now()->subDays($i);
+            $dateString = $date->toDateString();
             $dayName = $date->translatedFormat('l'); // e.g. 'Senin', 'Selasa'
-            $totalSales = (float) Transaction::whereDate('created_at', $date->toDateString())
-                ->where('status', 'success')
-                ->sum('total_harga');
+            
+            // Format standard key lookup (beberapa DB return date string tanpa time)
+            $totalSales = 0.0;
+            foreach ($salesData as $d => $val) {
+                if (date('Y-m-d', strtotime($d)) === $dateString) {
+                    $totalSales = (float) $val;
+                    break;
+                }
+            }
 
             $tren_penjualan_mingguan['labels'][] = $dayName;
             $tren_penjualan_mingguan['data'][] = $totalSales;

@@ -78,6 +78,9 @@ class ReportController extends Controller
             'profit_growth' => 0,
         ];
 
+        // Fetch transactions with user relationship to avoid N+1 queries
+        $transactions = \App\Models\Transaction::with('user')->orderBy('created_at', 'desc')->get();
+
         // Mock data performa kategori produk (untuk Bar Chart)
         $categoryPerformance = [
             'labels' => ['Sembako', 'Makanan', 'Minuman', 'Cemilan', 'Rumah Tangga'],
