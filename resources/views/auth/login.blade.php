@@ -27,10 +27,10 @@
           email: '{{ old('email') }}', 
           password: '', 
           showPassword: false,
-          fillDemoCredentials() {
-              this.email = 'admin@smartbiz.com';
-              this.password = 'admin123';
-              this.$dispatch('show-toast', { message: 'Kredensial demo diisi otomatis!', type: 'info' });
+          fillDemo(roleEmail) {
+              this.email = roleEmail;
+              this.password = 'password';
+              this.$dispatch('show-toast', { message: 'Kredensial demo ' + roleEmail + ' diisi!', type: 'info' });
           }
       }">
 
@@ -60,7 +60,7 @@
             
             <!-- Welcome Info Section -->
             <div class="my-12 relative z-10 space-y-4">
-                <span class="text-[10px] font-bold text-indigo-400 bg-indigo-950 border border-indigo-800/30 px-3 py-1 rounded-full uppercase tracking-wider">ERP & POS v1.0</span>
+                <span class="text-[10px] font-bold text-indigo-400 bg-indigo-950 border border-indigo-800/30 px-3 py-1 rounded-full uppercase tracking-wider">ERP & POS v1.1 (RBAC)</span>
                 <h1 class="text-2xl md:text-3xl font-black text-white leading-tight">Kelola Bisnis UMKM Lebih Efisien.</h1>
                 <p class="text-xs text-slate-400 leading-relaxed">Satu sistem terintegrasi untuk kasir POS penjualan, manajemen stok inventaris gudang, hingga laporan bisnis otomatis.</p>
             </div>
@@ -112,12 +112,12 @@
                     <div class="flex items-center bg-slate-900/80 rounded-xl px-3.5 py-3 border border-slate-800 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-900/20 transition-all duration-200">
                         <i data-lucide="mail" class="w-4 h-4 text-slate-500 mr-2.5"></i>
                         <input type="email" 
-                               id="email" 
-                               name="email" 
-                               x-model="email"
-                               placeholder="contoh@smartbiz.com" 
-                               required
-                               class="bg-transparent border-none text-xs focus:outline-none w-full text-slate-200">
+                                id="email" 
+                                name="email" 
+                                x-model="email"
+                                placeholder="contoh@demo.com" 
+                                required
+                                class="bg-transparent border-none text-xs focus:outline-none w-full text-slate-200">
                     </div>
                     @error('email')
                         <p class="text-[10px] text-rose-500 font-medium mt-1">{{ $message }}</p>
@@ -130,12 +130,12 @@
                     <div class="flex items-center bg-slate-900/80 rounded-xl px-3.5 py-3 border border-slate-800 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-900/20 transition-all duration-200">
                         <i data-lucide="lock" class="w-4 h-4 text-slate-500 mr-2.5"></i>
                         <input :type="showPassword ? 'text' : 'password'" 
-                               id="password" 
-                               name="password" 
-                               x-model="password"
-                               placeholder="******" 
-                               required
-                               class="bg-transparent border-none text-xs focus:outline-none w-full text-slate-200">
+                                id="password" 
+                                name="password" 
+                                x-model="password"
+                                placeholder="******" 
+                                required
+                                class="bg-transparent border-none text-xs focus:outline-none w-full text-slate-200">
                         <!-- Toggle show password -->
                         <button type="button" @click="showPassword = !showPassword" class="text-slate-500 hover:text-slate-300 transition-colors focus:outline-none">
                             <i :data-lucide="showPassword ? 'eye-off' : 'eye'" class="w-4 h-4"></i>
@@ -168,22 +168,22 @@
             </form>
             
             <!-- Demo Accounts Helper Info Card -->
-            <div class="mt-8 p-4 bg-indigo-950/30 border border-indigo-900/30 rounded-2xl flex flex-col sm:flex-row items-center gap-4 justify-between">
-                <div>
-                    <h4 class="text-xs font-bold text-indigo-300 flex items-center gap-1.5">
-                        <i data-lucide="info" class="w-4 h-4 text-indigo-400"></i>
-                        Akun Demo Pengujian
-                    </h4>
-                    <p class="text-[10px] text-slate-400 mt-1">Gunakan akun ini untuk masuk ke dasbor utama.</p>
-                    <div class="mt-2 text-[10px] font-mono text-indigo-200">
-                        Email: admin@smartbiz.com <br>
-                        Sandi: admin123
-                    </div>
+            <div class="mt-6 p-4 bg-slate-900/60 border border-slate-850 rounded-2xl">
+                <h4 class="text-xs font-bold text-indigo-300 flex items-center gap-1.5 mb-2">
+                    <i data-lucide="info" class="w-4 h-4 text-indigo-400"></i>
+                    Akun Demo Pengujian (Sandi: password)
+                </h4>
+                <div class="grid grid-cols-3 gap-2">
+                    <button @click="fillDemo('admin@demo.com')" class="px-2 py-1.5 bg-slate-850 hover:bg-slate-800 text-[10px] font-bold rounded-lg text-slate-200 border border-slate-800 hover:border-indigo-500 transition-all">
+                        Super Admin
+                    </button>
+                    <button @click="fillDemo('manager@demo.com')" class="px-2 py-1.5 bg-slate-850 hover:bg-slate-800 text-[10px] font-bold rounded-lg text-slate-200 border border-slate-800 hover:border-indigo-500 transition-all">
+                        Manager
+                    </button>
+                    <button @click="fillDemo('kasir@demo.com')" class="px-2 py-1.5 bg-slate-850 hover:bg-slate-800 text-[10px] font-bold rounded-lg text-slate-200 border border-slate-800 hover:border-indigo-500 transition-all">
+                        Kasir
+                    </button>
                 </div>
-                <button @click="fillDemoCredentials()" 
-                        class="w-full sm:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold rounded-xl whitespace-nowrap transition-colors shadow-sm">
-                    Gunakan Akun
-                </button>
             </div>
             
         </div>

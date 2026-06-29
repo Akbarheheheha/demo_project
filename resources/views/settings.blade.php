@@ -4,109 +4,7 @@
 @section('active_page', 'settings')
 
 @section('content')
-<div class="space-y-6" x-data="{
-    // Tab Navigation State
-    activeTab: 'profile', // 'profile', 'pos', 'users'
-    
-    // Data structures loaded from Controller
-    store: @json($store),
-    pos: @json($posConfig),
-    users: @json($users),
-    
-    // Modals & Action State
-    showAddUserModal: false,
-    isSaving: false,
-    
-    // New User Form State
-    newUserForm: {
-        name: '',
-        email: '',
-        role: 'Kasir',
-        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100&h=100',
-        status: 'Aktif'
-    },
-    
-    // Reset User form fields
-    resetUserForm() {
-        this.newUserForm = {
-            name: '',
-            email: '',
-            role: 'Kasir',
-            avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100&h=100',
-            status: 'Aktif'
-        };
-    },
-    
-    // Save configurations general mock function (Axios)
-    async saveSettings(category) {
-        this.isSaving = true;
-        try {
-            const dataToSave = (category === 'profile') ? this.store : this.pos;
-            const response = await axios.post('/api/settings/save/' + category, dataToSave);
-            
-            this.$dispatch('show-toast', { 
-                message: 'Pengaturan ' + (category === 'profile' ? 'Profil Toko' : 'Sistem POS') + ' berhasil disimpan!', 
-                type: 'success' 
-            });
-        } catch (error) {
-            console.error(error);
-            this.$dispatch('show-toast', { message: 'Gagal menyimpan pengaturan.', type: 'danger' });
-        } finally {
-            this.isSaving = false;
-        }
-    },
-    
-    // Add Employee Mock (Axios)
-    async addUser() {
-        if (!this.newUserForm.name.trim() || !this.newUserForm.email.trim()) {
-            this.$dispatch('show-toast', { message: 'Nama dan email wajib diisi!', type: 'danger' });
-            return;
-        }
-        this.isSaving = true;
-        
-        try {
-            const response = await axios.post('/api/settings/users/store', this.newUserForm);
-            
-            const addedUser = {
-                id: Date.now(),
-                name: this.newUserForm.name,
-                email: this.newUserForm.email,
-                role: this.newUserForm.role,
-                avatar: this.newUserForm.avatar,
-                status: this.newUserForm.status
-            };
-            
-            this.users.push(addedUser);
-            this.$dispatch('show-toast', { message: 'Pengguna ' + addedUser.name + ' berhasil ditambahkan!', type: 'success' });
-            this.showAddUserModal = false;
-            this.resetUserForm();
-        } catch (error) {
-            console.error(error);
-            this.$dispatch('show-toast', { message: 'Gagal menambahkan pengguna.', type: 'danger' });
-        } finally {
-            this.isSaving = false;
-        }
-    },
-    
-    // Remove User Mock (Axios)
-    async deleteUser(user) {
-        if (user.id === 1) {
-            this.$dispatch('show-toast', { message: 'Tidak dapat menghapus Administrator Utama!', type: 'danger' });
-            return;
-        }
-        
-        if (confirm('Apakah Anda yakin ingin menghapus akses karyawan ' + user.name + '?')) {
-            try {
-                const response = await axios.delete('/api/settings/users/delete/' + user.id);
-                this.users = this.users.filter(u => u.id !== user.id);
-                this.$dispatch('show-toast', { message: 'Akses Karyawan ' + user.name + ' dicabut.', type: 'warning' });
-            } catch (error) {
-                console.error(error);
-                this.$dispatch('show-toast', { message: 'Gagal menghapus pengguna.', type: 'danger' });
-            }
-        }
-    }
-}">
+<div class="space-y-6" x-data="settingsComponent()">
 
     <!-- Page Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -384,17 +282,16 @@
                     <div class="space-y-1.5">
                         <label class="text-xs font-bold text-slate-500">Hak Akses / Peran</label>
                         <select x-model="newUserForm.role" class="w-full text-xs rounded-xl border border-slate-200 bg-white p-2.5 text-slate-800 focus:outline-none focus:border-indigo-500 font-semibold">
-                            <option value="Kasir Utama">Kasir Utama</option>
-                            <option value="Kasir Shift 2">Kasir Shift 2</option>
-                            <option value="Gudang & Stok">Staff Gudang & Stok</option>
-                            <option value="Administrator">Administrator Kedua</option>
+                            <option value="Kasir">Kasir</option>
+                            <option value="Manager">Manager</option>
+                            <option value="Super Admin">Super Admin</option>
                         </select>
                     </div>
 
                     <!-- Password Field Mock info -->
                     <div class="space-y-1.5">
                         <label class="text-xs font-bold text-slate-500">Kata Sandi Default</label>
-                        <input type="text" value="karyawan123" disabled class="w-full text-xs bg-slate-50 rounded-xl px-3 py-2.5 border border-slate-100 text-slate-400 font-mono select-none">
+                        <input type="text" value="password" disabled class="w-full text-xs bg-slate-50 rounded-xl px-3 py-2.5 border border-slate-100 text-slate-400 font-mono select-none">
                         <p class="text-[10px] text-slate-400">Kata sandi default untuk pertama kali login. Dapat diganti oleh karyawan nanti.</p>
                     </div>
                 </div>
@@ -416,4 +313,104 @@
     </div>
 
 </div>
+
+<script>
+function settingsComponent() {
+    return {
+        // Tab Navigation State
+        activeTab: 'profile', // 'profile', 'pos', 'users'
+        
+        // Data structures loaded from Controller
+        store: @json($store),
+        pos: @json($posConfig),
+        users: @json($users),
+        
+        // Modals & Action State
+        showAddUserModal: false,
+        isSaving: false,
+        
+        // New User Form State
+        newUserForm: {
+            name: '',
+            email: '',
+            role: 'Kasir',
+            avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100&h=100',
+            status: 'Aktif'
+        },
+        
+        // Reset User form fields
+        resetUserForm() {
+            this.newUserForm = {
+                name: '',
+                email: '',
+                role: 'Kasir',
+                avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100&h=100',
+                status: 'Aktif'
+            };
+        },
+        
+        // Save configurations general function
+        async saveSettings(category) {
+            this.isSaving = true;
+            try {
+                const dataToSave = (category === 'profile') ? this.store : this.pos;
+                const response = await axios.post('/api/settings/save/' + category, dataToSave);
+                
+                this.$dispatch('show-toast', { 
+                    message: 'Pengaturan ' + (category === 'profile' ? 'Profil Toko' : 'Sistem POS') + ' berhasil disimpan!', 
+                    type: 'success' 
+                });
+            } catch (error) {
+                console.error(error);
+                this.$dispatch('show-toast', { message: 'Gagal menyimpan pengaturan.', type: 'danger' });
+            } finally {
+                this.isSaving = false;
+            }
+        },
+        
+        // Add Employee
+        async addUser() {
+            if (!this.newUserForm.name.trim() || !this.newUserForm.email.trim()) {
+                this.$dispatch('show-toast', { message: 'Nama dan email wajib diisi!', type: 'danger' });
+                return;
+            }
+            this.isSaving = true;
+            
+            try {
+                const response = await axios.post('/api/settings/users/store', this.newUserForm);
+                const addedUser = response.data;
+                
+                this.users.push(addedUser);
+                this.$dispatch('show-toast', { message: 'Pengguna ' + addedUser.name + ' berhasil ditambahkan!', type: 'success' });
+                this.showAddUserModal = false;
+                this.resetUserForm();
+            } catch (error) {
+                console.error(error);
+                this.$dispatch('show-toast', { message: 'Gagal menambahkan pengguna.', type: 'danger' });
+            } finally {
+                this.isSaving = false;
+            }
+        },
+        
+        // Remove User
+        async deleteUser(user) {
+            if (user.id === 1) {
+                this.$dispatch('show-toast', { message: 'Tidak dapat menghapus Administrator Utama!', type: 'danger' });
+                return;
+            }
+            
+            if (confirm('Apakah Anda yakin ingin menghapus akses karyawan ' + user.name + '?')) {
+                try {
+                    const response = await axios.delete('/api/settings/users/delete/' + user.id);
+                    this.users = this.users.filter(u => u.id !== user.id);
+                    this.$dispatch('show-toast', { message: 'Akses Karyawan ' + user.name + ' dicabut.', type: 'warning' });
+                } catch (error) {
+                    console.error(error);
+                    this.$dispatch('show-toast', { message: 'Gagal menghapus pengguna.', type: 'danger' });
+                }
+            }
+        }
+    };
+}
+</script>
 @endsection

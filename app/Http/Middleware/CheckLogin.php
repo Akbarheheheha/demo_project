@@ -15,7 +15,7 @@ class CheckLogin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!session('logged_in')) {
+        if (!\Illuminate\Support\Facades\Auth::check()) {
             return redirect()->route('login')->with('login_required', 'Silakan masuk ke akun Anda terlebih dahulu.');
         }
 

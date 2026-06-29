@@ -3,17 +3,29 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
+    /**
+     * Show the login form.
+     *
+     * @return \Illuminate\View\View
+     */
     public function showLogin()
     {
         return view('auth.login');
     }
 
+    /**
+     * Handle authentication attempt.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function login(Request $request)
     {
-        $request->validate([
+        $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required|min:6',
         ], [
@@ -23,26 +35,41 @@ class AuthController extends Controller
             'password.min' => 'Password minimal terdiri dari 6 karakter.',
         ]);
 
-        $email = $request->input('email');
-        $password = $request->input('password');
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            $request->session()->regenerate();
 
-        // Simulasi Kredensial Admin Demo
-        if ($email === 'admin@smartbiz.com' && $password === 'admin123') {
-            // Set session dummy untuk mensimulasikan login
-            session(['logged_in' => true, 'user_name' => 'Citra Kirana']);
-            
-            return redirect()->route('dashboard')->with('login_success', 'Selamat datang kembali, Citra Kirana!');
+            $user = Auth::user();
+
+            // Redirect based on role
+            if ($user->hasRole('Kasir')) {
+                return redirect()->route('pos')->with('login_success', 'Selamat datang kembali, ' . $user->name . ' (Kasir)!');
+            }
+
+            if ($user->hasAnyRole(['Super Admin', 'Manager'])) {
+                // Sesuai dengan instruksi user, arahkan ke rute dashboard admin
+                return redirect()->route('dashboard')->with('login_success', 'Selamat datang kembali, ' . $user->name . '!');
+            }
+
+            return redirect()->intended('/')->with('login_success', 'Selamat datang!');
         }
 
-        // Jika salah, kembali dengan error
         return back()->withErrors([
             'email' => 'Kredensial yang Anda masukkan tidak cocok dengan data kami.',
         ])->withInput($request->only('email'));
     }
 
-    public function logout()
+    /**
+     * Handle user logout.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function logout(Request $request)
     {
-        session()->forget(['logged_in', 'user_name']);
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
         return redirect()->route('login')->with('logout_success', 'Anda telah berhasil keluar.');
     }
 }

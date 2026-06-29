@@ -118,44 +118,54 @@
             <!-- Sidebar Navigation Links -->
             <nav class="flex-1 space-y-1.5 px-4 py-6">
                 <!-- Dashboard Link -->
-                <a href="{{ route('dashboard') }}" 
+                @hasanyrole('Super Admin|Manager')
+                <a href="{{ route('admin.dashboard') }}" 
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
                    :class="activePage === 'dashboard' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'">
                     <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
                     <span>Dashboard</span>
                 </a>
+                @endhasanyrole
                 
                 <!-- Kasir / POS Link -->
+                @hasanyrole('Kasir|Super Admin')
                 <a href="{{ route('pos') }}" 
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
                    :class="activePage === 'pos' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'">
                     <i data-lucide="shopping-cart" class="w-5 h-5"></i>
                     <span>Kasir POS</span>
                 </a>
+                @endhasanyrole
                 
                 <!-- Inventaris Link -->
+                @hasanyrole('Super Admin|Manager')
                 <a href="{{ route('inventory') }}" 
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
                    :class="activePage === 'inventory' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'">
                     <i data-lucide="package" class="w-5 h-5"></i>
                     <span>Inventaris</span>
                 </a>
+                @endhasanyrole
                 
-                <!-- Laporan Link -->
+                <!-- Laporan Link (Super Admin Only) -->
+                @role('Super Admin')
                 <a href="{{ route('reports') }}" 
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
                    :class="activePage === 'reports' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'">
                     <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
-                    <span>Laporan</span>
+                    <span>Laporan Keuangan</span>
                 </a>
+                @endrole
                 
-                <!-- Pengaturan Link -->
+                <!-- Pengaturan Link (Super Admin Only) -->
+                @role('Super Admin')
                 <a href="{{ route('settings') }}" 
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
                    :class="activePage === 'settings' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'">
                     <i data-lucide="settings" class="w-5 h-5"></i>
                     <span>Pengaturan</span>
                 </a>
+                @endrole
             </nav>
             
             <!-- Sidebar Footer / UMKM Info -->
@@ -256,8 +266,8 @@
                                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100&h=100" 
                                  alt="Profile">
                             <div class="hidden lg:block text-left pr-2">
-                                <h4 class="text-xs font-semibold text-slate-800">Citra Kirana</h4>
-                                <p class="text-[10px] text-slate-500 font-medium">Administrator</p>
+                                <h4 class="text-xs font-semibold text-slate-800">{{ auth()->user()->name }}</h4>
+                                <p class="text-[10px] text-slate-500 font-medium">{{ auth()->user()->roles->pluck('name')->implode(', ') }}</p>
                             </div>
                             <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
                         </button>

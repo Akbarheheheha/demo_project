@@ -4,217 +4,7 @@
 @section('active_page', 'inventory')
 
 @section('content')
-<div class="space-y-6"
-     x-data="{
-        inventory: @json($inventory),
-        mutations: @json($mutations),
-        categories: @json($categories),
-        
-        // Modals State
-        showAddModal: false,
-        showEditModal: false,
-        showMutationModal: false,
-        isSaving: false,
-        
-        // Filters State
-        searchQuery: '',
-        selectedCategory: 'all',
-        stockFilter: 'all', // 'all', 'normal', 'low', 'out'
-        
-        // Form Fields
-        form: {
-            id: null,
-            sku: '',
-            name: '',
-            category: 'Sembako',
-            stock: 0,
-            min_stock: 5,
-            purchase_price: 0,
-            selling_price: 0
-        },
-        
-        // Target product for mutation history
-        selectedProductForMutation: null,
-        
-        // Filtered Inventory List
-        get filteredInventory() {
-            return this.inventory.filter(item => {
-                const matchesCategory = this.selectedCategory === 'all' || item.category === this.selectedCategory;
-                const matchesSearch = item.name.toLowerCase().includes(this.searchQuery.toLowerCase()) || item.sku.toLowerCase().includes(this.searchQuery.toLowerCase());
-                
-                let matchesStock = true;
-                if (this.stockFilter === 'low') {
-                    matchesStock = item.stock <= item.min_stock && item.stock > 0;
-                } else if (this.stockFilter === 'out') {
-                    matchesStock = item.stock === 0;
-                } else if (this.stockFilter === 'normal') {
-                    matchesStock = item.stock > item.min_stock;
-                }
-                
-                return matchesCategory && matchesSearch && matchesStock;
-            });
-        },
-        
-        // Helper to check stock status
-        getStockStatus(item) {
-            if (item.stock === 0) return 'out';
-            if (item.stock <= item.min_stock) return 'low';
-            return 'normal';
-        },
-        
-        // Reset Form Fields
-        resetForm() {
-            this.form = {
-                id: null,
-                sku: '',
-                name: '',
-                category: this.categories[0] || 'Sembako',
-                stock: 0,
-                min_stock: 5,
-                purchase_price: 0,
-                selling_price: 0
-            };
-        },
-        
-        // Open Add Modal
-        openAddModal() {
-            this.resetForm();
-            // Generate Auto SKU
-            const random = Math.floor(1000 + Math.random() * 9000);
-            this.form.sku = 'SKU-' + random;
-            this.showAddModal = true;
-        },
-        
-        // Open Edit Modal
-        openEditModal(item) {
-            this.form = { ...item };
-            this.showEditModal = true;
-        },
-        
-        // Open Mutation Modal
-        openMutationModal(item) {
-            this.selectedProductForMutation = item;
-            this.showMutationModal = true;
-            setTimeout(() => lucide.createIcons(), 50);
-        },
-        
-        // Save New Product (Axios Mock)
-        async addProduct() {
-            if (!this.form.name.trim() || !this.form.sku.trim()) {
-                this.$dispatch('show-toast', { message: 'Nama barang dan SKU wajib diisi!', type: 'danger' });
-                return;
-            }
-            this.isSaving = true;
-            
-            try {
-                // Axios POST Mock
-                const response = await axios.post('/api/inventory/store', this.form);
-                
-                const newProduct = {
-                    id: Date.now(),
-                    sku: this.form.sku,
-                    name: this.form.name,
-                    category: this.form.category,
-                    stock: parseInt(this.form.stock) || 0,
-                    min_stock: parseInt(this.form.min_stock) || 5,
-                    purchase_price: parseFloat(this.form.purchase_price) || 0,
-                    selling_price: parseFloat(this.form.selling_price) || 0
-                };
-                
-                this.inventory.unshift(newProduct);
-                
-                // Add mutation log for stock initialization
-                this.mutations.unshift({
-                    date: new Date().toISOString().slice(0, 16).replace('T', ' '),
-                    sku: newProduct.sku,
-                    name: newProduct.name,
-                    type: 'IN',
-                    qty: newProduct.stock,
-                    ref: 'INIT-STOK',
-                    operator: 'Citra (Admin)'
-                });
-                
-                this.$dispatch('show-toast', { message: 'Barang ' + newProduct.name + ' berhasil ditambahkan!', type: 'success' });
-                this.showAddModal = false;
-                this.resetForm();
-            } catch (error) {
-                console.error(error);
-                this.$dispatch('show-toast', { message: 'Gagal menambahkan barang.', type: 'danger' });
-            } finally {
-                this.isSaving = false;
-            }
-        },
-        
-        // Edit Product (Axios Mock)
-        async editProduct() {
-            if (!this.form.name.trim()) {
-                this.$dispatch('show-toast', { message: 'Nama barang wajib diisi!', type: 'danger' });
-                return;
-            }
-            this.isSaving = true;
-            
-            try {
-                // Axios PUT Mock
-                const response = await axios.put('/api/inventory/update/' + this.form.id, this.form);
-                
-                const index = this.inventory.findIndex(item => item.id === this.form.id);
-                if (index > -1) {
-                    // Track stock difference for mutation history if changed
-                    const oldStock = this.inventory[index].stock;
-                    const newStock = parseInt(this.form.stock) || 0;
-                    const diff = newStock - oldStock;
-                    
-                    if (diff !== 0) {
-                        this.mutations.unshift({
-                            date: new Date().toISOString().slice(0, 16).replace('T', ' '),
-                            sku: this.form.sku,
-                            name: this.form.name,
-                            type: diff > 0 ? 'IN' : 'OUT',
-                            qty: Math.abs(diff),
-                            ref: 'PENYESUAIAN',
-                            operator: 'Citra (Admin)'
-                        });
-                    }
-                    
-                    this.inventory[index] = {
-                        ...this.inventory[index],
-                        sku: this.form.sku,
-                        name: this.form.name,
-                        category: this.form.category,
-                        stock: newStock,
-                        min_stock: parseInt(this.form.min_stock) || 5,
-                        purchase_price: parseFloat(this.form.purchase_price) || 0,
-                        selling_price: parseFloat(this.form.selling_price) || 0
-                    };
-                }
-                
-                this.$dispatch('show-toast', { message: 'Barang ' + this.form.name + ' berhasil diperbarui!', type: 'success' });
-                this.showEditModal = false;
-                this.resetForm();
-            } catch (error) {
-                console.error(error);
-                this.$dispatch('show-toast', { message: 'Gagal memperbarui barang.', type: 'danger' });
-            } finally {
-                this.isSaving = false;
-            }
-        },
-        
-        // Delete Product (Axios Mock)
-        async deleteProduct(item) {
-            if (confirm('Apakah Anda yakin ingin menghapus barang ' + item.name + '?')) {
-                try {
-                    // Axios DELETE Mock
-                    const response = await axios.delete('/api/inventory/delete/' + item.id);
-                    
-                    this.inventory = this.inventory.filter(prod => prod.id !== item.id);
-                    this.$dispatch('show-toast', { message: 'Barang ' + item.name + ' telah dihapus!', type: 'danger' });
-                } catch (error) {
-                    console.error(error);
-                    this.$dispatch('show-toast', { message: 'Gagal menghapus barang.', type: 'danger' });
-                }
-            }
-        }
-     }">
+<div class="space-y-6" x-data="inventoryComponent()">
 
     <!-- Page Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -633,4 +423,203 @@
     </div>
 
 </div>
+
+<script>
+function inventoryComponent() {
+    return {
+        inventory: @json($inventory),
+        mutations: @json($mutations),
+        categories: @json($categories),
+        
+        // Modals State
+        showAddModal: false,
+        showEditModal: false,
+        showMutationModal: false,
+        isSaving: false,
+        
+        // Filters State
+        searchQuery: '',
+        selectedCategory: 'all',
+        stockFilter: 'all', // 'all', 'normal', 'low', 'out'
+        
+        // Form Fields
+        form: {
+            id: null,
+            sku: '',
+            name: '',
+            category: 'Sembako',
+            stock: 0,
+            min_stock: 5,
+            purchase_price: 0,
+            selling_price: 0
+        },
+        
+        // Target product for mutation history
+        selectedProductForMutation: null,
+        
+        // Filtered Inventory List
+        get filteredInventory() {
+            return this.inventory.filter(item => {
+                const matchesCategory = this.selectedCategory === 'all' || item.category === this.selectedCategory;
+                const matchesSearch = item.name.toLowerCase().includes(this.searchQuery.toLowerCase()) || item.sku.toLowerCase().includes(this.searchQuery.toLowerCase());
+                
+                let matchesStock = true;
+                if (this.stockFilter === 'low') {
+                    matchesStock = item.stock <= item.min_stock && item.stock > 0;
+                } else if (this.stockFilter === 'out') {
+                    matchesStock = item.stock === 0;
+                } else if (this.stockFilter === 'normal') {
+                    matchesStock = item.stock > item.min_stock;
+                }
+                
+                return matchesCategory && matchesSearch && matchesStock;
+            });
+        },
+        
+        // Helper to check stock status
+        getStockStatus(item) {
+            if (item.stock === 0) return 'out';
+            if (item.stock <= item.min_stock) return 'low';
+            return 'normal';
+        },
+        
+        // Reset Form Fields
+        resetForm() {
+            this.form = {
+                id: null,
+                sku: '',
+                name: '',
+                category: this.categories[0] || 'Sembako',
+                stock: 0,
+                min_stock: 5,
+                purchase_price: 0,
+                selling_price: 0
+            };
+        },
+        
+        // Open Add Modal
+        openAddModal() {
+            this.resetForm();
+            // Generate Auto SKU
+            const random = Math.floor(1000 + Math.random() * 9000);
+            this.form.sku = 'SKU-' + random;
+            this.showAddModal = true;
+        },
+        
+        // Open Edit Modal
+        openEditModal(item) {
+            this.form = { ...item };
+            this.showEditModal = true;
+        },
+        
+        // Open Mutation Modal
+        openMutationModal(item) {
+            this.selectedProductForMutation = item;
+            this.showMutationModal = true;
+            setTimeout(() => lucide.createIcons(), 50);
+        },
+        
+        // Save New Product (Axios Mock)
+        async addProduct() {
+            if (!this.form.name.trim() || !this.form.sku.trim()) {
+                this.$dispatch('show-toast', { message: 'Nama barang dan SKU wajib diisi!', type: 'danger' });
+                return;
+            }
+            this.isSaving = true;
+            
+            try {
+                // Axios POST
+                const response = await axios.post('/api/inventory/store', this.form);
+                
+                const newProduct = response.data.product;
+                
+                this.inventory.unshift(newProduct);
+                
+                // Add mutation log for stock initialization
+                this.mutations.unshift({
+                    date: new Date().toISOString().slice(0, 16).replace('T', ' '),
+                    sku: newProduct.sku,
+                    name: newProduct.name,
+                    type: 'IN',
+                    qty: newProduct.stock,
+                    ref: 'INIT-STOK',
+                    operator: 'Sistem'
+                });
+                
+                this.$dispatch('show-toast', { message: 'Barang ' + newProduct.name + ' berhasil ditambahkan!', type: 'success' });
+                this.showAddModal = false;
+                this.resetForm();
+            } catch (error) {
+                console.error(error);
+                this.$dispatch('show-toast', { message: 'Gagal menambahkan barang.', type: 'danger' });
+            } finally {
+                this.isSaving = false;
+            }
+        },
+        
+        // Edit Product
+        async editProduct() {
+            if (!this.form.name.trim()) {
+                this.$dispatch('show-toast', { message: 'Nama barang wajib diisi!', type: 'danger' });
+                return;
+            }
+            this.isSaving = true;
+            
+            try {
+                // Axios PUT
+                const response = await axios.put('/api/inventory/update/' + this.form.id, this.form);
+                
+                const index = this.inventory.findIndex(item => item.id === this.form.id);
+                if (index > -1) {
+                    const updatedProduct = response.data.product;
+                    
+                    // Track stock difference for mutation history if changed
+                    const oldStock = this.inventory[index].stock;
+                    const newStock = updatedProduct.stock;
+                    const diff = newStock - oldStock;
+                    
+                    if (diff !== 0) {
+                        this.mutations.unshift({
+                            date: new Date().toISOString().slice(0, 16).replace('T', ' '),
+                            sku: this.form.sku,
+                            name: this.form.name,
+                            type: diff > 0 ? 'IN' : 'OUT',
+                            qty: Math.abs(diff),
+                            ref: 'PENYESUAIAN',
+                            operator: 'Sistem'
+                        });
+                    }
+                    
+                    this.inventory[index] = updatedProduct;
+                }
+                
+                this.$dispatch('show-toast', { message: 'Barang ' + this.form.name + ' berhasil diperbarui!', type: 'success' });
+                this.showEditModal = false;
+                this.resetForm();
+            } catch (error) {
+                console.error(error);
+                this.$dispatch('show-toast', { message: 'Gagal memperbarui barang.', type: 'danger' });
+            } finally {
+                this.isSaving = false;
+            }
+        },
+        
+        // Delete Product (Axios Mock)
+        async deleteProduct(item) {
+            if (confirm('Apakah Anda yakin ingin menghapus barang ' + item.name + '?')) {
+                try {
+                    // Axios DELETE Mock
+                    const response = await axios.delete('/api/inventory/delete/' + item.id);
+                    
+                    this.inventory = this.inventory.filter(prod => prod.id !== item.id);
+                    this.$dispatch('show-toast', { message: 'Barang ' + item.name + ' telah dihapus!', type: 'danger' });
+                } catch (error) {
+                    console.error(error);
+                    this.$dispatch('show-toast', { message: 'Gagal menghapus barang.', type: 'danger' });
+                }
+            }
+        }
+    };
+}
+</script>
 @endsection

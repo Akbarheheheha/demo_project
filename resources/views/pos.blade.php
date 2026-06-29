@@ -4,183 +4,7 @@
 @section('active_page', 'pos')
 
 @section('content')
-<div class="h-[calc(100vh-8.5rem)] flex flex-col gap-6"
-     x-data="{
-        products: @json($products),
-        categories: @json($categories),
-        selectedCategory: 'all',
-        searchQuery: '',
-        
-        // Cart State
-        cart: [],
-        discountPercent: 0,
-        taxPercent: 11,
-        
-        // Payment State
-        paymentModalOpen: false,
-        paymentMethod: 'cash',
-        cashAmount: '',
-        isProcessing: false,
-        invoiceNumber: '',
-        
-        // Filtered products list
-        get filteredProducts() {
-            return this.products.filter(p => {
-                const matchesCategory = this.selectedCategory === 'all' || p.category === this.selectedCategory;
-                const matchesSearch = p.name.toLowerCase().includes(this.searchQuery.toLowerCase()) || p.sku.toLowerCase().includes(this.searchQuery.toLowerCase());
-                return matchesCategory && matchesSearch;
-            });
-        },
-        
-        // Add to Cart
-        addToCart(product) {
-            if (product.stock <= 0) {
-                this.$dispatch('show-toast', { message: 'Gagal! Stok barang ' + product.name + ' telah habis.', type: 'danger' });
-                return;
-            }
-            
-            const existingItem = this.cart.find(item => item.product.id === product.id);
-            
-            if (existingItem) {
-                if (existingItem.qty >= product.stock) {
-                    this.$dispatch('show-toast', { message: 'Batas stok tercapai! Stok hanya tersedia ' + product.stock + ' pcs.', type: 'warning' });
-                    return;
-                }
-                existingItem.qty++;
-            } else {
-                this.cart.push({
-                    product: product,
-                    qty: 1
-                });
-            }
-            this.$dispatch('show-toast', { message: product.name + ' ditambahkan ke keranjang.', type: 'success' });
-            
-            // Reinitialize Lucide icons for cart
-            setTimeout(() => lucide.createIcons(), 50);
-        },
-        
-        // Remove from Cart
-        removeFromCart(productId) {
-            const itemIndex = this.cart.findIndex(item => item.product.id === productId);
-            if (itemIndex > -1) {
-                const itemName = this.cart[itemIndex].product.name;
-                this.cart.splice(itemIndex, 1);
-                this.$dispatch('show-toast', { message: itemName + ' dihapus dari keranjang.', type: 'info' });
-            }
-        },
-        
-        // Update Qty
-        updateQty(productId, delta) {
-            const item = this.cart.find(item => item.product.id === productId);
-            if (item) {
-                const newQty = item.qty + delta;
-                if (newQty < 1) {
-                    this.removeFromCart(productId);
-                    return;
-                }
-                if (newQty > item.product.stock) {
-                    this.$dispatch('show-toast', { message: 'Batas stok tercapai! Stok hanya tersedia ' + item.product.stock + ' pcs.', type: 'warning' });
-                    return;
-                }
-                item.qty = newQty;
-            }
-        },
-        
-        // Calculations
-        get subtotal() {
-            return this.cart.reduce((total, item) => total + (item.product.price * item.qty), 0);
-        },
-        get discountAmount() {
-            return (this.subtotal * this.discountPercent) / 100;
-        },
-        get taxAmount() {
-            return ((this.subtotal - this.discountAmount) * this.taxPercent) / 100;
-        },
-        get grandTotal() {
-            return this.subtotal - this.discountAmount + this.taxAmount;
-        },
-        get changeAmount() {
-            const paid = parseFloat(this.cashAmount) || 0;
-            return Math.max(0, paid - this.grandTotal);
-        },
-        get isValidPayment() {
-            if (this.cart.length === 0) return false;
-            if (this.paymentMethod === 'cash') {
-                const paid = parseFloat(this.cashAmount) || 0;
-                return paid >= this.grandTotal;
-            }
-            return true;
-        },
-        
-        // Generate Invoice Code
-        initiatePayment() {
-            if (this.cart.length === 0) {
-                this.$dispatch('show-toast', { message: 'Peringatan: Keranjang masih kosong!', type: 'warning' });
-                return;
-            }
-            const date = new Date();
-            const format = date.getFullYear() +
-                String(date.getMonth() + 1).padStart(2, '0') +
-                String(date.getDate()).padStart(2, '0');
-            const random = Math.floor(100 + Math.random() * 900);
-            this.invoiceNumber = 'TRX-' + format + '-' + random;
-            this.cashAmount = '';
-            this.paymentMethod = 'cash';
-            this.paymentModalOpen = true;
-        },
-        
-        // Axios Mock Submission
-        async processCheckout() {
-            if (!this.isValidPayment) return;
-            this.isProcessing = true;
-            
-            try {
-                // Axios Async dummy request simulation
-                const response = await axios.post('/api/checkout-simulation', {
-                    invoice: this.invoiceNumber,
-                    items: this.cart.map(item => ({
-                        id: item.product.id,
-                        qty: item.qty,
-                        price: item.product.price
-                    })),
-                    subtotal: this.subtotal,
-                    discount: this.discountAmount,
-                    tax: this.taxAmount,
-                    total: this.grandTotal,
-                    payment_method: this.paymentMethod,
-                    cash_received: this.paymentMethod === 'cash' ? parseFloat(this.cashAmount) : this.grandTotal
-                });
-                
-                // If success: Update stock in local view
-                this.cart.forEach(item => {
-                    const prod = this.products.find(p => p.id === item.product.id);
-                    if (prod) {
-                        prod.stock -= item.qty;
-                    }
-                });
-                
-                this.$dispatch('show-toast', { message: 'Checkout Berhasil! Invoice ' + this.invoiceNumber + ' disimpan.', type: 'success' });
-                this.cart = [];
-                this.paymentModalOpen = false;
-                
-            } catch (error) {
-                console.error('Error checkout:', error);
-                this.$dispatch('show-toast', { message: 'Koneksi terganggu, transaksi disimpan ke database lokal.', type: 'warning' });
-                
-                // Fallback offline success
-                this.cart.forEach(item => {
-                    const prod = this.products.find(p => p.id === item.product.id);
-                    if (prod) {
-                        prod.stock -= item.qty;
-                    }
-                });
-                this.cart = [];
-                this.paymentModalOpen = false;
-            } finally {
-                this.isProcessing = false;
-            }
-        }
-     }">
+<div class="h-[calc(100vh-8.5rem)] flex flex-col gap-6" x-data="posComponent()">
      
     <!-- Split Layout Grid -->
     <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
@@ -574,4 +398,185 @@
     </div>
 
 </div>
+
+<script>
+function posComponent() {
+    return {
+        products: @json($products),
+        categories: @json($categories),
+        selectedCategory: 'all',
+        searchQuery: '',
+        
+        // Cart State
+        cart: [],
+        discountPercent: 0,
+        taxPercent: 11,
+        
+        // Payment State
+        paymentModalOpen: false,
+        paymentMethod: 'cash',
+        cashAmount: '',
+        isProcessing: false,
+        invoiceNumber: '',
+        
+        // Filtered products list
+        get filteredProducts() {
+            return this.products.filter(p => {
+                const matchesCategory = this.selectedCategory === 'all' || p.category === this.selectedCategory;
+                const matchesSearch = p.name.toLowerCase().includes(this.searchQuery.toLowerCase()) || p.sku.toLowerCase().includes(this.searchQuery.toLowerCase());
+                return matchesCategory && matchesSearch;
+            });
+        },
+        
+        // Add to Cart
+        addToCart(product) {
+            if (product.stock <= 0) {
+                this.$dispatch('show-toast', { message: 'Gagal! Stok barang ' + product.name + ' telah habis.', type: 'danger' });
+                return;
+            }
+            
+            const existingItem = this.cart.find(item => item.product.id === product.id);
+            
+            if (existingItem) {
+                if (existingItem.qty >= product.stock) {
+                    this.$dispatch('show-toast', { message: 'Batas stok tercapai! Stok hanya tersedia ' + product.stock + ' pcs.', type: 'warning' });
+                    return;
+                }
+                existingItem.qty++;
+            } else {
+                this.cart.push({
+                    product: product,
+                    qty: 1
+                });
+            }
+            this.$dispatch('show-toast', { message: product.name + ' ditambahkan ke keranjang.', type: 'success' });
+            
+            // Reinitialize Lucide icons for cart
+            setTimeout(() => lucide.createIcons(), 50);
+        },
+        
+        // Remove from Cart
+        removeFromCart(productId) {
+            const itemIndex = this.cart.findIndex(item => item.product.id === productId);
+            if (itemIndex > -1) {
+                const itemName = this.cart[itemIndex].product.name;
+                this.cart.splice(itemIndex, 1);
+                this.$dispatch('show-toast', { message: itemName + ' dihapus dari keranjang.', type: 'info' });
+            }
+        },
+        
+        // Update Qty
+        updateQty(productId, delta) {
+            const item = this.cart.find(item => item.product.id === productId);
+            if (item) {
+                const newQty = item.qty + delta;
+                if (newQty < 1) {
+                    this.removeFromCart(productId);
+                    return;
+                }
+                if (newQty > item.product.stock) {
+                    this.$dispatch('show-toast', { message: 'Batas stok tercapai! Stok hanya tersedia ' + item.product.stock + ' pcs.', type: 'warning' });
+                    return;
+                }
+                item.qty = newQty;
+            }
+        },
+        
+        // Calculations
+        get subtotal() {
+            return this.cart.reduce((total, item) => total + (item.product.price * item.qty), 0);
+        },
+        get discountAmount() {
+            return (this.subtotal * this.discountPercent) / 100;
+        },
+        get taxAmount() {
+            return ((this.subtotal - this.discountAmount) * this.taxPercent) / 100;
+        },
+        get grandTotal() {
+            return this.subtotal - this.discountAmount + this.taxAmount;
+        },
+        get changeAmount() {
+            const paid = parseFloat(this.cashAmount) || 0;
+            return Math.max(0, paid - this.grandTotal);
+        },
+        get isValidPayment() {
+            if (this.cart.length === 0) return false;
+            if (this.paymentMethod === 'cash') {
+                const paid = parseFloat(this.cashAmount) || 0;
+                return paid >= this.grandTotal;
+            }
+            return true;
+        },
+        
+        // Generate Invoice Code
+        initiatePayment() {
+            if (this.cart.length === 0) {
+                this.$dispatch('show-toast', { message: 'Peringatan: Keranjang masih kosong!', type: 'warning' });
+                return;
+            }
+            const date = new Date();
+            const format = date.getFullYear() +
+                String(date.getMonth() + 1).padStart(2, '0') +
+                String(date.getDate()).padStart(2, '0');
+            const random = Math.floor(100 + Math.random() * 900);
+            this.invoiceNumber = 'TRX-' + format + '-' + random;
+            this.cashAmount = '';
+            this.paymentMethod = 'cash';
+            this.paymentModalOpen = true;
+        },
+        
+        // Axios Mock Submission
+        async processCheckout() {
+            if (!this.isValidPayment) return;
+            this.isProcessing = true;
+            
+            try {
+                // Axios Async dummy request simulation
+                const response = await axios.post('/api/checkout-simulation', {
+                    invoice: this.invoiceNumber,
+                    items: this.cart.map(item => ({
+                        id: item.product.id,
+                        qty: item.qty,
+                        price: item.product.price
+                    })),
+                    subtotal: this.subtotal,
+                    discount: this.discountAmount,
+                    tax: this.taxAmount,
+                    total: this.grandTotal,
+                    payment_method: this.paymentMethod,
+                    cash_received: this.paymentMethod === 'cash' ? parseFloat(this.cashAmount) : this.grandTotal
+                });
+                
+                // If success: Update stock in local view
+                this.cart.forEach(item => {
+                    const prod = this.products.find(p => p.id === item.product.id);
+                    if (prod) {
+                        prod.stock -= item.qty;
+                    }
+                });
+                
+                this.$dispatch('show-toast', { message: 'Checkout Berhasil! Invoice ' + this.invoiceNumber + ' disimpan.', type: 'success' });
+                this.cart = [];
+                this.paymentModalOpen = false;
+                
+            } catch (error) {
+                console.error('Error checkout:', error);
+                this.$dispatch('show-toast', { message: 'Koneksi terganggu, transaksi disimpan ke database lokal.', type: 'warning' });
+                
+                // Fallback offline success
+                this.cart.forEach(item => {
+                    const prod = this.products.find(p => p.id === item.product.id);
+                    if (prod) {
+                        prod.stock -= item.qty;
+                    }
+                });
+                this.cart = [];
+                this.paymentModalOpen = false;
+            } finally {
+                this.isProcessing = false;
+            }
+        }
+    };
+}
+</script>
 @endsection

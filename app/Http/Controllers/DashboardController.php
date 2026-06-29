@@ -2,76 +2,78 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Product;
+use App\Models\Transaction;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
+    /**
+     * Display the admin dashboard.
+     *
+     * @return \Illuminate\View\View
+     */
     public function index()
     {
-        // Mock data untuk statistik ringkas
-        $stats = [
-            'total_sales_today' => 5420000,
-            'total_transactions_today' => 84,
-            'low_stock_count' => 5,
-            'sales_growth' => 12.5, // % kenaikan dari kemarin
-            'transactions_growth' => 8.0 // % kenaikan dari kemarin
+        // a. $total_stok (Sum dari kolom 'stok' di tabel products)
+        $total_stok = (int) Product::sum('stock');
+
+        // b. $total_penjualan_hari_ini (Sum dari kolom 'total_harga' di tabel transactions di mana created_at adalah hari ini)
+        $total_penjualan_hari_ini = (float) Transaction::whereDate('created_at', Carbon::today())
+            ->where('status', 'success')
+            ->sum('total_harga');
+
+        // c. $total_transaksi (Count dari tabel transactions)
+        $total_transaksi = Transaction::count();
+
+        // d. $stok_menipis (Ambil 5 produk dengan stok <= 5, order by stok asc)
+        $stok_menipis = Product::where('stock', '<=', 5)
+            ->orderBy('stock', 'asc')
+            ->limit(5)
+            ->get();
+
+        // e. $aktivitas_kasir (Ambil 5 transaksi terakhir, beserta relasi ke user/kasir yang melakukannya)
+        $aktivitas_kasir = Transaction::with('user')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        // f. $laporan_keuangan_bulanan (Total omzet bulan ini)
+        $laporan_keuangan_bulanan = (float) Transaction::whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)
+            ->where('status', 'success')
+            ->sum('total_harga');
+
+        // g. $tren_penjualan_mingguan (Mengelompokkan total penjualan per hari selama 7 hari terakhir)
+        $tren_penjualan_mingguan = [
+            'labels' => [],
+            'data' => []
         ];
 
-        // Mock data tren penjualan mingguan (Senin - Minggu)
-        $weeklySales = [
-            'labels' => ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'],
-            'data' => [3200000, 4100000, 3800000, 4900000, 5200000, 6800000, 5420000]
-        ];
+        // Set locale ke Bahasa Indonesia untuk penamaan hari
+        Carbon::setLocale('id');
 
-        // Mock data transaksi terbaru
-        $recentTransactions = [
-            [
-                'invoice' => 'TRX-20260629-001',
-                'customer' => 'Budi Santoso',
-                'time' => '11:45',
-                'items_count' => 3,
-                'total' => 125000,
-                'status' => 'success',
-                'payment_method' => 'QRIS'
-            ],
-            [
-                'invoice' => 'TRX-20260629-002',
-                'customer' => 'Siti Aminah',
-                'time' => '11:30',
-                'items_count' => 1,
-                'total' => 45000,
-                'status' => 'success',
-                'payment_method' => 'Tunai'
-            ],
-            [
-                'invoice' => 'TRX-20260629-003',
-                'customer' => 'Agus Wijaya',
-                'time' => '11:15',
-                'items_count' => 5,
-                'total' => 380000,
-                'status' => 'pending',
-                'payment_method' => 'Transfer'
-            ],
-            [
-                'invoice' => 'TRX-20260629-004',
-                'customer' => 'Lani Siregar',
-                'time' => '10:50',
-                'items_count' => 2,
-                'total' => 95000,
-                'status' => 'success',
-                'payment_method' => 'Tunai'
-            ],
-            [
-                'invoice' => 'TRX-20260629-005',
-                'customer' => 'Dewi Lestari',
-                'time' => '10:10',
-                'items_count' => 4,
-                'total' => 220000,
-                'status' => 'success',
-                'payment_method' => 'QRIS'
-            ]
-        ];
+        $now = Carbon::now();
+        for ($i = 6; $i >= 0; $i--) {
+            $date = (clone $now)->subDays($i);
+            $dayName = $date->translatedFormat('l'); // e.g. 'Senin', 'Selasa'
+            $totalSales = (float) Transaction::whereDate('created_at', $date->toDateString())
+                ->where('status', 'success')
+                ->sum('total_harga');
 
-        return view('dashboard', compact('stats', 'weeklySales', 'recentTransactions'));
+            $tren_penjualan_mingguan['labels'][] = $dayName;
+            $tren_penjualan_mingguan['data'][] = $totalSales;
+        }
+
+        return view('dashboard', compact(
+            'total_stok',
+            'total_penjualan_hari_ini',
+            'total_transaksi',
+            'stok_menipis',
+            'aktivitas_kasir',
+            'laporan_keuangan_bulanan',
+            'tren_penjualan_mingguan'
+        ));
     }
 }

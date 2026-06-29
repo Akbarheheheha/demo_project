@@ -15,7 +15,11 @@ class RedirectIfLoggedIn
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (session('logged_in')) {
+        if (\Illuminate\Support\Facades\Auth::check()) {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            if ($user->hasRole('Kasir')) {
+                return redirect()->route('pos');
+            }
             return redirect()->route('dashboard');
         }
 
