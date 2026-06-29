@@ -138,7 +138,7 @@ class ReportController extends Controller
             'last_year' => [15000000, 16800000, 19200000, 22000000, 25400000, 28100000]
         ];
 
-        return compact('financialSummary', 'categoryPerformance', 'topProducts', 'monthlyComparison');
+        return compact('financialSummary', 'categoryPerformance', 'topProducts', 'monthlyComparison', 'transactions');
     }
 
     private function calculateGrossProfit(Carbon $startOfMonth, Carbon $endOfMonth): float
