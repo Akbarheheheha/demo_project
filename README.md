@@ -163,4 +163,4 @@ composer test
 
 ## 📄 License
 
-MIT License — dibuat dengan ❤️ menggunakan Laravel, Tailwind CSS, Alpine.js, dan Chart.js.
+MIT License — dibuat menggunakan Laravel, Tailwind CSS, Alpine.js, dan Chart.js.
