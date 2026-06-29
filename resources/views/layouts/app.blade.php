@@ -141,17 +141,18 @@
                     <span>Inventaris</span>
                 </a>
                 
-                <!-- Laporan Link (Dummy) -->
-                <a href="#" @click.prevent="$dispatch('show-toast', { message: 'Fitur Laporan akan hadir pada modul berikutnya!', type: 'info' })"
-                   class="flex items-center gap-3.5 px-4 py-3 rounded-xl hover:bg-slate-800/60 hover:text-white transition-all duration-200">
+                <!-- Laporan Link -->
+                <a href="{{ route('reports') }}" 
+                   class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
+                   :class="activePage === 'reports' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'">
                     <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
                     <span>Laporan</span>
-                    <span class="ml-auto text-[10px] font-semibold bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full">Pro</span>
                 </a>
                 
-                <!-- Pengaturan Link (Dummy) -->
-                <a href="#" @click.prevent="$dispatch('show-toast', { message: 'Fitur Pengaturan akan hadir pada modul berikutnya!', type: 'info' })"
-                   class="flex items-center gap-3.5 px-4 py-3 rounded-xl hover:bg-slate-800/60 hover:text-white transition-all duration-200">
+                <!-- Pengaturan Link -->
+                <a href="{{ route('settings') }}" 
+                   class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
+                   :class="activePage === 'settings' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'">
                     <i data-lucide="settings" class="w-5 h-5"></i>
                     <span>Pengaturan</span>
                 </a>
