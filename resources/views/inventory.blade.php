@@ -13,19 +13,25 @@
             <p class="text-sm text-slate-500">Kelola inventaris barang dagangan, harga beli/jual, dan lihat log keluar-masuk stok.</p>
         </div>
         
-        <!-- Tambah Barang Button -->
+        <!-- Tambah Barang Button (Only Super Admin or Manager) -->
+        @hasanyrole('Super Admin|Manager')
         <button @click="openAddModal()" 
                 class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:shadow-lg hover:shadow-indigo-600/20 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all">
-            <i data-lucide="plus" class="w-4 h-4"></i>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
+            </svg>
             <span>Tambah Barang</span>
         </button>
+        @endhasanyrole
     </div>
     
     <!-- Filter Panel -->
     <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
         <!-- Search bar -->
         <div class="w-full md:w-80 flex items-center gap-2 bg-slate-100 rounded-xl px-3 py-2 text-slate-500 border border-slate-100 focus-within:border-indigo-400 focus-within:bg-white transition-all duration-200">
-            <i data-lucide="search" class="w-4 h-4"></i>
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
             <input type="text" 
                    placeholder="Cari SKU atau nama barang..." 
                    x-model="searchQuery"
@@ -36,7 +42,9 @@
         <div class="w-full md:w-auto flex flex-col sm:flex-row items-center gap-3">
             <!-- Category Filter dropdown -->
             <div class="w-full sm:w-44 flex items-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-1.5 text-xs text-slate-600">
-                <i data-lucide="filter" class="w-3.5 h-3.5 text-slate-400 mr-1.5"></i>
+                <svg class="w-3.5 h-3.5 text-slate-450 mr-1.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                </svg>
                 <select x-model="selectedCategory" class="bg-transparent border-none focus:outline-none w-full font-semibold">
                     <option value="all">Semua Kategori</option>
                     <template x-for="cat in categories" :key="cat">
@@ -45,26 +53,26 @@
                 </select>
             </div>
             
-            <!-- Stock Alert Filter pills -->
+            <!-- Stock Alert Filter pills / Tab Navigation -->
             <div class="w-full sm:w-auto flex items-center bg-slate-100 p-1 rounded-xl gap-1">
                 <button @click="stockFilter = 'all'"
                         :class="stockFilter === 'all' ? 'bg-white text-slate-800 shadow-sm font-bold' : 'text-slate-500 hover:text-slate-700'"
-                        class="px-3 py-1 rounded-lg text-[10px] font-semibold transition-all">
+                        class="px-3 py-1.5 rounded-lg text-[10px] font-semibold transition-all">
                     Semua
                 </button>
                 <button @click="stockFilter = 'normal'"
                         :class="stockFilter === 'normal' ? 'bg-white text-emerald-700 shadow-sm font-bold' : 'text-slate-500 hover:text-emerald-600'"
-                        class="px-3 py-1 rounded-lg text-[10px] font-semibold transition-all">
+                        class="px-3 py-1.5 rounded-lg text-[10px] font-semibold transition-all">
                     Stok Aman
                 </button>
                 <button @click="stockFilter = 'low'"
                         :class="stockFilter === 'low' ? 'bg-white text-amber-700 shadow-sm font-bold' : 'text-slate-500 hover:text-amber-600'"
-                        class="px-3 py-1 rounded-lg text-[10px] font-semibold transition-all">
-                    Menipis
+                        class="px-3 py-1.5 rounded-lg text-[10px] font-semibold transition-all">
+                    Stok Menipis
                 </button>
                 <button @click="stockFilter = 'out'"
                         :class="stockFilter === 'out' ? 'bg-white text-rose-700 shadow-sm font-bold' : 'text-slate-500 hover:text-rose-600'"
-                        class="px-3 py-1 rounded-lg text-[10px] font-semibold transition-all">
+                        class="px-3 py-1.5 rounded-lg text-[10px] font-semibold transition-all">
                     Habis
                 </button>
             </div>
@@ -116,7 +124,7 @@
                             <!-- Stok & Badges -->
                             <td class="px-6 py-3.5 text-center">
                                 <div class="flex items-center justify-center gap-1.5">
-                                    <span class="font-bold" x-text="item.stock"></span>
+                                    <span class="font-bold text-slate-800" x-text="item.stock"></span>
                                     
                                     <!-- Dynamic Badge status based on Stock Status -->
                                     <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wide"
@@ -147,29 +155,37 @@
                                 <span x-text="Math.round(((item.selling_price - item.purchase_price) / item.selling_price) * 100) + '%'"></span>
                             </td>
                             
-                            <!-- Actions -->
+                            <!-- Actions Column (Always rendered, buttons protected by role) -->
                             <td class="px-6 py-3.5 text-center">
                                 <div class="flex items-center justify-center gap-1">
-                                    <!-- Mutation history -->
+                                    <!-- Mutation history (Available to all roles) -->
                                     <button @click="openMutationModal(item)"
                                             title="Riwayat Mutasi Stok"
                                             class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                                        <i data-lucide="history" class="w-4 h-4"></i>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
                                     </button>
                                     
-                                    <!-- Edit -->
+                                    @hasanyrole('Super Admin|Manager')
+                                    <!-- Edit (Protected by Role) -->
                                     <button @click="openEditModal(item)"
                                             title="Edit Barang"
                                             class="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
-                                        <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
                                     </button>
                                     
-                                    <!-- Delete -->
+                                    <!-- Delete (Protected by Role) -->
                                     <button @click="deleteProduct(item)"
                                             title="Hapus Barang"
                                             class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
-                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
                                     </button>
+                                    @endhasanyrole
                                 </div>
                             </td>
                         </tr>
@@ -195,7 +211,9 @@
                 <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                     <h3 class="font-bold text-slate-800 text-sm">Tambah Barang Baru</h3>
                     <button @click="showAddModal = false" :disabled="isSaving" class="text-slate-400 hover:text-slate-600">
-                        <i data-lucide="x" class="w-5 h-5"></i>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
                     </button>
                 </div>
                 
@@ -282,7 +300,9 @@
                         <p class="text-[10px] text-slate-400 mt-0.5" x-text="'SKU: ' + form.sku"></p>
                     </div>
                     <button @click="showEditModal = false" :disabled="isSaving" class="text-slate-400 hover:text-slate-600">
-                        <i data-lucide="x" class="w-5 h-5"></i>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
                     </button>
                 </div>
                 
@@ -363,7 +383,9 @@
                         <p class="text-[10px] text-slate-500 mt-0.5" x-text="selectedProductForMutation ? selectedProductForMutation.name + ' (' + selectedProductForMutation.sku + ')' : ''"></p>
                     </div>
                     <button @click="showMutationModal = false" class="text-slate-400 hover:text-slate-600">
-                        <i data-lucide="x" class="w-5 h-5"></i>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
                     </button>
                 </div>
                 
@@ -376,12 +398,16 @@
                             <div class="flex gap-4 items-start p-3 border border-slate-100 rounded-2xl hover:border-slate-200 transition-colors">
                                 <div class="p-2 rounded-xl flex items-center justify-center flex-shrink-0"
                                      :class="mut.type === 'IN' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'">
-                                    <!-- IN or OUT icon -->
+                                    
                                     <template x-if="mut.type === 'IN'">
-                                        <i data-lucide="arrow-down-left" class="w-4 h-4"></i>
+                                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                                        </svg>
                                     </template>
                                     <template x-if="mut.type === 'OUT'">
-                                        <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+                                        <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+                                        </svg>
                                     </template>
                                 </div>
                                 <div class="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -424,6 +450,7 @@
 
 </div>
 
+@push('scripts')
 <script>
 function inventoryComponent() {
     return {
@@ -516,10 +543,9 @@ function inventoryComponent() {
         openMutationModal(item) {
             this.selectedProductForMutation = item;
             this.showMutationModal = true;
-            setTimeout(() => lucide.createIcons(), 50);
         },
         
-        // Save New Product (Axios Mock)
+        // Save New Product (Axios POST)
         async addProduct() {
             if (!this.form.name.trim() || !this.form.sku.trim()) {
                 this.$dispatch('show-toast', { message: 'Nama barang dan SKU wajib diisi!', type: 'danger' });
@@ -549,12 +575,6 @@ function inventoryComponent() {
                 this.$dispatch('show-toast', { message: 'Barang ' + newProduct.name + ' berhasil ditambahkan!', type: 'success' });
                 this.showAddModal = false;
                 this.resetForm();
-
-                setTimeout(() => {
-                    if (window.lucide) {
-                        window.lucide.createIcons();
-                    }
-                }, 50);
             } catch (error) {
                 console.error(error);
                 this.$dispatch('show-toast', { message: 'Gagal menambahkan barang.', type: 'danger' });
@@ -563,7 +583,7 @@ function inventoryComponent() {
             }
         },
         
-        // Edit Product
+        // Edit Product (Axios PUT)
         async editProduct() {
             if (!this.form.name.trim()) {
                 this.$dispatch('show-toast', { message: 'Nama barang wajib diisi!', type: 'danger' });
@@ -610,11 +630,11 @@ function inventoryComponent() {
             }
         },
         
-        // Delete Product (Axios Mock)
+        // Delete Product (Axios DELETE)
         async deleteProduct(item) {
             if (confirm('Apakah Anda yakin ingin menghapus barang ' + item.name + '?')) {
                 try {
-                    // Axios DELETE Mock
+                    // Axios DELETE
                     const response = await axios.delete('/api/inventory/delete/' + item.id);
                     
                     this.inventory = this.inventory.filter(prod => prod.id !== item.id);
@@ -628,4 +648,5 @@ function inventoryComponent() {
     };
 }
 </script>
+@endpush
 @endsection

@@ -232,130 +232,183 @@
         </div>
     </div>
 
+    <!-- Table: Semua Transaksi Penjualan (Real Database) -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden mt-6">
+        <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+            <div>
+                <h3 class="font-bold text-slate-800 text-base">Riwayat Lengkap Transaksi Penjualan</h3>
+                <p class="text-xs text-slate-400">Daftar transaksi penjualan terdaftar dalam database.</p>
+            </div>
+            <span class="text-[10px] font-bold bg-indigo-50 text-indigo-700 px-3 py-1 rounded-xl uppercase tracking-wider">Database Real</span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/50 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                        <th class="px-6 py-4">Nomor Invoice</th>
+                        <th class="px-6 py-4">Operator / Kasir</th>
+                        <th class="px-6 py-4">Tanggal Transaksi</th>
+                        <th class="px-6 py-4 text-right">Total Nominal</th>
+                        <th class="px-6 py-4 text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs">
+                    @forelse($transactions as $trx)
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="px-6 py-3.5 font-mono font-bold text-slate-800">{{ $trx->invoice }}</td>
+                            <td class="px-6 py-3.5 font-semibold text-slate-800">{{ $trx->user ? $trx->user->name : 'Sistem' }}</td>
+                            <td class="px-6 py-3.5 text-slate-500 font-medium">{{ $trx->created_at->format('d M Y H:i') }}</td>
+                            <td class="px-6 py-3.5 text-right font-black text-indigo-600">Rp {{ number_format($trx->total_harga, 0, ',', '.') }}</td>
+                            <td class="px-6 py-3.5 text-center">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider {{ $trx->status === 'success' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600' }}">
+                                    {{ $trx->status }}
+                                </span>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="text-center py-12 text-slate-400 font-semibold">
+                                Belum ada data transaksi penjualan di database.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 
+@push('scripts')
 <!-- Chart.js Library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // --- 1. Monthly Comparison Chart (Line / Area) ---
-        const comparisonCtx = document.getElementById('monthlyComparisonChart').getContext('2d');
-        const compData = @json($monthlyComparison);
-        
-        // Gradients
-        const gradThisYear = comparisonCtx.createLinearGradient(0, 0, 0, 240);
-        gradThisYear.addColorStop(0, 'rgba(79, 70, 229, 0.25)');
-        gradThisYear.addColorStop(1, 'rgba(79, 70, 229, 0.0)');
-        
-        new Chart(comparisonCtx, {
-            type: 'line',
-            data: {
-                labels: compData.labels,
-                datasets: [
-                    {
-                        label: 'Tahun Ini (2026)',
-                        data: compData.this_year,
-                        borderColor: '#4f46e5',
-                        borderWidth: 3,
-                        backgroundColor: gradThisYear,
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#ffffff',
-                        pointBorderColor: '#4f46e5',
-                        pointBorderWidth: 2,
-                        pointRadius: 4
-                    },
-                    {
-                        label: 'Tahun Lalu (2025)',
-                        data: compData.last_year,
-                        borderColor: '#94a3b8',
-                        borderWidth: 2,
-                        borderDash: [5, 5],
-                        fill: false,
-                        tension: 0.4,
-                        pointBackgroundColor: '#ffffff',
-                        pointBorderColor: '#94a3b8',
-                        pointBorderWidth: 1.5,
-                        pointRadius: 3
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            font: { family: 'Outfit', size: 11 },
-                            boxWidth: 20
+        const comparisonCanvas = document.getElementById('monthlyComparisonChart');
+        if (comparisonCanvas) {
+            const comparisonCtx = comparisonCanvas.getContext('2d');
+            const compData = @json($monthlyComparison);
+            
+            // Gradients
+            const gradThisYear = comparisonCtx.createLinearGradient(0, 0, 0, 240);
+            gradThisYear.addColorStop(0, 'rgba(79, 70, 229, 0.25)');
+            gradThisYear.addColorStop(1, 'rgba(79, 70, 229, 0.0)');
+            
+            new Chart(comparisonCtx, {
+                type: 'line',
+                data: {
+                    labels: compData.labels,
+                    datasets: [
+                        {
+                            label: 'Tahun Ini (2026)',
+                            data: compData.this_year,
+                            borderColor: '#4f46e5',
+                            borderWidth: 3,
+                            backgroundColor: gradThisYear,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#ffffff',
+                            pointBorderColor: '#4f46e5',
+                            pointBorderWidth: 2,
+                            pointRadius: 4
+                        },
+                        {
+                            label: 'Tahun Lalu (2025)',
+                            data: compData.last_year,
+                            borderColor: '#94a3b8',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: false,
+                            tension: 0.4,
+                            pointBackgroundColor: '#ffffff',
+                            pointBorderColor: '#94a3b8',
+                            pointBorderWidth: 1.5,
+                            pointRadius: 3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { family: 'Outfit', size: 11 },
+                                boxWidth: 20
+                            }
+                        },
+                        tooltip: {
+                            padding: 10,
+                            cornerRadius: 10,
+                            bodyFont: { family: 'Outfit' }
                         }
                     },
-                    tooltip: {
-                        padding: 10,
-                        cornerRadius: 10,
-                        bodyFont: { family: 'Outfit' }
-                    }
-                },
-                scales: {
-                    x: { grid: { display: false }, ticks: { font: { family: 'Outfit', size: 10 } } },
-                    y: { 
-                        grid: { color: '#f1f5f9' },
-                        ticks: {
-                            font: { family: 'Outfit', size: 9 },
-                            callback: function(val) { return 'Rp ' + val / 1000000 + 'jt'; }
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { family: 'Outfit', size: 10 } } },
+                        y: { 
+                            grid: { color: '#f1f5f9' },
+                            ticks: {
+                                font: { family: 'Outfit', size: 9 },
+                                callback: function(val) { return 'Rp ' + val / 1000000 + 'jt'; }
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
 
         // --- 2. Category Performance Chart (Bar Chart) ---
-        const categoryCtx = document.getElementById('categoryPerformanceChart').getContext('2d');
-        const catData = @json($categoryPerformance);
-        
-        new Chart(categoryCtx, {
-            type: 'bar',
-            data: {
-                labels: catData.labels,
-                datasets: [{
-                    label: 'Omset Penjualan',
-                    data: catData.data,
-                    backgroundColor: [
-                        '#10b981', // Sembako (Emerald)
-                        '#f59e0b', // Makanan (Amber)
-                        '#0ea5e9', // Minuman (Sky)
-                        '#8b5cf6', // Cemilan (Purple)
-                        '#ec4899'  // Rumah Tangga (Pink)
-                    ],
-                    borderRadius: 8,
-                    maxBarThickness: 32
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        padding: 10,
-                        cornerRadius: 10,
-                        bodyFont: { family: 'Outfit' }
-                    }
+        const categoryCanvas = document.getElementById('categoryPerformanceChart');
+        if (categoryCanvas) {
+            const categoryCtx = categoryCanvas.getContext('2d');
+            const catData = @json($categoryPerformance);
+            
+            new Chart(categoryCtx, {
+                type: 'bar',
+                data: {
+                    labels: catData.labels,
+                    datasets: [{
+                        label: 'Omset Penjualan',
+                        data: catData.data,
+                        backgroundColor: [
+                            '#10b981', // Sembako (Emerald)
+                            '#f59e0b', // Makanan (Amber)
+                            '#0ea5e9', // Minuman (Sky)
+                            '#8b5cf6', // Cemilan (Purple)
+                            '#ec4899'  // Rumah Tangga (Pink)
+                        ],
+                        borderRadius: 8,
+                        maxBarThickness: 32
+                    }]
                 },
-                scales: {
-                    x: { grid: { display: false }, ticks: { font: { family: 'Outfit', size: 10 } } },
-                    y: { 
-                        grid: { color: '#f1f5f9' },
-                        ticks: {
-                            font: { family: 'Outfit', size: 9 },
-                            callback: function(val) { return 'Rp ' + val / 1000000 + 'jt'; }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            padding: 10,
+                            cornerRadius: 10,
+                            bodyFont: { family: 'Outfit' }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { family: 'Outfit', size: 10 } } },
+                        y: { 
+                            grid: { color: '#f1f5f9' },
+                            ticks: {
+                                font: { family: 'Outfit', size: 9 },
+                                callback: function(val) { return 'Rp ' + val / 1000000 + 'jt'; }
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
     });
 </script>
+@endpush
 @endsection

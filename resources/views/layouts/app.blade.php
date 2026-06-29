@@ -159,14 +159,14 @@
                 @endhasanyrole
                 
                 <!-- Laporan Link (Super Admin Only) -->
-                @role('Super Admin')
+                <!-- @role('Super Admin')
                 <a href="{{ route('reports') }}" 
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
-                   :class="activePage === 'reports' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'">
+                   :class="activePage === 'reports' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white' ">
                     <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
                     <span>Laporan Keuangan</span>
                 </a>
-                @endrole
+                @endrole -->
                 
                 <!-- Pengaturan Link (Super Admin Only) -->
                 @role('Super Admin')
@@ -353,6 +353,9 @@
             // Ignore hashes, javascript:, external links, and logout
             if (href.startsWith('#') || href.startsWith('javascript:') || href.includes('logout') || link.getAttribute('target') === '_blank') return;
             
+            // Ignore native full-page hard navigation request
+            if (link.getAttribute('data-spa') === 'false' || link.getAttribute('data-turbo') === 'false') return;
+            
             // Validate internal origin
             try {
                 const url = new URL(link.href, window.location.href);
@@ -462,8 +465,8 @@
                     
                     // --- Execute scripts inside swapped content ---
                     // Separate external and inline scripts, maintain order
-                    if (currentMain) {
-                        executeScriptsAsync(currentMain);
+                    if (newMain) {
+                        executeScriptsAsync(doc);
                     }
                     
                     setTimeout(function() {
@@ -481,8 +484,8 @@
         }
 
         // Async script executor – loads external scripts first, then runs inline scripts
-        async function executeScriptsAsync(container) {
-            const scripts = Array.from(container.querySelectorAll('script'));
+        async function executeScriptsAsync(parsedDoc) {
+            const scripts = Array.from(parsedDoc.querySelectorAll('script'));
             
             // Phase 1: Load all external scripts (CDNs like Chart.js)
             const externalLoads = [];
@@ -499,7 +502,10 @@
             // Phase 2: Initialize Alpine on new content BEFORE running inline scripts
             // This ensures x-data components are alive and functional
             if (window.Alpine) {
-                Alpine.initTree(container);
+                const currentMain = document.querySelector('main');
+                if (currentMain) {
+                    Alpine.initTree(currentMain);
+                }
             }
 
             // Phase 3: Run inline scripts (with DOMContentLoaded unwrapped)
@@ -512,7 +518,7 @@
                 // Unwrap DOMContentLoaded so the code executes immediately
                 const code = unwrapDCL(oldScript.innerHTML);
                 newScript.appendChild(document.createTextNode(code));
-                oldScript.parentNode.replaceChild(newScript, oldScript);
+                document.body.appendChild(newScript);
             });
             
             // Phase 4: Re-create Lucide icons after Alpine has rendered all templates
@@ -533,5 +539,6 @@
             }
         });
     </script>
+    @stack('scripts')
 </body>
 </html>

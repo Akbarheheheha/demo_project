@@ -8,15 +8,26 @@ class ReportController extends Controller
 {
     public function index()
     {
-        // Mock data rangkuman keuangan
+        // Query real database finance recap
+        $totalOmzet = (float) \App\Models\Transaction::where('status', 'success')->sum('total_harga');
+        $totalTrx = \App\Models\Transaction::count();
+        
+        // Simulasikan HPP 75% dari omzet untuk kalkulasi keuangan
+        $cogs = $totalOmzet * 0.75;
+        $grossProfit = $totalOmzet - $cogs;
+        $avgTicket = $totalTrx > 0 ? ($totalOmzet / $totalTrx) : 0.0;
+
         $financialSummary = [
-            'net_revenue' => 34840000, // Pendapatan Bersih
-            'cogs' => 28200000,        // HPP (Harga Pokok Penjualan)
-            'gross_profit' => 6640000,  // Laba Kotor
-            'average_ticket' => 65200,  // Rata-rata Nilai Transaksi
-            'revenue_growth' => 14.8,   // % pertumbuhan bulanan
-            'profit_growth' => 18.2     // % pertumbuhan laba bulanan
+            'net_revenue' => $totalOmzet,
+            'cogs' => $cogs,
+            'gross_profit' => $grossProfit,
+            'average_ticket' => $avgTicket,
+            'revenue_growth' => 12.5,
+            'profit_growth' => 15.0
         ];
+
+        // Fetch transactions with user relationship to avoid N+1 queries
+        $transactions = \App\Models\Transaction::with('user')->orderBy('created_at', 'desc')->get();
 
         // Mock data performa kategori produk (untuk Bar Chart)
         $categoryPerformance = [
@@ -75,6 +86,6 @@ class ReportController extends Controller
             'last_year' => [15000000, 16800000, 19200000, 22000000, 25400000, 28100000]
         ];
 
-        return view('reports', compact('financialSummary', 'categoryPerformance', 'topProducts', 'monthlyComparison'));
+        return view('reports', compact('financialSummary', 'categoryPerformance', 'topProducts', 'monthlyComparison', 'transactions'));
     }
 }
