@@ -149,14 +149,14 @@
                 @endhasanyrole
                 
                 <!-- Laporan Link (Super Admin Only) -->
-                <!-- @role('Super Admin')
+                @role('Super Admin')
                 <a href="{{ route('reports') }}" 
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
                    :class="activePage === 'reports' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white' ">
                     <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
                     <span>Laporan Keuangan</span>
                 </a>
-                @endrole -->
+                @endrole
                 
                 <!-- Pengaturan Link (Super Admin Only) -->
                 @role('Super Admin')
@@ -323,6 +323,8 @@
         </div>
     </div>
     
+    @stack('scripts')
+
     <script>
         // Save initial state for browser navigation
         window.history.replaceState({ url: window.location.href }, document.title, window.location.href);
@@ -467,7 +469,12 @@
 
         // Async script executor – loads external scripts first, then runs inline scripts
         async function executeScriptsAsync(parsedDoc) {
-            const scripts = Array.from(parsedDoc.querySelectorAll('script'));
+            const scripts = Array.from(parsedDoc.querySelectorAll('script')).filter(function(script) {
+                return script.type !== 'module'
+                    && !script.innerHTML.includes('function spaNavigate(')
+                    && !script.innerHTML.includes('window.history.replaceState');
+            });
+            const container = document.querySelector('main');
             
             // Phase 1: Load all external scripts (CDNs like Chart.js)
             const externalLoads = [];
@@ -481,13 +488,7 @@
                 try { await Promise.all(externalLoads); } catch(e) { console.error('Failed to load external script:', e); }
             }
 
-            // Phase 2: Initialize Alpine on new content BEFORE running inline scripts
-            // This ensures x-data components are alive and functional
-            if (window.Alpine) {
-                Alpine.initTree(container);
-            }
-
-            // Phase 3: Run inline scripts (with DOMContentLoaded unwrapped)
+            // Phase 2: Run inline scripts (with DOMContentLoaded unwrapped)
             scripts.forEach(function(oldScript) {
                 if (oldScript.src) return; // Skip externals, already loaded
                 const newScript = document.createElement('script');

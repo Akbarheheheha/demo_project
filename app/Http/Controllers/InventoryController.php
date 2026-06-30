@@ -29,7 +29,8 @@ class InventoryController extends Controller
                 'stock' => $item->stock,
                 'min_stock' => $item->min_stock,
                 'purchase_price' => (float) $item->purchase_price,
-                'selling_price' => (float) $item->price
+                'selling_price' => (float) $item->price,
+                'price' => (float) $item->price
             ];
         });
 

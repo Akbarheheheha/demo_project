@@ -15,7 +15,18 @@ class Product extends Model
         'category',
         'purchase_price',
         'price',
+        'selling_price',
         'stock',
         'min_stock',
     ];
+
+    public function getSellingPriceAttribute($value)
+    {
+        return $value ?? $this->price;
+    }
+
+    public function getPriceAttribute($value)
+    {
+        return $value;
+    }
 }

@@ -67,13 +67,10 @@ class DashboardController extends Controller
             $dateString = $date->toDateString();
             $dayName = $date->translatedFormat('l'); // e.g. 'Senin', 'Selasa'
             
-            // Format standard key lookup (beberapa DB return date string tanpa time)
+            // Gunakan date string langsung (seperti yang disimpan di database)
             $totalSales = 0.0;
-            foreach ($salesData as $d => $val) {
-                if (date('Y-m-d', strtotime($d)) === $dateString) {
-                    $totalSales = (float) $val;
-                    break;
-                }
+            if (array_key_exists($dateString, $salesData)) {
+                $totalSales = (float) $salesData[$dateString];
             }
 
             $tren_penjualan_mingguan['labels'][] = $dayName;
