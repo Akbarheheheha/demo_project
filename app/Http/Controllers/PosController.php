@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Services\PosService;
-use Illuminate\Http\Request;
 use Exception;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\View\View;
 
 class PosController extends Controller
 {
@@ -13,8 +16,6 @@ class PosController extends Controller
 
     /**
      * PosController constructor.
-     *
-     * @param PosService $posService
      */
     public function __construct(PosService $posService)
     {
@@ -24,19 +25,19 @@ class PosController extends Controller
     /**
      * Display a listing of the products for POS.
      *
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function index()
     {
         $products = Product::all();
+
         return view('pos.index', compact('products'));
     }
 
     /**
      * Store a newly created transaction in storage.
      *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function store(Request $request)
     {
@@ -48,7 +49,10 @@ class PosController extends Controller
 
         try {
             $transaction = $this->posService->processCheckout($request->input('items'));
-            return redirect()->back()->with('success', 'Transaksi Berhasil! Nomor Invoice: ' . $transaction->invoice);
+
+            Cache::tags(['reports', 'sales-summary'])->flush();
+
+            return redirect()->back()->with('success', 'Transaksi Berhasil! Nomor Invoice: '.$transaction->invoice);
         } catch (Exception $e) {
             return redirect()->back()->withInput()->withErrors(['checkout_error' => $e->getMessage()]);
         }

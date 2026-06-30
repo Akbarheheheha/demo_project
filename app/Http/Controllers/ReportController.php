@@ -6,8 +6,11 @@ use App\Exports\FinancialReportExport;
 use App\Models\Expense;
 use App\Models\Transaction;
 use App\Models\TransactionDetail;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
@@ -21,28 +24,28 @@ class ReportController extends Controller
     public function exportPdf()
     {
         abort_unless(
-            class_exists(\Barryvdh\DomPDF\Facade\Pdf::class),
+            class_exists(Pdf::class),
             500,
             'Package barryvdh/laravel-dompdf belum terpasang. Jalankan: composer require barryvdh/laravel-dompdf'
         );
 
         $reportData = $this->buildMonthlyReportData();
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.pdf', $reportData)->setPaper('a4', 'portrait');
+        $pdf = Pdf::loadView('reports.pdf', $reportData)->setPaper('a4', 'portrait');
 
-        return $pdf->download('laporan-keuangan-' . now()->format('Y-m') . '.pdf');
+        return $pdf->download('laporan-keuangan-'.now()->format('Y-m').'.pdf');
     }
 
     public function exportExcel()
     {
         abort_unless(
-            class_exists(\Maatwebsite\Excel\Facades\Excel::class),
+            class_exists(Excel::class),
             500,
             'Package maatwebsite/excel belum terpasang. Jalankan: composer require maatwebsite/excel'
         );
 
-        return \Maatwebsite\Excel\Facades\Excel::download(
+        return Excel::download(
             new FinancialReportExport($this->buildMonthlyReportData()),
-            'laporan-keuangan-' . now()->format('Y-m') . '.xlsx'
+            'laporan-keuangan-'.now()->format('Y-m').'.xlsx'
         );
     }
 
@@ -51,40 +54,15 @@ class ReportController extends Controller
         $startOfMonth = Carbon::now()->startOfMonth();
         $endOfMonth = Carbon::now()->endOfMonth();
 
-        $successfulTransactions = Transaction::query()
-            ->where('status', 'success')
-            ->whereBetween('created_at', [$startOfMonth, $endOfMonth]);
-
-        $totalOmzet = (float) (clone $successfulTransactions)->sum('total_harga');
-        $jumlahTransaksi = (int) (clone $successfulTransactions)->count();
-        $averageTicket = $jumlahTransaksi > 0 ? $totalOmzet / $jumlahTransaksi : 0;
-
-        $grossProfit = $this->calculateGrossProfit($startOfMonth, $endOfMonth);
-
-        $totalPengeluaran = (float) Expense::query()
-            ->whereBetween('tanggal', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
-            ->sum('nominal');
-
-        $netRevenue = $grossProfit - $totalPengeluaran;
-
-        $financialSummary = [
-            'total_omzet' => $totalOmzet,
-            'gross_profit' => $grossProfit,
-            'total_pengeluaran' => $totalPengeluaran,
-            'net_revenue' => $netRevenue,
-            'average_ticket' => $averageTicket,
-            'jumlah_transaksi' => $jumlahTransaksi,
-            'revenue_growth' => 0,
-            'profit_growth' => 0,
-        ];
+        $financialSummary = $this->getMonthlyFinancialSummary($startOfMonth, $endOfMonth);
 
         // Fetch transactions with user relationship to avoid N+1 queries
-        $transactions = \App\Models\Transaction::with('user')->orderBy('created_at', 'desc')->get();
+        $transactions = Transaction::with('user')->orderBy('created_at', 'desc')->get();
 
         // Mock data performa kategori produk (untuk Bar Chart)
         $categoryPerformance = [
             'labels' => ['Sembako', 'Makanan', 'Minuman', 'Cemilan', 'Rumah Tangga'],
-            'data' => [14200000, 8900000, 5400000, 3800000, 2540000]
+            'data' => [14200000, 8900000, 5400000, 3800000, 2540000],
         ];
 
         // Mock data penjualan terlaris (Top Selling Products)
@@ -95,7 +73,7 @@ class ReportController extends Controller
                 'category' => 'Sembako',
                 'sold_qty' => 120,
                 'total_revenue' => 9360000,
-                'margin' => '12.8%'
+                'margin' => '12.8%',
             ],
             [
                 'sku' => 'MKN-001',
@@ -103,7 +81,7 @@ class ReportController extends Controller
                 'category' => 'Makanan',
                 'sold_qty' => 840,
                 'total_revenue' => 2940000,
-                'margin' => '20%'
+                'margin' => '20%',
             ],
             [
                 'sku' => 'SMB-002',
@@ -111,7 +89,7 @@ class ReportController extends Controller
                 'category' => 'Sembako',
                 'sold_qty' => 75,
                 'total_revenue' => 2887500,
-                'margin' => '14.2%'
+                'margin' => '14.2%',
             ],
             [
                 'sku' => 'MNM-003',
@@ -119,7 +97,7 @@ class ReportController extends Controller
                 'category' => 'Minuman',
                 'sold_qty' => 450,
                 'total_revenue' => 1800000,
-                'margin' => '37.5%'
+                'margin' => '37.5%',
             ],
             [
                 'sku' => 'SNC-002',
@@ -127,18 +105,54 @@ class ReportController extends Controller
                 'category' => 'Cemilan',
                 'sold_qty' => 95,
                 'total_revenue' => 1567500,
-                'margin' => '21.2%'
-            ]
+                'margin' => '21.2%',
+            ],
         ];
 
         // Mock data tren bulanan perbandingan (Tahun Ini vs Tahun Lalu)
         $monthlyComparison = [
             'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
             'this_year' => [18500000, 22400000, 25800000, 29000000, 31200000, 34840000],
-            'last_year' => [15000000, 16800000, 19200000, 22000000, 25400000, 28100000]
+            'last_year' => [15000000, 16800000, 19200000, 22000000, 25400000, 28100000],
         ];
 
         return compact('financialSummary', 'categoryPerformance', 'topProducts', 'monthlyComparison', 'transactions');
+    }
+
+    private function getMonthlyFinancialSummary(Carbon $startOfMonth, Carbon $endOfMonth): array
+    {
+        $cacheKey = sprintf(
+            'reports:sales-summary:%s:%s',
+            $startOfMonth->toDateString(),
+            $endOfMonth->toDateString()
+        );
+
+        return Cache::tags(['reports', 'sales-summary'])
+            ->remember($cacheKey, now()->addHour(), function () use ($startOfMonth, $endOfMonth): array {
+                $successfulTransactions = Transaction::query()
+                    ->where('status', 'success')
+                    ->whereBetween('created_at', [$startOfMonth, $endOfMonth]);
+
+                $totalOmzet = (float) (clone $successfulTransactions)->sum('total_harga');
+                $jumlahTransaksi = (int) (clone $successfulTransactions)->count();
+                $averageTicket = $jumlahTransaksi > 0 ? $totalOmzet / $jumlahTransaksi : 0;
+                $grossProfit = $this->calculateGrossProfit($startOfMonth, $endOfMonth);
+
+                $totalPengeluaran = (float) Expense::query()
+                    ->whereBetween('tanggal', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
+                    ->sum('nominal');
+
+                return [
+                    'total_omzet' => $totalOmzet,
+                    'gross_profit' => $grossProfit,
+                    'total_pengeluaran' => $totalPengeluaran,
+                    'net_revenue' => $grossProfit - $totalPengeluaran,
+                    'average_ticket' => $averageTicket,
+                    'jumlah_transaksi' => $jumlahTransaksi,
+                    'revenue_growth' => 0,
+                    'profit_growth' => 0,
+                ];
+            });
     }
 
     private function calculateGrossProfit(Carbon $startOfMonth, Carbon $endOfMonth): float
