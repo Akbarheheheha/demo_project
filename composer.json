@@ -10,6 +10,7 @@
         "barryvdh/laravel-dompdf": "*",
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0",
+        "predis/predis": "^3.5",
         "spatie/laravel-permission": "*"
     },
     "require-dev": {
