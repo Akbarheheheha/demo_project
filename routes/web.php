@@ -29,6 +29,11 @@ Route::middleware(['auth.custom'])->group(function () {
         return redirect()->route('admin.dashboard');
     })->name('home');
 
+    // Profile Route
+    Route::get('/profile', function () {
+        return view('profile');
+    })->name('profile');
+
     // POS Routes (Accessible by Cashier and Super Admin)
     Route::middleware(['role:Kasir|Super Admin'])->group(function () {
         Route::get('/pos', [PosController::class, 'index'])->name('pos');

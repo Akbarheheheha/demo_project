@@ -27,10 +27,13 @@
           email: '{{ old('email') }}', 
           password: '', 
           showPassword: false,
-          fillDemo(roleEmail) {
+          fillDemoAndSubmit(roleEmail) {
               this.email = roleEmail;
               this.password = 'password';
-              this.$dispatch('show-toast', { message: 'Kredensial demo ' + roleEmail + ' diisi!', type: 'info' });
+              this.$dispatch('show-toast', { message: 'Menghubungkan sebagai ' + roleEmail + '...', type: 'info' });
+              this.$nextTick(() => {
+                  document.querySelector('form').submit();
+              });
           }
       }">
 
@@ -166,25 +169,6 @@
                     <span>Masuk Sistem</span>
                 </button>
             </form>
-            
-            <!-- Demo Accounts Helper Info Card -->
-            <div class="mt-6 p-4 bg-slate-900/60 border border-slate-850 rounded-2xl">
-                <h4 class="text-xs font-bold text-indigo-300 flex items-center gap-1.5 mb-2">
-                    <i data-lucide="info" class="w-4 h-4 text-indigo-400"></i>
-                    Akun Demo Pengujian (Sandi: password)
-                </h4>
-                <div class="grid grid-cols-3 gap-2">
-                    <button @click="fillDemo('admin@demo.com')" class="px-2 py-1.5 bg-slate-850 hover:bg-slate-800 text-[10px] font-bold rounded-lg text-slate-200 border border-slate-800 hover:border-indigo-500 transition-all">
-                        Super Admin
-                    </button>
-                    <button @click="fillDemo('manager@demo.com')" class="px-2 py-1.5 bg-slate-850 hover:bg-slate-800 text-[10px] font-bold rounded-lg text-slate-200 border border-slate-800 hover:border-indigo-500 transition-all">
-                        Manager
-                    </button>
-                    <button @click="fillDemo('kasir@demo.com')" class="px-2 py-1.5 bg-slate-850 hover:bg-slate-800 text-[10px] font-bold rounded-lg text-slate-200 border border-slate-800 hover:border-indigo-500 transition-all">
-                        Kasir
-                    </button>
-                </div>
-            </div>
             
         </div>
         

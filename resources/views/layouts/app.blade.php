@@ -34,11 +34,28 @@
             width: 0%;
             pointer-events: none;
         }
+        /* Moving gradient animation for sidebar */
+        @keyframes sidebar-gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        .sidebar-animate-bg {
+            background: linear-gradient(270deg, #1e1b4b, #330854ff);
+            background-size: 400% 400%;
+            animation: sidebar-gradient 12s ease infinite;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased font-sans" 
       data-active-page="@yield('active_page', 'dashboard')"
-      x-data="{ sidebarOpen: false, activePage: '@yield('active_page', 'dashboard')' }"
+      x-data="{ sidebarOpen: window.innerWidth >= 768, activePage: '@yield('active_page', 'dashboard')' }"
       @set-active-page.window="activePage = $event.detail"
       x-init="
         @if(session('login_success'))
@@ -93,37 +110,68 @@
     <!-- Layout Wrapper -->
     <div class="flex min-h-screen">
         
+        <!-- Sidebar Backdrop (Mobile Only) -->
+        <div x-show="sidebarOpen" 
+             @click="sidebarOpen = false" 
+             x-transition:enter="transition-opacity ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition-opacity ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 z-30 bg-slate-900/60 backdrop-blur-xs md:hidden"
+             style="display: none;"></div>
+        
         <!-- Sidebar Navigation -->
-        <aside class="fixed inset-y-0 left-0 z-40 w-64 transform bg-gradient-to-b from-slate-900 to-indigo-950 text-slate-300 transition-transform duration-300 ease-in-out md:translate-x-0"
-               :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
+        <aside class="fixed inset-y-0 left-0 z-40 transform sidebar-animate-bg text-slate-300 transition-all duration-300 ease-in-out"
+               :class="sidebarOpen ? 'w-64 translate-x-0' : 'w-20 md:translate-x-0 -translate-x-full'">
             
             <!-- Sidebar Header / Logo -->
-            <div class="flex h-16 items-center justify-between px-6 border-b border-slate-800">
-                <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5">
-                    <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 shadow-md shadow-indigo-500/20 text-white font-bold text-lg">
+            <div class="flex h-16 items-center border-b border-slate-800 transition-all duration-300"
+                 :class="sidebarOpen ? 'justify-between px-6' : 'justify-center px-0'">
+                
+                <!-- Logo & Brand (Only visible when sidebar is open) -->
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5" x-show="sidebarOpen" x-transition:enter="transition-opacity ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+                    <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 shadow-md shadow-indigo-500/20 text-white font-bold text-lg flex-shrink-0">
                         S
                     </div>
-                    <div>
+                    <div class="overflow-hidden whitespace-nowrap">
                         <h1 class="font-bold text-white tracking-wide text-md">SmartBiz ERP</h1>
                         <p class="text-[10px] text-indigo-400 font-medium">Mini ERP & Advanced POS</p>
                     </div>
                 </a>
-                
-                <!-- Close sidebar (Mobile Only) -->
-                <button class="rounded-lg p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white md:hidden" @click="sidebarOpen = false">
-                    <i data-lucide="x" class="h-5 w-5"></i>
+
+                <!-- Collapsed State Logo Button -->
+                <div x-show="!sidebarOpen" class="flex flex-col items-center justify-center">
+                    <button class="group flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-850 hover:text-white transition-all duration-200"
+                            @click="sidebarOpen = !sidebarOpen">
+                        <!-- Default text 'S' with logo gradient -->
+                        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 shadow-md shadow-indigo-500/20 text-white font-bold text-lg flex-shrink-0 group-hover:hidden">
+                            S
+                        </div>
+                        <!-- Hover icon 'panel-left-open' -->
+                        <i data-lucide="panel-left-open" class="hidden group-hover:block h-5 w-5"></i>
+                    </button>
+                </div>
+
+                <!-- Toggle Button inside Sidebar -->
+                <button x-show="sidebarOpen" 
+                        class="rounded-lg p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white transition-colors" 
+                        @click="sidebarOpen = !sidebarOpen">
+                    <i data-lucide="panel-left-close" class="h-5 w-5"></i>
                 </button>
             </div>
             
             <!-- Sidebar Navigation Links -->
-            <nav class="flex-1 space-y-1.5 px-4 py-6">
+            <nav class="flex-1 space-y-1.5 px-3 py-6" @click="if(window.innerWidth < 768) sidebarOpen = false">
                 <!-- Dashboard Link -->
                 @hasanyrole('Super Admin|Manager')
                 <a href="{{ route('admin.dashboard') }}" 
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
-                   :class="activePage === 'dashboard' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
-                    <span>Dashboard</span>
+                   :class="activePage === 'dashboard' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'"
+                   :title="!sidebarOpen ? 'Dashboard' : ''">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 flex-shrink-0"></i>
+                    <span x-show="sidebarOpen" x-transition.opacity>Dashboard</span>
                 </a>
                 @endhasanyrole
                 
@@ -131,9 +179,10 @@
                 @hasanyrole('Kasir|Super Admin')
                 <a href="{{ route('pos') }}" 
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
-                   :class="activePage === 'pos' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'">
-                    <i data-lucide="shopping-cart" class="w-5 h-5"></i>
-                    <span>Kasir POS</span>
+                   :class="activePage === 'pos' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'"
+                   :title="!sidebarOpen ? 'Kasir POS' : ''">
+                    <i data-lucide="shopping-cart" class="w-5 h-5 flex-shrink-0"></i>
+                    <span x-show="sidebarOpen" x-transition.opacity>Kasir POS</span>
                 </a>
                 @endhasanyrole
                 
@@ -142,9 +191,10 @@
                 <a href="{{ route('inventory') }}" 
                    data-spa-ignore
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
-                   :class="activePage === 'inventory' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'">
-                    <i data-lucide="package" class="w-5 h-5"></i>
-                    <span>Inventaris</span>
+                   :class="activePage === 'inventory' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'"
+                   :title="!sidebarOpen ? 'Inventaris' : ''">
+                    <i data-lucide="package" class="w-5 h-5 flex-shrink-0"></i>
+                    <span x-show="sidebarOpen" x-transition.opacity>Inventaris</span>
                 </a>
                 @endhasanyrole
                 
@@ -152,9 +202,10 @@
                 @role('Super Admin')
                 <a href="{{ route('reports') }}" 
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
-                   :class="activePage === 'reports' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white' ">
-                    <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
-                    <span>Laporan Keuangan</span>
+                   :class="activePage === 'reports' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white' "
+                   :title="!sidebarOpen ? 'Laporan Keuangan' : ''">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5 flex-shrink-0"></i>
+                    <span x-show="sidebarOpen" x-transition.opacity>Laporan Keuangan</span>
                 </a>
                 @endrole
                 
@@ -163,20 +214,21 @@
                 <a href="{{ route('settings') }}" 
                    data-spa-ignore
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
-                   :class="activePage === 'settings' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'">
-                    <i data-lucide="settings" class="w-5 h-5"></i>
-                    <span>Pengaturan</span>
+                   :class="activePage === 'settings' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'"
+                   :title="!sidebarOpen ? 'Pengaturan' : ''">
+                    <i data-lucide="settings" class="w-5 h-5 flex-shrink-0"></i>
+                    <span x-show="sidebarOpen" x-transition.opacity>Pengaturan</span>
                 </a>
                 @endrole
             </nav>
             
             <!-- Sidebar Footer / UMKM Info -->
             <div class="absolute bottom-0 w-full p-4 border-t border-slate-800 bg-slate-950/40">
-                <div class="flex items-center gap-3">
-                    <div class="h-9 w-9 rounded-full bg-slate-800 flex items-center justify-center text-indigo-400 font-semibold border border-indigo-500/20">
+                <div class="flex items-center gap-3" :class="sidebarOpen ? 'justify-start' : 'justify-center'">
+                    <div class="h-9 w-9 rounded-full bg-slate-800 flex items-center justify-center text-indigo-400 font-semibold border border-indigo-500/20 flex-shrink-0">
                         KB
                     </div>
-                    <div class="overflow-hidden">
+                    <div class="overflow-hidden" x-show="sidebarOpen" x-transition.opacity>
                         <h4 class="text-sm font-semibold text-white truncate">Kios Berkah Raya</h4>
                         <p class="text-[10px] text-slate-400">UMKM Retail & Kelontong</p>
                     </div>
@@ -185,21 +237,21 @@
         </aside>
 
         <!-- Main Content Area -->
-        <div class="flex flex-1 flex-col md:pl-64">
+        <div class="flex flex-1 flex-col transition-all duration-300"
+             :class="sidebarOpen ? 'md:ml-64' : 'md:ml-20'">
             
             <!-- Topbar sticky header -->
-            <header class="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white/80 backdrop-blur-md px-6 dark:bg-slate-900/80 dark:border-slate-800">
+            <header class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200/80 dark:border-slate-800/50 bg-white/75 dark:bg-slate-900/50 backdrop-blur-xl px-6 shadow-sm shadow-slate-100 dark:shadow-slate-950/20 transition-all duration-300">
                 
                 <!-- Mobile Sidebar Toggle -->
-                <div class="flex items-center gap-4">
-                    <button class="rounded-lg p-2 hover:bg-slate-100 text-slate-600 md:hidden transition-colors" @click="sidebarOpen = !sidebarOpen">
-                        <i data-lucide="menu" class="h-6 w-6"></i>
+                <div class="flex items-center gap-4 bg-transparent">
+                    <button class="rounded-xl p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white md:hidden transition-all active:scale-95 hover:bg-slate-100 dark:hover:bg-slate-800" @click="sidebarOpen = !sidebarOpen">
+                        <i data-lucide="menu" class="h-5 w-5"></i>
                     </button>
-                    
                     <!-- Search Bar -->
-                    <form action="{{ route('inventory') }}" method="GET" class="hidden sm:flex items-center gap-2 bg-slate-100 rounded-xl px-3 py-1.5 w-64 text-slate-500 border border-slate-100 hover:border-slate-200 transition-colors">
-                        <i data-lucide="search" class="w-4 h-4"></i>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari barang berdasarkan nama atau SKU..." class="bg-transparent border-none text-xs focus:outline-none w-full text-slate-700">
+                    <form action="{{ route('inventory') }}" method="GET" class="hidden sm:flex items-center gap-2 bg-slate-100 dark:bg-slate-950/60 rounded-xl px-3 py-1.5 w-64 text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-slate-800 focus-within:border-indigo-500/60 focus-within:ring-1 focus-within:ring-indigo-500/30 transition-all duration-200">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400 dark:text-slate-500"></i>
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search system database..." class="bg-transparent border-none text-xs focus:outline-none w-full text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-650 font-mono">
                     </form>
                 </div>
                 
@@ -207,20 +259,20 @@
                 <div class="flex items-center gap-4">
                     
                     <!-- Connection Status Indicator -->
-                    <div class="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-[10px] font-semibold text-emerald-700">
-                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Cloud Sync: Online
+                    <div class="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 text-[9px] font-mono font-semibold text-emerald-600 dark:text-emerald-400 tracking-wider uppercase shadow-[0_0_8px_rgba(16,185,129,0.05)]">
+                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
+                        SYS: ACTIVE
                     </div>
                     
                     <!-- Notifications Dropdown -->
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open" @click.away="open = false" 
-                                class="relative rounded-xl p-2 hover:bg-slate-100 text-slate-600 hover:text-indigo-600 transition-all duration-200">
-                            <i data-lucide="bell" class="h-5.5 w-5.5"></i>
+                                class="relative rounded-xl p-2 bg-slate-50 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800 hover:border-indigo-500/50 text-slate-500 hover:text-slate-850 dark:text-slate-400 dark:hover:text-white transition-all duration-200">
+                            <i data-lucide="bell" class="h-5 w-5"></i>
                             <!-- Badge -->
-                            <span class="absolute top-1.5 right-1.5 flex h-2 w-2">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                            <span class="absolute top-1 right-1 flex h-2 w-2">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-450 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.8)]"></span>
                             </span>
                         </button>
                         
@@ -230,30 +282,30 @@
                              x-transition:enter-start="opacity-0 scale-95 translate-y-2"
                              x-transition:enter-end="opacity-100 scale-100 translate-y-0"
                              x-transition:leave="transition ease-in duration-75"
-                             class="absolute right-0 mt-2 w-80 origin-top-right rounded-2xl bg-white p-2 shadow-xl border border-slate-100 z-50 text-slate-800">
-                            <div class="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between">
-                                <h3 class="font-bold text-sm">Notifikasi Baru</h3>
-                                <span class="text-[10px] font-semibold bg-rose-50 text-rose-600 px-2 py-0.5 rounded-full">2 Baru</span>
+                             class="absolute right-0 mt-2 w-80 origin-top-right rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-850 p-2 shadow-2xl z-50 text-slate-700 dark:text-slate-300">
+                            <div class="px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                                <h3 class="font-bold text-xs uppercase tracking-wider text-slate-400 dark:text-slate-450 font-mono">System Alerts</h3>
+                                <span class="text-[9px] font-mono font-semibold bg-rose-500/10 border border-rose-500/25 text-rose-500 dark:text-rose-400 px-2 py-0.5 rounded-full">2 Action Required</span>
                             </div>
                             <div class="max-h-64 overflow-y-auto py-1">
                                 <!-- Notif 1 -->
-                                <a href="{{ route('inventory') }}" class="flex gap-3 px-4 py-3 hover:bg-slate-50 rounded-xl transition-colors">
-                                    <div class="p-2 bg-amber-50 text-amber-600 rounded-xl h-9 w-9 flex items-center justify-center flex-shrink-0">
+                                <a href="{{ route('inventory') }}" class="flex gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors">
+                                    <div class="p-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 rounded-xl h-9 w-9 flex items-center justify-center flex-shrink-0">
                                         <i data-lucide="alert-triangle" class="w-4 h-4"></i>
                                     </div>
                                     <div>
-                                        <p class="text-xs font-semibold text-slate-800">Stok Menipis Terdeteksi!</p>
-                                        <p class="text-[10px] text-slate-500 mt-0.5">Stok Deterjen Rinso sisa 4 pcs.</p>
+                                        <p class="text-xs font-semibold text-slate-800 dark:text-slate-200">Stok Menipis Terdeteksi!</p>
+                                        <p class="text-[10px] text-slate-500 dark:text-slate-450 mt-0.5">Stok Deterjen Rinso sisa 4 pcs.</p>
                                     </div>
                                 </a>
                                 <!-- Notif 2 -->
-                                <a href="{{ route('inventory') }}" class="flex gap-3 px-4 py-3 hover:bg-slate-50 rounded-xl transition-colors">
-                                    <div class="p-2 bg-rose-50 text-rose-600 rounded-xl h-9 w-9 flex items-center justify-center flex-shrink-0">
+                                <a href="{{ route('inventory') }}" class="flex gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors">
+                                    <div class="p-2 bg-rose-550/10 text-rose-555/90 dark:text-rose-400 border border-rose-500/20 rounded-xl h-9 w-9 flex items-center justify-center flex-shrink-0">
                                         <i data-lucide="x-circle" class="w-4 h-4"></i>
                                     </div>
                                     <div>
-                                        <p class="text-xs font-semibold text-slate-800">Stok Habis!</p>
-                                        <p class="text-[10px] text-slate-500 mt-0.5">Chitato Sapi Panggang habis terjual.</p>
+                                        <p class="text-xs font-semibold text-slate-800 dark:text-slate-200">Stok Habis!</p>
+                                        <p class="text-[10px] text-slate-500 dark:text-slate-450 mt-0.5">Chitato Sapi Panggang habis terjual.</p>
                                     </div>
                                 </a>
                             </div>
@@ -263,13 +315,13 @@
                     <!-- Profile Menu Dropdown -->
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open" @click.away="open = false" 
-                                class="flex items-center gap-2.5 rounded-xl p-1 hover:bg-slate-50 transition-colors focus:outline-none">
-                            <img class="h-9 w-9 rounded-xl object-cover border border-slate-100" 
+                                class="flex items-center gap-2.5 rounded-xl p-1.5 bg-slate-50 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800 hover:border-indigo-500/50 focus:outline-none transition-all duration-200">
+                            <img class="h-8.5 w-8.5 rounded-lg object-cover border border-slate-200 dark:border-slate-800" 
                                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100&h=100" 
                                  alt="Profile">
                             <div class="hidden lg:block text-left pr-2">
-                                <h4 class="text-xs font-semibold text-slate-800">{{ auth()->user()->name }}</h4>
-                                <p class="text-[10px] text-slate-500 font-medium">{{ auth()->user()->roles->pluck('name')->implode(', ') }}</p>
+                                <h4 class="text-xs font-semibold text-slate-700 dark:text-slate-200">{{ auth()->user()->name }}</h4>
+                                <p class="text-[9px] text-indigo-600 dark:text-indigo-400 font-mono tracking-wider font-semibold uppercase">{{ auth()->user()->roles->pluck('name')->implode(', ') }}</p>
                             </div>
                             <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
                         </button>
@@ -280,28 +332,28 @@
                              x-transition:enter-start="opacity-0 scale-95 translate-y-2"
                              x-transition:enter-end="opacity-100 scale-100 translate-y-0"
                              x-transition:leave="transition ease-in duration-75"
-                             class="absolute right-0 mt-2 w-48 origin-top-right rounded-2xl bg-white p-1.5 shadow-xl border border-slate-100 z-50">
+                             class="absolute right-0 mt-2 w-48 origin-top-right rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-850 p-1.5 shadow-2xl z-50 text-slate-750 dark:text-slate-350">
                             
-                            <a href="#" @click.prevent="$dispatch('show-toast', { message: 'Profil Saya akan hadir pada versi berikutnya!', type: 'info' })"
-                               class="flex items-center gap-2.5 px-3 py-2.5 text-xs text-slate-700 hover:bg-slate-50 rounded-xl transition-colors">
-                                <i data-lucide="user" class="w-4 h-4 text-slate-400"></i>
+                            <a href="{{ route('profile') }}"
+                               class="flex items-center gap-2.5 px-3 py-2.5 text-xs hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors hover:text-slate-900 dark:hover:text-white">
+                                <i data-lucide="user" class="w-4 h-4 text-slate-400 dark:text-slate-550"></i>
                                 Profil Saya
                             </a>
                             
                             <a href="{{ route('settings') }}"
-                               class="flex items-center gap-2.5 px-3 py-2.5 text-xs text-slate-700 hover:bg-slate-50 rounded-xl transition-colors">
-                                <i data-lucide="settings" class="w-4 h-4 text-slate-400"></i>
+                               class="flex items-center gap-2.5 px-3 py-2.5 text-xs hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors hover:text-slate-900 dark:hover:text-white">
+                                <i data-lucide="settings" class="w-4 h-4 text-slate-400 dark:text-slate-555"></i>
                                 Pengaturan
                             </a>
                             
-                            <hr class="my-1 border-slate-100">
+                            <hr class="my-1 border-slate-100 dark:border-slate-800">
                             
                             <!-- Form Logout -->
                             <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
                                 @csrf
                             </form>
                             <a href="#" @click.prevent="document.getElementById('logout-form').submit()"
-                               class="flex items-center gap-2.5 px-3 py-2.5 text-xs text-rose-600 hover:bg-rose-50 rounded-xl transition-colors">
+                               class="flex items-center gap-2.5 px-3 py-2.5 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-colors hover:text-rose-700 dark:hover:text-rose-300">
                                 <i data-lucide="log-out" class="w-4 h-4"></i>
                                 Log Out
                             </a>
@@ -321,6 +373,7 @@
                 &copy; 2026 SmartBiz UMKM. Powered by Laravel 13 & Tailwind CSS v4.
             </footer>
         </div>
+    </div>
     </div>
     
     @stack('scripts')

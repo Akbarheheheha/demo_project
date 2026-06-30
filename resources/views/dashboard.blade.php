@@ -4,6 +4,45 @@
 @section('active_page', 'dashboard')
 
 @section('content')
+<style>
+    .btn-kelola{
+        background: #4f46e5;
+    }
+    .btn-kelola:hover{
+        color: #4f46e5;
+        transition: 0.2s ease;
+        background: rgba(79, 70, 229, 0.15);
+        backdrop-filter:blur(4px);
+        box-shadow: 0 0 10px rgba(79, 70, 229, 0.25);
+    }
+    .container_scale{
+        transition: transform 0.2s ease;
+    }
+    .container_scale:hover{
+        transform: scale(1.02);
+    }
+    .container_stok{
+        border: 1px solid rgba(79, 70, 229, 0.2);
+    }
+    .container_stok:hover{
+        background: #4f46e5;
+        border: 1px solid #4f46e5;
+    }
+    .container_stok:hover h4,
+    .container_stok:hover span {
+        color: #ffffff !important;
+    }
+    .btn_kelola2{
+        background: #4f46e5;
+    }
+    .btn_kelola2:hover{
+        color: #4f46e5;
+        transition: 0.2s ease;
+        background: rgba(79, 70, 229, 0.15);
+        backdrop-filter:blur(4px);
+        box-shadow: 0 0 10px rgba(79, 70, 229, 0.25);
+    }
+</style>
 <div class="space-y-6" x-data="{ timeRange: '7d' }">
     
     <!-- Welcome Header -->
@@ -40,7 +79,7 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         
         <!-- Card 1: Total Sales Today -->
-        <div class="group bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-300 relative overflow-hidden">
+        <div class="container_scale group bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-300 relative overflow-hidden">
             <div class="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-indigo-50 group-hover:bg-indigo-100/70 transition-colors duration-300 -z-0"></div>
             
             <div class="relative z-10 flex items-start justify-between">
@@ -62,7 +101,7 @@
         </div>
 
         <!-- Card 2: Total Transactions -->
-        <div class="group bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-violet-200 transition-all duration-300 relative overflow-hidden">
+        <div class="container_scale group bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-violet-200 transition-all duration-300 relative overflow-hidden">
             <div class="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-violet-50 group-hover:bg-violet-100/70 transition-colors duration-300 -z-0"></div>
             
             <div class="relative z-10 flex items-start justify-between">
@@ -84,12 +123,12 @@
         </div>
 
         <!-- Card 3: Low Stock Warning -->
-        <div class="group bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-rose-200 transition-all duration-300 relative overflow-hidden">
+        <a href="{{ route('inventory') }}" class="container_scale block group bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-rose-200 transition-all duration-300 relative overflow-hidden">
             <div class="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-rose-50 group-hover:bg-rose-100/70 transition-colors duration-300 -z-0"></div>
             
             <div class="relative z-10 flex items-start justify-between">
                 <div>
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pemberitahuan Stok (<= 5)</span>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pemberitahuan Stok </span>
                     <h3 class="text-2xl font-bold text-slate-800 mt-2">{{ $stok_menipis->count() }} Barang</h3>
                     <div class="flex items-center gap-1.5 mt-2 text-[10px] text-slate-500 font-medium">
                         <span>Total unit stok produk: <strong class="text-slate-700 font-bold">{{ $total_stok }}</strong></span>
@@ -99,7 +138,7 @@
                     <i data-lucide="alert-triangle" class="w-6 h-6"></i>
                 </div>
             </div>
-        </div>
+        </a>
         
     </div>
 
@@ -107,7 +146,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         <!-- Weekly Sales Chart (takes 2 cols) -->
-        <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+        <div class="container_scale lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
             <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
                 <div>
                     <h3 class="font-bold text-slate-800 text-lg">Tren Penjualan Mingguan</h3>
@@ -125,84 +164,68 @@
             </div>
         </div>
 
-        <!-- Recent Transactions Table / Cashier Activity (takes 1 col) -->
-        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col">
+        <!-- Widget Area: Low Stock or Cashier Log (takes 1 col) -->
+        <div class="container_scale bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col" x-data="{ showLog: false }">
+            
+            <!-- Widget Header -->
             <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
                 <div>
-                    <h3 class="font-bold text-slate-800 text-lg">Aktivitas Kasir</h3>
-                    <p class="text-xs text-slate-400">Daftar transaksi kasir terbaru dari database.</p>
+                    <h3 class="font-bold text-slate-800 text-lg" x-text="showLog ? 'Aktivitas Kasir' : 'Peringatan Stok Menipis'">Peringatan Stok Menipis</h3>
+                    <p class="text-xs text-slate-400" x-text="showLog ? 'Daftar transaksi kasir terbaru dari database.' : 'Daftar produk dengan stok menipis saat ini.'">Daftar produk dengan stok menipis saat ini.</p>
                 </div>
-                <i data-lucide="history" class="w-5 h-5 text-slate-400"></i>
+                
+                <!-- Toggle Button -->
+                <!-- <button @click="showLog = !showLog" 
+                        class="p-2 rounded-xl bg-slate-50 border border-slate-200/60 hover:bg-slate-100 text-slate-600 transition-all flex items-center justify-center"
+                        :title="showLog ? 'Tampilkan Stok Menipis'  ">
+                    <i :data-lucide="showLog ? 'alert-triangle' : 'history'" class="w-4 h-4"></i>
+                </button> -->
             </div>
 
-            <!-- Scrollable Transaction List -->
-            <div class="flex-1 overflow-y-auto max-h-[300px] space-y-4 pr-1">
-                @forelse($aktivitas_kasir as $trx)
-                    @php
-                        // Deterministic styling based on transaction ID
-                        $method = $trx->id % 2 === 0 ? 'QRIS' : ($trx->id % 3 === 0 ? 'Transfer' : 'Tunai');
-                        $bgClass = $method === 'QRIS' ? 'bg-purple-50 text-purple-600' : ($method === 'Tunai' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600');
-                    @endphp
-                    <div class="flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50/50 transition-all duration-200">
-                        <div class="flex items-center gap-3">
-                            <div class="h-9 w-9 rounded-xl flex items-center justify-center font-bold text-[10px] {{ $bgClass }}">
-                                {{ substr($method, 0, 2) }}
-                            </div>
-                            <div>
-                                <div class="flex items-center gap-1.5">
-                                    <span class="text-xs font-bold text-slate-800">{{ $trx->invoice }}</span>
-                                    <span class="text-[9px] text-slate-400">{{ $trx->created_at->format('H:i') }}</span>
+            <!-- Widget Body: Low Stock List (Default) -->
+            <div x-show="!showLog" class="flex-1 flex flex-col justify-between min-h-[300px]">
+                <div class="overflow-y-auto max-h-[300px] space-y-3 pr-1 flex-1">
+                    @forelse($stok_menipis as $item)
+                        <div class="container_stok flex items-center justify-between p-3 rounded-xl bg-indigo-50/20 hover:bg-indigo-50/50 transition-all duration-200">
+                            <div class="flex items-center gap-3">
+                                <div class="h-9 w-9 rounded-xl flex items-center justify-center font-bold bg-indigo-50 text-indigo-600">
+                                    <i data-lucide="package" class="w-4 h-4"></i>
                                 </div>
-                                <p class="text-[10px] text-slate-500 font-medium">
-                                    Kasir: <span class="text-slate-700 font-semibold">{{ $trx->user ? $trx->user->name : 'Sistem' }}</span>
-                                </p>
+                                <div>
+                                    <h4 class="text-xs font-bold text-slate-850">{{ $item->name }}</h4>
+                                    <span class="text-[9px] text-slate-450">{{ $item->sku }}</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs font-black text-indigo-600">{{ $item->stock }} Sisa</span>
+                                <div class="mt-0.5">
+                                    <span class=" text-[8px] font-semibold text-slate-400 font-medium">Min: {{ $item->min_stock }}</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <span class="text-xs font-bold text-slate-800">Rp {{ number_format($trx->total_harga, 0, ',', '.') }}</span>
-                            <div class="mt-1">
-                                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider
-                                     {{ $trx->status === 'success' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600' }}">
-                                    {{ $trx->status }}
-                                </span>
+                    @empty
+                        <div class="flex flex-col items-center justify-center h-full text-center py-12 text-slate-450">
+                            <div class="p-3 bg-emerald-50 text-emerald-600 rounded-2xl mb-2">
+                                <i data-lucide="check" class="w-6 h-6"></i>
                             </div>
+                            <h4 class="text-xs font-bold text-slate-700">Semua Stok Aman</h4>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Tidak ada barang dengan stok menipis.</p>
                         </div>
-                    </div>
-                @empty
-                    <div class="text-center py-12 text-slate-450">
-                        <i data-lucide="shopping-cart" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
-                        <span class="text-xs">Belum ada transaksi saat ini.</span>
-                    </div>
-                @endforelse
+                    @endforelse
+                </div>
+                
+                <div class="mt-4 pt-4 border-t border-slate-100">
+                    <a href="{{ route('inventory', ['filter' => 'low_stock']) }}" 
+                       class="btn-kelola w-full py-2.5 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm shadow-indigo-900/10 active:scale-[0.98]">
+                        <i data-lucide="settings-2" class="w-4 h-4"></i>
+                        <span>Kelola & Restock Barang</span>
+                    </a>
+                </div>
             </div>
         </div>
 
     </div>
 
-    <!-- Alert Stok Menipis Details (Conditional Banner) -->
-    @if($stok_menipis->isNotEmpty())
-        <div class="bg-rose-50 border border-rose-100 rounded-2xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div class="flex items-start gap-3">
-                <div class="p-2 bg-rose-100 text-rose-700 rounded-xl mt-0.5">
-                    <i data-lucide="package-x" class="w-5 h-5"></i>
-                </div>
-                <div>
-                    <h4 class="text-sm font-bold text-rose-800">Peringatan Stok Menipis!</h4>
-                    <p class="text-xs text-rose-600">Beberapa barang berikut membutuhkan restock segera karena stoknya di bawah batas minimal:</p>
-                    <div class="flex flex-wrap gap-2 mt-2">
-                        @foreach($stok_menipis as $item)
-                            <span class="inline-flex items-center text-[10px] font-semibold bg-white border border-rose-200 text-rose-700 px-2 py-0.5 rounded-lg">
-                                {{ $item->name }} (Sisa: {{ $item->stock }})
-                            </span>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-            <a href="{{ route('inventory') }}" class="px-4 py-2 bg-rose-650 hover:bg-rose-700 text-white text-xs font-bold rounded-xl whitespace-nowrap transition-colors shadow-sm shadow-rose-900/10">
-                Kelola Inventaris
-            </a>
-        </div>
-    @endif
 
 </div>
 
