@@ -13,10 +13,20 @@ class Transaction extends Model
         'user_id',
         'invoice',
         'total_harga',
+        'tax_amount',
+        'discount_amount',
         'status',
         'customer_name',
         'discount',
         'tax',
+    ];
+
+    protected $casts = [
+        'total_harga' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
+        'discount' => 'decimal:2',
+        'tax' => 'decimal:2',
     ];
 
     public function user()

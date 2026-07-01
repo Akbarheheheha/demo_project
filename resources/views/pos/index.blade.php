@@ -283,15 +283,16 @@
                             <div class="mt-1 flex items-center gap-1.5">
                                 <span class="text-[10px] text-slate-450 font-medium" x-text="'Rp' + new Intl.NumberFormat('id-ID').format(item.product.price)"></span>
                                 <span class="text-[9px] text-slate-350 font-black">&times;</span>
-                                <input type="number"
-                                       min="1"
-                                       :max="item.product.stock"
-                                       :data-qty-input="item.product.id"
-                                       @focus="selectCartItem(item.product.id)"
-                                       @click.stop
-                                       @change="setQty(item.product.id, $event.target.value)"
-                                       x-model.number="item.qty"
-                                       class="w-14 text-[10px] text-center font-bold bg-slate-100 px-1.5 py-0.5 rounded-lg border border-slate-200/40 focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400">
+                <input type="number"
+                       min="1"
+                       :max="item.product.stock"
+                       :data-qty-input="item.product.id"
+                       @focus="selectCartItem(item.product.id)"
+                       @click.stop
+                       @change="setQty(item.product.id, $event.target.value)"
+                       @input="focusSelectedQty()"
+                       x-model.number="item.qty"
+                       class="w-14 text-[10px] text-center font-bold bg-slate-100 px-1.5 py-0.5 rounded-lg border border-slate-200/40 focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400">
                             </div>
                         </div>
                         
@@ -668,6 +669,9 @@
                         });
                     }
                     this.selectedCartId = product.id;
+                    
+                    // Focus the quantity input field for the newly added product
+                    setTimeout(() => this.focusSelectedQty(), 50);
                     setTimeout(() => lucide.createIcons(), 50);
                 },
 

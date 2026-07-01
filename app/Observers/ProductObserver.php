@@ -13,7 +13,7 @@ class ProductObserver
         $this->record(
             'product.created',
             sprintf(
-                'User %s menambahkan barang %s.',
+                'User [%s] menambahkan barang [%s].',
                 $this->userName(),
                 $product->name
             )
@@ -26,7 +26,7 @@ class ProductObserver
             $this->record(
                 'product.updated',
                 sprintf(
-                    'User %s mengubah harga barang %s dari Rp %s menjadi Rp %s.',
+                    'User [%s] mengubah harga barang [%s] dari Rp %s menjadi Rp %s.',
                     $this->userName(),
                     $product->name,
                     number_format((float) $product->getOriginal('price'), 0, ',', '.'),
@@ -40,7 +40,7 @@ class ProductObserver
         $this->record(
             'product.updated',
             sprintf(
-                'User %s mengubah data barang %s.',
+                'User [%s] mengubah data barang [%s].',
                 $this->userName(),
                 $product->name
             )
@@ -52,7 +52,7 @@ class ProductObserver
         $this->record(
             'product.deleted',
             sprintf(
-                'User %s menghapus barang %s.',
+                'User [%s] menghapus barang [%s].',
                 $this->userName(),
                 $product->name
             )
