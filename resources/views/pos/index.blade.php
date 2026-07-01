@@ -224,13 +224,16 @@
                         <input type="text" 
                                placeholder="Umum / Baru..." 
                                x-model="customerName"
+                               name="customerName"
                                class="bg-transparent border-none text-[11px] focus:outline-none w-full text-slate-700 font-semibold p-0">
                     </div>
                 </div>
                 <!-- Discount Selector (3 cols) -->
                 <div class="col-span-3">
                     <label class="text-[9px] font-bold text-slate-455 uppercase tracking-wider block mb-0.5">Disk (%)</label>
-                    <select x-model="discountPercent" class="w-full text-[11px] font-bold bg-slate-50 rounded-lg border border-slate-200 px-2 py-1 text-slate-700 focus:outline-none focus:border-indigo-500">
+                    <select x-model="discountPercent" 
+                            name="discountPercent"
+                            class="w-full text-[11px] font-bold bg-slate-50 rounded-lg border border-slate-200 px-2 py-1 text-slate-700 focus:outline-none focus:border-indigo-500">
                         <option :value="0">0%</option>
                         <option :value="5">5%</option>
                         <option :value="10">10%</option>
@@ -241,7 +244,9 @@
                 <!-- Tax Selector (3 cols) -->
                 <div class="col-span-3">
                     <label class="text-[9px] font-bold text-slate-455 uppercase tracking-wider block mb-0.5">PPN (%)</label>
-                    <select x-model="taxPercent" class="w-full text-[11px] font-bold bg-slate-50 rounded-lg border border-slate-200 px-2 py-1 text-slate-700 focus:outline-none focus:border-indigo-500">
+                    <select x-model="taxPercent" 
+                            name="taxPercent"
+                            class="w-full text-[11px] font-bold bg-slate-50 rounded-lg border border-slate-200 px-2 py-1 text-slate-700 focus:outline-none focus:border-indigo-500">
                         <option :value="0">0%</option>
                         <option :value="10">10%</option>
                         <option :value="11">11%</option>
@@ -500,7 +505,7 @@
                 selectedCartId: null,
                 customerName: '',
                 discountPercent: 0,
-                taxPercent: 11,
+                taxPercent: 0,
                 
                 // Payment State
                 cashAmount: '',
@@ -586,6 +591,43 @@
                             if (e.key === '4') {
                                 e.preventDefault();
                                 this.addCash(50000);
+                            }
+                            // New shortcuts for form inputs
+                            if (e.key === 'd') {
+                                e.preventDefault();
+                                // Focus to Discount select (the select element with x-model="discountPercent")
+                                const discountSelect = document.querySelector('select[x-model="discountPercent"]');
+                                if (discountSelect) {
+                                    discountSelect.focus();
+                                    discountSelect.select();
+                                }
+                            }
+                            if (e.key === 't') {
+                                e.preventDefault();
+                                // Focus to PPN/Tax select (the select element with x-model="taxPercent")
+                                const taxSelect = document.querySelector('select[x-model="taxPercent"]');
+                                if (taxSelect) {
+                                    taxSelect.focus();
+                                    taxSelect.select();
+                                }
+                            }
+                            if (e.key === 'n') {
+                                e.preventDefault();
+                                // Focus to Customer Name input (input with x-model="customerName" and placeholder "Umum / Baru...")
+                                const customerNameInput = document.querySelector('input[x-model="customerName"]');
+                                if (customerNameInput) {
+                                    customerNameInput.focus();
+                                    customerNameInput.select();
+                                }
+                            }
+                            if (e.ctrlKey && e.key.toLowerCase() === 'q') {
+                                e.preventDefault();
+                                // Focus to first quantity input
+                                const qtyInput = document.querySelector('[data-qty-input]');
+                                if (qtyInput) {
+                                    qtyInput.focus();
+                                    qtyInput.select();
+                                }
                             }
                         }
                     });

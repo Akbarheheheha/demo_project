@@ -96,32 +96,25 @@
             <div class="col-span-4 text-right">Subtotal</div>
         </div>
         
-        <!-- Items List -->
+        @if($items)
         <div class="space-y-2">
-            @php
-                $mockItems = [
-                    ['name' => 'Kopi Kapal Api 165g', 'qty' => 2, 'price' => 15000, 'total' => 30000],
-                    ['name' => 'Indomie Goreng Spesial', 'qty' => 5, 'price' => 3500, 'total' => 17500],
-                    ['name' => 'Susu Ultra Milk Cokelat 1L', 'qty' => 1, 'price' => 19500, 'total' => 19500],
-                ];
-                $activeItems = $items ?? $mockItems;
-            @endphp
-            @foreach($activeItems as $item)
+            @foreach($items as $item)
                 <div>
                     <!-- Item Name (Full Row if long) -->
-                    <div class="text-slate-800 font-bold text-[10px]">{{ $item['name'] ?? ($item['product']['name'] ?? 'Produk') }}</div>
+                    <div class="text-slate-800 font-bold text-[10px]">{{ $item['name'] }}</div>
                     <!-- Qty x Price & Line Total -->
                     <div class="grid grid-cols-12 gap-1 text-slate-650 text-[10px]">
                         <div class="col-span-6 pl-1.5 text-slate-500">
-                            {{ number_format($item['qty'], 0) }} x {{ number_format($item['price'] ?? ($item['product']['price'] ?? 0), 0, ',', '.') }}
+                            {{ number_format($item['qty'], 0) }} x {{ number_format($item['price'], 0, ',', '.') }}
                         </div>
                         <div class="col-span-6 text-right font-semibold text-slate-800">
-                            Rp {{ number_format($item['total'] ?? (($item['price'] ?? 0) * $item['qty']), 0, ',', '.') }}
+                            Rp {{ number_format($item['total'], 0, ',', '.') }}
                         </div>
                     </div>
                 </div>
             @endforeach
         </div>
+        @endif
         
         <!-- Divider (Dashed) -->
         <div class="border-b border-dashed border-slate-300 my-3"></div>
