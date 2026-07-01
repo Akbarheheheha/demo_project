@@ -309,7 +309,7 @@
                                 <span class="text-[11px] font-black text-indigo-650" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(item.product.price * item.qty)"></span>
                                 
                                 <!-- Compact Qty controls -->
-                                <div class="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200/50 shadow-inner">
+                                <!-- <div class="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200/50 shadow-inner">
                                     <button @click="updateQty(item.product.id, -1)" class="h-4.5 w-4.5 rounded-md bg-white border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-600 text-xs font-black transition-all shadow-xs">
                                         -
                                     </button>
@@ -317,7 +317,7 @@
                                     <button @click="updateQty(item.product.id, 1)" class="h-4.5 w-4.5 rounded-md bg-white border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-600 text-xs font-black transition-all shadow-xs">
                                         +
                                     </button>
-                                </div>
+                                </div> -->
                             </div>
                         </div>
                     </div>
@@ -349,10 +349,11 @@
                         <span class="text-[8px] font-bold uppercase tracking-wider text-slate-400">Uang Bayar (Tunai)</span>
                         <div class="flex items-center gap-1 mt-0.5">
                             <span class="text-[10px] font-extrabold text-slate-400">Rp</span>
-                            <input type="number" 
+                            <input type="text" 
                                    placeholder="0" 
                                    id="cash-amount"
-                                   x-model.number="cashAmount"
+                                   :value="formattedCashAmount"
+                                   @input="setFormattedCash($event.target.value)"
                                    class="bg-transparent border-none text-xs font-black focus:outline-none w-full text-slate-800 p-0">
                         </div>
                     </div>
@@ -791,6 +792,17 @@
                         return false;
                     }
                     return true;
+                },
+
+                // Formatted Cash Amount
+                get formattedCashAmount() {
+                    if (this.cashAmount === '' || this.cashAmount === null || this.cashAmount === 0) return '';
+                    return new Intl.NumberFormat('id-ID').format(this.cashAmount);
+                },
+
+                setFormattedCash(val) {
+                    const clean = val.replace(/[^0-9]/g, '');
+                    this.cashAmount = clean ? parseInt(clean, 10) : '';
                 },
 
                 // Modal Actions
