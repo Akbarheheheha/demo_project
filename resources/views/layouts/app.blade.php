@@ -282,30 +282,30 @@
                              x-transition:enter-start="opacity-0 scale-95 translate-y-2"
                              x-transition:enter-end="opacity-100 scale-100 translate-y-0"
                              x-transition:leave="transition ease-in duration-75"
-                             class="absolute right-0 mt-2 w-80 origin-top-right rounded-2xl bg-white/95 dark:bg-slate-900/98 backdrop-blur-3xl border border-indigo-500/20 p-2 shadow-2xl z-50 text-slate-700 dark:text-slate-300">
-                            <div class="px-4 py-2.5 border-b border-indigo-500/10 flex items-center justify-between">
-                                <h3 class="font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-mono">System Alerts</h3>
-                                <span class="text-[9px] font-mono font-semibold bg-rose-500/10 border border-rose-500/25 text-rose-500 dark:text-rose-400 px-2 py-0.5 rounded-full">2 Action Required</span>
+                             class="absolute right-0 mt-2 w-80 origin-top-right rounded-2xl bg-gradient-to-br from-[#1e1b4b] to-[#330854] border border-indigo-900/60 p-2 shadow-2xl z-50 text-slate-200">
+                            <div class="px-4 py-2.5 border-b border-white/10 flex items-center justify-between">
+                                <h3 class="font-bold text-xs uppercase tracking-wider text-slate-300 font-mono">System Alerts</h3>
+                                <span class="text-[9px] font-mono font-semibold bg-rose-500/20 border border-rose-500/40 text-rose-350 px-2 py-0.5 rounded-full">2 Action Required</span>
                             </div>
                             <div class="max-h-64 overflow-y-auto py-1">
                                 <!-- Notif 1 -->
-                                <a href="{{ route('inventory') }}" class="flex gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800/60 rounded-xl transition-colors">
-                                    <div class="p-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 rounded-xl h-9 w-9 flex items-center justify-center flex-shrink-0">
+                                <a href="{{ route('inventory') }}" class="flex gap-3 px-4 py-3 hover:bg-white/10 rounded-xl transition-colors">
+                                    <div class="p-2 bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-xl h-9 w-9 flex items-center justify-center flex-shrink-0">
                                         <i data-lucide="alert-triangle" class="w-4 h-4"></i>
                                     </div>
                                     <div>
-                                        <p class="text-xs font-bold text-slate-900 dark:text-white">Stok Menipis Terdeteksi!</p>
-                                        <p class="text-[10px] text-slate-600 dark:text-slate-450 mt-0.5 font-medium">Stok Deterjen Rinso sisa 4 pcs.</p>
+                                        <p class="text-xs font-bold text-white">Stok Menipis Terdeteksi!</p>
+                                        <p class="text-[10px] text-slate-300 mt-0.5 font-medium">Stok Deterjen Rinso sisa 4 pcs.</p>
                                     </div>
                                 </a>
                                 <!-- Notif 2 -->
-                                <a href="{{ route('inventory') }}" class="flex gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800/60 rounded-xl transition-colors">
-                                    <div class="p-2 bg-rose-550/10 text-rose-555/90 dark:text-rose-400 border border-rose-500/20 rounded-xl h-9 w-9 flex items-center justify-center flex-shrink-0">
+                                <a href="{{ route('inventory') }}" class="flex gap-3 px-4 py-3 hover:bg-white/10 rounded-xl transition-colors">
+                                    <div class="p-2 bg-rose-550/10 text-rose-400 border border-rose-500/30 rounded-xl h-9 w-9 flex items-center justify-center flex-shrink-0">
                                         <i data-lucide="x-circle" class="w-4 h-4"></i>
                                     </div>
                                     <div>
-                                        <p class="text-xs font-bold text-slate-900 dark:text-white">Stok Habis!</p>
-                                        <p class="text-[10px] text-slate-600 dark:text-slate-450 mt-0.5 font-medium">Chitato Sapi Panggang habis terjual.</p>
+                                        <p class="text-xs font-bold text-white">Stok Habis!</p>
+                                        <p class="text-[10px] text-slate-300 mt-0.5 font-medium">Chitato Sapi Panggang habis terjual.</p>
                                     </div>
                                 </a>
                             </div>
@@ -316,7 +316,7 @@
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open" @click.away="open = false" 
                                 class="flex items-center gap-2.5 rounded-xl p-1.5 bg-white/20 border border-indigo-500/60 focus:outline-none transition-all duration-200">
-                            <img class="h-8.5 w-8.5 rounded-lg object-cover border border-slate-200 dark:border-slate-800" 
+                            <img class="h-8.5 w-8.5 rounded-lg object-cover border border-slate-200" 
                                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100&h=100" 
                                   alt="Profile">
                             <div class="hidden lg:block text-left pr-2">
@@ -332,28 +332,28 @@
                              x-transition:enter-start="opacity-0 scale-95 translate-y-2"
                              x-transition:enter-end="opacity-100 scale-100 translate-y-0"
                              x-transition:leave="transition ease-in duration-75"
-                             class="absolute right-0 mt-2 w-48 origin-top-right rounded-2xl bg-white/95 dark:bg-slate-900/98 backdrop-blur-3xl border border-indigo-500/20 p-1.5 shadow-2xl z-50 text-slate-700 dark:text-slate-300">
+                             class="absolute right-0 mt-2 w-48 origin-top-right rounded-2xl bg-gradient-to-br from-[#1e1b4b] to-[#330854] border border-indigo-900/60 p-1.5 shadow-2xl z-50 text-slate-200">
                             
                             <a href="{{ route('profile') }}"
-                               class="flex items-center gap-2.5 px-3 py-2.5 text-xs rounded-xl font-bold text-slate-750 hover:bg-slate-100 dark:text-slate-250 dark:hover:bg-slate-800 transition-colors">
-                                <i data-lucide="user" class="w-4 h-4 text-slate-400 dark:text-slate-550"></i>
+                               class="flex items-center gap-2.5 px-3 py-2.5 text-xs rounded-xl font-bold text-slate-200 hover:bg-white/10 hover:text-white transition-colors">
+                                <i data-lucide="user" class="w-4 h-4 text-slate-350"></i>
                                 Profil Saya
                             </a>
                             
                             <a href="{{ route('settings') }}"
-                               class="flex items-center gap-2.5 px-3 py-2.5 text-xs rounded-xl font-bold text-slate-750 hover:bg-slate-100 dark:text-slate-250 dark:hover:bg-slate-800 transition-colors">
-                                <i data-lucide="settings" class="w-4 h-4 text-slate-400 dark:text-slate-555"></i>
+                               class="flex items-center gap-2.5 px-3 py-2.5 text-xs rounded-xl font-bold text-slate-200 hover:bg-white/10 hover:text-white transition-colors">
+                                <i data-lucide="settings" class="w-4 h-4 text-slate-355"></i>
                                 Pengaturan
                             </a>
                             
-                            <hr class="my-1 border-slate-100 dark:border-slate-800">
+                            <hr class="my-1 border-white/10">
                             
                             <!-- Form Logout -->
                             <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
                                 @csrf
                             </form>
                             <a href="#" @click.prevent="document.getElementById('logout-form').submit()"
-                               class="flex items-center gap-2.5 px-3 py-2.5 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl font-bold transition-colors">
+                               class="flex items-center gap-2.5 px-3 py-2.5 text-xs text-rose-450 hover:bg-rose-950/30 rounded-xl font-bold transition-colors">
                                 <i data-lucide="log-out" class="w-4 h-4"></i>
                                 Log Out
                             </a>

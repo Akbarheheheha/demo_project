@@ -83,14 +83,40 @@ class DatabaseSeeder extends Seeder
             $date = (clone $now)->subDays($i);
             $numTrx = rand(2, 5);
             for ($j = 1; $j <= $numTrx; $j++) {
-                Transaction::create([
+                // Fetch random products
+                $productsList = Product::all();
+                if ($productsList->count() === 0) {
+                    continue;
+                }
+
+                $selectedProds = $productsList->random(rand(1, 3));
+                $subtotal = 0;
+                $details = [];
+
+                foreach ($selectedProds as $prod) {
+                    $qty = rand(1, 3);
+                    $subtotal += $prod->price * $qty;
+                    $details[] = [
+                        'product_id' => $prod->id,
+                        'qty' => $qty,
+                        'harga_beli' => $prod->purchase_price,
+                        'harga_jual' => $prod->price,
+                        'subtotal' => $prod->price * $qty
+                    ];
+                }
+
+                $transaction = Transaction::create([
                     'user_id' => rand(0, 1) ? $kasir->id : $admin->id,
                     'invoice' => 'TRX-' . $date->format('Ymd') . '-' . rand(1000, 9999),
-                    'total_harga' => rand(5, 50) * 10000,
+                    'total_harga' => $subtotal,
                     'status' => 'success',
                     'created_at' => $date->copy()->subHours(rand(1, 10)),
                     'updated_at' => $date->copy()->subHours(rand(1, 10)),
                 ]);
+
+                foreach ($details as $det) {
+                    $transaction->details()->create($det);
+                }
             }
         }
 

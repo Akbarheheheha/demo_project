@@ -399,6 +399,7 @@
                     <input type="hidden" name="customer_name" :value="customerName">
                     <input type="hidden" name="discount_percent" :value="discountPercent">
                     <input type="hidden" name="tax_percent" :value="taxPercent">
+                    <input type="hidden" name="cash_amount" :value="cashAmount">
 
                     <!-- Main submit button -->
                     <button type="button"

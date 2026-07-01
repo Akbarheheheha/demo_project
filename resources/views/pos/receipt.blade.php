@@ -84,6 +84,12 @@
                 <span>Metode Bayar:</span>
                 <span class="uppercase font-bold text-slate-800">{{ $paymentMethod ?? 'TUNAI' }}</span>
             </div>
+            @if(!empty($customer_name))
+            <div class="flex justify-between">
+                <span>Pelanggan:</span>
+                <span class="font-bold text-slate-800">{{ $customer_name }}</span>
+            </div>
+            @endif
         </div>
         
         <!-- Divider (Dashed) -->

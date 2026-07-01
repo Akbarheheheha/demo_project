@@ -62,7 +62,7 @@ class PosService
             // Create Transaction record
             $invoice = 'TRX-' . date('Ymd') . '-' . mt_rand(1000, 9999);
             
-            return Transaction::create([
+            $transaction = Transaction::create([
                 'user_id' => auth()->id(),
                 'invoice' => $invoice,
                 'total_harga' => $totalHarga,
@@ -71,6 +71,28 @@ class PosService
                 'tax' => $taxAmount,
                 'status' => 'success',
             ]);
+
+            // Insert Transaction Details
+            foreach ($items as $item) {
+                $productId = $item['id'] ?? null;
+                $qty = (int) ($item['qty'] ?? 0);
+
+                if (!$productId || $qty <= 0) {
+                    continue;
+                }
+
+                $product = Product::find($productId);
+
+                $transaction->details()->create([
+                    'product_id' => $productId,
+                    'qty' => $qty,
+                    'harga_beli' => $product->purchase_price,
+                    'harga_jual' => $product->price,
+                    'subtotal' => $product->price * $qty,
+                ]);
+            }
+
+            return $transaction;
         });
     }
 }

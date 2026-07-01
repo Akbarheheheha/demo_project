@@ -65,6 +65,7 @@ class PosController extends Controller
             'customer_name' => 'nullable|string|max:255',
             'discount_percent' => 'nullable|numeric|min:0|max:100',
             'tax_percent' => 'nullable|numeric|min:0|max:100',
+            'cash_amount' => 'nullable|numeric|min:0',
         ]);
 
         try {
@@ -77,9 +78,11 @@ class PosController extends Controller
 
             Cache::tags(['reports', 'sales-summary'])->flush();
 
+            $cashAmount = (float) $request->input('cash_amount', $transaction->total_harga);
+
             return redirect()->back()->with([
                 'success' => 'Transaksi Berhasil! Nomor Invoice: '.$transaction->invoice,
-                'print_url' => route('pos.receipt', $transaction->id)
+                'print_url' => route('pos.receipt', $transaction->id) . '?cash=' . $cashAmount
             ]);
         } catch (Exception $e) {
             return redirect()->back()->withInput()->withErrors(['checkout_error' => $e->getMessage()]);
@@ -109,18 +112,22 @@ class PosController extends Controller
             ];
         })->toArray();
 
+        $cashReceived = (float) request()->query('cash', $transaction->total_harga);
+        $change = max(0, $cashReceived - $transaction->total_harga);
+
         return view('pos.receipt', [
             'invoice' => $transaction->invoice,
             'date' => $transaction->created_at->format('d/m/Y H:i:s'),
             'cashier' => $transaction->user->name ?? 'Kasir',
+            'customer_name' => $transaction->customer_name,
             'paymentMethod' => 'TUNAI',
             'items' => $items,
             'subtotal' => $subtotal,
             'discount' => (float) $transaction->discount,
             'tax' => (float) $transaction->tax,
             'grandTotal' => (float) $transaction->total_harga,
-            'cashReceived' => (float) $transaction->total_harga,
-            'change' => 0.0
+            'cashReceived' => $cashReceived,
+            'change' => $change
         ]);
     }
 }
