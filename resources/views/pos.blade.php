@@ -18,6 +18,7 @@
                 <div class="flex-1 flex items-center gap-2 bg-slate-100 rounded-xl px-3 py-2 text-slate-500 border border-slate-100 focus-within:border-indigo-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-100 transition-all duration-200">
                     <i data-lucide="search" class="w-4 h-4"></i>
                     <input type="text" 
+                           id="search-product"
                            placeholder="Cari SKU atau Nama Produk..." 
                            x-model="searchQuery"
                            class="bg-transparent border-none text-xs focus:outline-none w-full text-slate-700">
@@ -247,7 +248,8 @@
                 </div>
                 
                 <!-- Bayar Sekarang Button -->
-                <button @click="initiatePayment()"
+                <button id="btn-checkout"
+                        @click="initiatePayment()"
                         :disabled="cart.length === 0"
                         :class="cart.length === 0 ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold hover:shadow-lg hover:shadow-indigo-600/20 active:scale-[0.98]'"
                         class="w-full py-3.5 rounded-2xl flex items-center justify-center gap-2 shadow-md transition-all duration-200">
@@ -578,5 +580,24 @@ function posComponent() {
         }
     };
 }
+
+// Global Keyboard Shortcuts
+window.addEventListener('keydown', function(e) {
+    if (e.key === 'F2') {
+        e.preventDefault();
+        const searchInput = document.getElementById('search-product');
+        if (searchInput) {
+            searchInput.focus();
+            searchInput.select();
+        }
+    }
+    if (e.key === 'F9') {
+        e.preventDefault();
+        const checkoutBtn = document.getElementById('btn-checkout');
+        if (checkoutBtn && !checkoutBtn.disabled) {
+            checkoutBtn.click();
+        }
+    }
+});
 </script>
 @endsection

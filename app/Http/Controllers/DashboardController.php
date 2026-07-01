@@ -77,6 +77,11 @@ class DashboardController extends Controller
             $tren_penjualan_mingguan['data'][] = $totalSales;
         }
 
+        // Fetch AI Business Insight (Cached for 30 minutes for performance)
+        $ai_insight = cache()->remember('ai_business_insight', 1800, function() {
+            return (new \App\Services\AiInsightService())->getBusinessInsights();
+        });
+
         return view('dashboard', compact(
             'total_stok',
             'total_penjualan_hari_ini',
@@ -84,7 +89,8 @@ class DashboardController extends Controller
             'stok_menipis',
             'aktivitas_kasir',
             'laporan_keuangan_bulanan',
-            'tren_penjualan_mingguan'
+            'tren_penjualan_mingguan',
+            'ai_insight'
         ));
     }
 }

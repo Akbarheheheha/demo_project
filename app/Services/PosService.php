@@ -13,13 +13,16 @@ class PosService
      * Process checkout for items in POS.
      *
      * @param array $items Array of items (e.g. [['id' => 1, 'qty' => 2], ...])
+     * @param string|null $customerName
+     * @param float $discountPercent
+     * @param float $taxPercent
      * @return Transaction
      * @throws Exception
      */
-    public function processCheckout(array $items): Transaction
+    public function processCheckout(array $items, ?string $customerName = null, float $discountPercent = 0, float $taxPercent = 0): Transaction
     {
-        return DB::transaction(function () use ($items) {
-            $totalHarga = 0;
+        return DB::transaction(function () use ($items, $customerName, $discountPercent, $taxPercent) {
+            $subtotal = 0;
 
             foreach ($items as $item) {
                 $productId = $item['id'] ?? null;
@@ -43,13 +46,18 @@ class PosService
                 // Reduce stock
                 $product->decrement('stock', $qty);
 
-                // Add to total
-                $totalHarga += $product->price * $qty;
+                // Add to total subtotal
+                $subtotal += $product->price * $qty;
             }
 
-            if ($totalHarga <= 0) {
+            if ($subtotal <= 0) {
                 throw new Exception("Keranjang belanja kosong atau data tidak valid.");
             }
+
+            // Calculate final price with discount and tax
+            $discountAmount = ($subtotal * $discountPercent) / 100;
+            $taxAmount = (($subtotal - $discountAmount) * $taxPercent) / 100;
+            $totalHarga = $subtotal - $discountAmount + $taxAmount;
 
             // Create Transaction record
             $invoice = 'TRX-' . date('Ymd') . '-' . mt_rand(1000, 9999);
@@ -58,6 +66,9 @@ class PosService
                 'user_id' => auth()->id(),
                 'invoice' => $invoice,
                 'total_harga' => $totalHarga,
+                'customer_name' => $customerName,
+                'discount' => $discountAmount,
+                'tax' => $taxAmount,
                 'status' => 'success',
             ]);
         });

@@ -16,6 +16,9 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
             $table->string('invoice')->unique();
             $table->decimal('total_harga', 15, 2);
+            $table->string('customer_name')->nullable();
+            $table->decimal('discount', 15, 2)->default(0);
+            $table->decimal('tax', 15, 2)->default(0);
             $table->string('status')->default('success'); // pending, success, failed
             $table->timestamps();
         });

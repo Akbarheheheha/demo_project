@@ -14,6 +14,9 @@ class Transaction extends Model
         'invoice',
         'total_harga',
         'status',
+        'customer_name',
+        'discount',
+        'tax',
     ];
 
     public function user()

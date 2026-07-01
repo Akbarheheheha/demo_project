@@ -75,6 +75,31 @@
         </div>
     </div>
     
+    <!-- AI Business Insight Banner -->
+    <div class="container_scale bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-900 text-white p-6 rounded-2xl border border-indigo-500/25 shadow-xl relative overflow-hidden">
+        <!-- Background decorative glows -->
+        <div class="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none"></div>
+        <div class="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-violet-500/10 blur-3xl pointer-events-none"></div>
+        
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center gap-5">
+            <!-- Icon -->
+            <div class="p-3.5 bg-white/10 backdrop-blur-md text-indigo-300 rounded-2xl border border-white/15 shadow-inner self-start md:self-center flex-shrink-0">
+                <i data-lucide="sparkles" class="w-7 h-7"></i>
+            </div>
+            
+            <!-- Content -->
+            <div class="flex-1 space-y-1">
+                <div class="flex items-center gap-2">
+                    <span class="px-2 py-0.5 text-[9px] font-mono font-semibold bg-indigo-500/25 border border-indigo-400/30 text-indigo-200 rounded-md tracking-wider uppercase">AI Advisor</span>
+                    <h3 class="font-bold text-sm text-slate-100 tracking-wide">AI Business Insight</h3>
+                </div>
+                <div class="text-xs text-slate-300 leading-relaxed font-sans mt-2 pr-4 whitespace-pre-line">
+                    {!! nl2br(e($ai_insight)) !!}
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Statistic Cards Grid -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         
@@ -106,7 +131,7 @@
             
             <div class="relative z-10 flex items-start justify-between">
                 <div>
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Transaksi (Sistem)</span>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Transaksi</span>
                     <h3 class="text-2xl font-bold text-slate-800 mt-2">{{ number_format($total_transaksi) }} Transaksi</h3>
                     <div class="flex items-center gap-1 mt-2">
                         <span class="flex items-center text-[10px] font-semibold text-violet-600 bg-violet-50 px-2 py-0.5 rounded-lg">
@@ -128,7 +153,7 @@
             
             <div class="relative z-10 flex items-start justify-between">
                 <div>
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pemberitahuan Stok </span>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pemberitahuan Stok menipis</span>
                     <h3 class="text-2xl font-bold text-slate-800 mt-2">{{ $stok_menipis->count() }} Barang</h3>
                     <div class="flex items-center gap-1.5 mt-2 text-[10px] text-slate-500 font-medium">
                         <span>Total unit stok produk: <strong class="text-slate-700 font-bold">{{ $total_stok }}</strong></span>

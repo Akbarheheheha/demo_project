@@ -30,8 +30,14 @@ class PosController extends Controller
     public function index()
     {
         $products = Product::all();
+        $categories = Product::select('category')
+            ->distinct()
+            ->whereNotNull('category')
+            ->where('category', '!=', '')
+            ->pluck('category')
+            ->toArray();
 
-        return view('pos.index', compact('products'));
+        return view('pos.index', compact('products', 'categories'));
     }
 
     /**
@@ -45,10 +51,18 @@ class PosController extends Controller
             'items' => 'required|array',
             'items.*.id' => 'required|integer|exists:products,id',
             'items.*.qty' => 'required|integer|min:1',
+            'customer_name' => 'nullable|string|max:255',
+            'discount_percent' => 'nullable|numeric|min:0|max:100',
+            'tax_percent' => 'nullable|numeric|min:0|max:100',
         ]);
 
         try {
-            $transaction = $this->posService->processCheckout($request->input('items'));
+            $transaction = $this->posService->processCheckout(
+                $request->input('items'),
+                $request->input('customer_name'),
+                (float) $request->input('discount_percent', 0),
+                (float) $request->input('tax_percent', 11)
+            );
 
             Cache::tags(['reports', 'sales-summary'])->flush();
 
