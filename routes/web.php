@@ -36,7 +36,8 @@ Route::middleware(['auth.custom'])->group(function () {
 
     // POS Routes (Accessible by Cashier and Super Admin)
     Route::middleware(['role:Kasir|Super Admin'])->group(function () {
-        Route::get('/pos', [PosController::class, 'index'])->name('pos');
+        Route::get('/pos', [PosController::class, 'launcher'])->name('pos');
+        Route::get('/pos/fullscreen', [PosController::class, 'index'])->name('pos.fullscreen');
         Route::post('/pos', [PosController::class, 'store'])->name('pos.store');
     });
 

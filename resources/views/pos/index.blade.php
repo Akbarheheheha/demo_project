@@ -3,53 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>SmartBiz POS - Kasir Profesional</title>
-    
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Google Fonts: Inter & Outfit -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .heading-font {
-            font-family: 'Outfit', sans-serif;
-        }
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 9999px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-    </style>
+    @vite(['resources/css/app.css', 'resources/css/pos.css', 'resources/js/app.js'])
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased overflow-hidden h-screen flex flex-col" x-data="posEngine()">
 
     <!-- Top Navbar -->
-    <header class="bg-white border-b border-slate-200 h-16 px-6 flex items-center justify-between flex-shrink-0 shadow-sm relative z-10">
+    <header class="bg-white border-b border-slate-200 h-16 px-4 lg:px-6 flex items-center justify-between flex-shrink-0 shadow-sm relative z-10">
         <!-- Logo & Navigation back to Dashboard -->
         <div class="flex items-center gap-3.5">
-            <a href="{{ route('admin.dashboard') }}" class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-rose-600 to-indigo-600 shadow-md text-white font-black text-lg hover:scale-105 transition-transform duration-200" title="Kembali ke Dashboard">
+            <a href="{{ route('home') }}" class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-rose-600 to-indigo-600 shadow-md text-white font-black text-lg hover:scale-105 transition-transform duration-200" title="Kembali">
                 S
             </a>
             <div>
@@ -61,7 +25,7 @@
         </div>
 
         <!-- Center: Real-time Clock & Info -->
-        <div class="hidden sm:flex items-center gap-5 bg-slate-50 border border-slate-100 px-4 py-1.5 rounded-2xl shadow-inner text-xs font-mono font-bold text-slate-600">
+        <div class="hidden md:flex items-center gap-5 bg-slate-50 border border-slate-100 px-4 py-1.5 rounded-2xl shadow-inner text-xs font-mono font-bold text-slate-600">
             <div class="flex items-center gap-1.5">
                 <i data-lucide="clock" class="w-3.5 h-3.5 text-indigo-500"></i>
                 <span x-text="currentTime">00:00:00</span>
@@ -74,18 +38,27 @@
         </div>
 
         <!-- Right Side: Cashier Info & Back -->
-        <div class="flex items-center gap-4">
-            <div class="text-right">
+        <div class="flex items-center gap-3 lg:gap-4">
+            <div class="hidden sm:block text-right">
                 <p class="text-xs font-bold text-slate-700">{{ auth()->user()->name }}</p>
                 <p class="text-[9px] font-semibold text-indigo-600 tracking-wider uppercase font-mono">{{ auth()->user()->roles->pluck('name')->implode(', ') }}</p>
             </div>
-            <div class="h-8.5 w-8.5 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs">
+            <div class="h-9 w-9 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs">
                 {{ substr(auth()->user()->name, 0, 2) }}
             </div>
+            @hasanyrole('Super Admin|Manager')
             <a href="{{ route('admin.dashboard') }}" class="py-2 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5">
                 <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-                Dashboard
+                <span class="hidden sm:inline">Dashboard</span>
             </a>
+            @endhasanyrole
+            <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <button type="submit" class="py-2 px-3.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Keluar</span>
+                </button>
+            </form>
         </div>
     </header>
 
@@ -118,20 +91,21 @@
     </div>
 
     <!-- Main Workspace Split View (Full Screen Height, No Outer Scroll) -->
-    <main class="flex-1 flex overflow-hidden min-h-0">
+    <main class="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
         
         <!-- LEFT AREA: Product Directory & Search (7/12 Cols) -->
-        <section class="flex-1 flex flex-col bg-slate-50 p-5 min-h-0 border-r border-slate-200">
+        <section class="flex-1 flex flex-col bg-slate-50 p-4 lg:p-5 min-h-0 border-r border-slate-200">
             
             <!-- Filters, Search & Barcode Bar -->
-            <div class="flex flex-col sm:flex-row gap-3 mb-4 flex-shrink-0">
+            <div class="flex flex-col sm:flex-row gap-3 mb-3 flex-shrink-0">
                 <!-- Product Search input -->
                 <div class="flex-1 flex items-center gap-2 bg-white rounded-xl px-3.5 py-2.5 text-slate-500 border border-slate-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 transition-all duration-200 shadow-sm">
                     <i data-lucide="search" class="w-4 h-4 text-slate-450"></i>
                     <input type="text" 
                            id="search-product"
-                           placeholder="Cari Produk atau Scan Barcode... (Tekan F2)" 
+                           placeholder="Cari produk / SKU, lalu Enter untuk tambah cepat (F2)" 
                            x-model="searchQuery"
+                           @keydown.enter.prevent="addFirstFilteredProduct()"
                            class="bg-transparent border-none text-xs focus:outline-none w-full text-slate-700 placeholder-slate-400 font-medium">
                     <!-- Clear search query -->
                     <button x-show="searchQuery !== ''" @click="searchQuery = ''" class="text-slate-450 hover:text-slate-700 transition-colors">
@@ -141,7 +115,8 @@
             </div>
 
             <!-- Categories Horizontal Pills -->
-            <div class="flex gap-2 overflow-x-auto pb-2 flex-shrink-0 whitespace-nowrap mb-4">
+            <div class="flex items-center justify-between gap-3 mb-3 flex-shrink-0">
+                <div class="flex gap-2 overflow-x-auto pb-1 whitespace-nowrap">
                 <button @click="selectedCategory = 'all'"
                         :class="selectedCategory === 'all' ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-650/15' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'"
                         class="px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200">
@@ -154,6 +129,10 @@
                             x-text="cat">
                     </button>
                 </template>
+                </div>
+                <span class="hidden sm:inline-flex flex-shrink-0 text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-3 py-2 rounded-xl">
+                    <span x-text="filteredProducts.length"></span>&nbsp;produk
+                </span>
             </div>
 
             <!-- Products List (Scrollable Grid) -->
@@ -168,9 +147,9 @@
                 </div>
 
                 <!-- Products Grid -->
-                <div x-show="filteredProducts.length > 0" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div x-show="filteredProducts.length > 0" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
                     <template x-for="prod in filteredProducts" :key="prod.id">
-                        <div @click="addToCart(prod)"
+                        <div @click="addToCart(prod); selectCartItem(prod.id)"
                              class="group cursor-pointer bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition-all duration-200 flex flex-col relative overflow-hidden select-none">
                             
                             <!-- Category Badge -->
@@ -212,7 +191,7 @@
         </section>
 
         <!-- RIGHT AREA: Shopping Cart & Checkout Panel (5/12 Cols) -->
-        <section class="w-[390px] xl:w-[460px] bg-white flex flex-col flex-shrink-0 min-h-0 border-l border-slate-200">
+        <section class="w-full lg:w-[390px] xl:w-[460px] bg-white flex flex-col flex-shrink-0 min-h-0 border-l border-slate-200">
             
             <!-- Cart Title / Header -->
             <div class="px-4 py-3 border-b border-slate-150 flex items-center justify-between bg-slate-50/50 flex-shrink-0">
@@ -221,6 +200,7 @@
                         <i data-lucide="shopping-cart" class="w-4 h-4"></i>
                     </span>
                     <h3 class="font-bold text-slate-800 text-xs heading-font">Keranjang Belanja</h3>
+                    <span x-show="cart.length > 0" class="text-[10px] font-black text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg px-2 py-0.5" x-text="cartItemCount + ' item'"></span>
                 </div>
                 <button @click="cart = []" 
                         x-show="cart.length > 0" 
@@ -277,7 +257,9 @@
 
                 <!-- Cart List -->
                 <template x-for="item in cart" :key="item.product.id">
-                    <div class="flex items-center gap-3 p-3 bg-white hover:bg-slate-50/50 border border-slate-200 rounded-2xl shadow-xs transition-all duration-200 group">
+                    <div @click="selectCartItem(item.product.id)"
+                         :class="selectedCartId === item.product.id ? 'border-indigo-300 ring-2 ring-indigo-100 bg-indigo-50/30' : 'border-slate-200 bg-white hover:bg-slate-50/50'"
+                         class="flex items-center gap-3 p-3 rounded-2xl shadow-xs transition-all duration-200 group">
                         
                         <!-- Thumbnail Representation / Category Icon -->
                         <div class="h-10 w-10 rounded-xl flex-shrink-0 flex items-center justify-center bg-indigo-50 text-indigo-600 border border-indigo-100/50 shadow-inner">
@@ -291,7 +273,15 @@
                             <div class="mt-1 flex items-center gap-1.5">
                                 <span class="text-[10px] text-slate-450 font-medium" x-text="'Rp' + new Intl.NumberFormat('id-ID').format(item.product.price)"></span>
                                 <span class="text-[9px] text-slate-350 font-black">&times;</span>
-                                <span class="text-[10px] text-slate-650 font-bold bg-slate-100 px-1.5 py-0.5 rounded-lg border border-slate-200/40" x-text="item.qty + ' pcs'"></span>
+                                <input type="number"
+                                       min="1"
+                                       :max="item.product.stock"
+                                       :data-qty-input="item.product.id"
+                                       @focus="selectCartItem(item.product.id)"
+                                       @click.stop
+                                       @change="setQty(item.product.id, $event.target.value)"
+                                       x-model.number="item.qty"
+                                       class="w-14 text-[10px] text-center font-bold bg-slate-100 px-1.5 py-0.5 rounded-lg border border-slate-200/40 focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400">
                             </div>
                         </div>
                         
@@ -350,10 +340,27 @@
                             <span class="text-[10px] font-extrabold text-slate-400">Rp</span>
                             <input type="number" 
                                    placeholder="0" 
+                                   id="cash-amount"
                                    x-model.number="cashAmount"
                                    class="bg-transparent border-none text-xs font-black focus:outline-none w-full text-slate-800 p-0">
                         </div>
                     </div>
+                </div>
+
+                <!-- Quick Cash Actions -->
+                <div class="grid grid-cols-4 gap-2">
+                    <button type="button" @click="payExact()" class="rounded-lg border border-indigo-100 bg-indigo-50 px-2 py-2 text-[10px] font-black text-indigo-700 hover:bg-indigo-100">
+                        Pas
+                    </button>
+                    <button type="button" @click="addCash(10000)" class="rounded-lg border border-slate-200 bg-white px-2 py-2 text-[10px] font-black text-slate-700 hover:bg-slate-50">
+                        +10rb
+                    </button>
+                    <button type="button" @click="addCash(20000)" class="rounded-lg border border-slate-200 bg-white px-2 py-2 text-[10px] font-black text-slate-700 hover:bg-slate-50">
+                        +20rb
+                    </button>
+                    <button type="button" @click="addCash(50000)" class="rounded-lg border border-slate-200 bg-white px-2 py-2 text-[10px] font-black text-slate-700 hover:bg-slate-50">
+                        +50rb
+                    </button>
                 </div>
                 
                 <!-- Kembalian Bar -->
@@ -386,8 +393,8 @@
                     <!-- Main submit button -->
                     <button type="submit"
                             id="btn-checkout"
-                            :disabled="cart.length === 0 || isCashInsufficient"
-                            :class="(cart.length === 0 || isCashInsufficient) ? 'bg-slate-200 text-slate-400 cursor-not-allowed border-none shadow-none' : 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:shadow-md hover:shadow-indigo-650/15 active:scale-[0.99] text-white'"
+                            :disabled="!canCheckout"
+                            :class="!canCheckout ? 'bg-slate-200 text-slate-400 cursor-not-allowed border-none shadow-none' : 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:shadow-md hover:shadow-indigo-650/15 active:scale-[0.99] text-white'"
                             class="w-full py-3.5 rounded-xl flex items-center justify-center gap-2 font-bold text-xs shadow-xs transition-all duration-200 mt-1">
                         <i data-lucide="check-circle" class="w-4 h-4"></i>
                         <span>SIMPAN PEMBAYARAN (F9)</span>
@@ -410,6 +417,7 @@
                 
                 // Cart State
                 cart: [],
+                selectedCartId: null,
                 customerName: '',
                 discountPercent: 0,
                 taxPercent: 11,
@@ -427,6 +435,9 @@
 
                     // Setup Keyboard shortcuts
                     window.addEventListener('keydown', (e) => {
+                        const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+                        const typing = ['input', 'textarea', 'select'].includes(activeTag) || document.activeElement?.isContentEditable;
+
                         if (e.key === 'F2') {
                             e.preventDefault();
                             const searchEl = document.getElementById('search-product');
@@ -435,12 +446,28 @@
                                 searchEl.select();
                             }
                         }
+                        if (e.key === 'F3') {
+                            e.preventDefault();
+                            const cashEl = document.getElementById('cash-amount');
+                            if (cashEl) {
+                                cashEl.focus();
+                                cashEl.select();
+                            }
+                        }
+                        if (e.key === 'F4') {
+                            e.preventDefault();
+                            this.focusSelectedQty();
+                        }
                         if (e.key === 'F9') {
                             e.preventDefault();
                             const checkoutForm = document.getElementById('checkout-form');
                             if (checkoutForm && this.cart.length > 0 && !this.isCashInsufficient) {
-                                checkoutForm.submit();
+                                checkoutForm.requestSubmit();
                             }
+                        }
+                        if (!typing && e.key.toLowerCase() === 'p') {
+                            e.preventDefault();
+                            this.payExact();
                         }
                     });
 
@@ -478,12 +505,57 @@
                             qty: 1
                         });
                     }
+                    this.selectedCartId = product.id;
                     setTimeout(() => lucide.createIcons(), 50);
+                },
+
+                addFirstFilteredProduct() {
+                    if (this.filteredProducts.length === 1) {
+                        this.addToCart(this.filteredProducts[0]);
+                        this.searchQuery = '';
+                    }
+                },
+
+                selectCartItem(productId) {
+                    this.selectedCartId = productId;
+                },
+
+                focusSelectedQty() {
+                    const selector = this.selectedCartId
+                        ? `[data-qty-input="${this.selectedCartId}"]`
+                        : '[data-qty-input]';
+                    const qtyInput = document.querySelector(selector);
+                    if (qtyInput) {
+                        qtyInput.focus();
+                        qtyInput.select();
+                    }
                 },
 
                 removeFromCart(productId) {
                     this.cart = this.cart.filter(item => item.product.id !== productId);
+                    if (this.selectedCartId === productId) {
+                        this.selectedCartId = this.cart[0]?.product.id || null;
+                    }
                     setTimeout(() => lucide.createIcons(), 50);
+                },
+
+                setQty(productId, value) {
+                    const item = this.cart.find(entry => entry.product.id === productId);
+                    if (!item) return;
+
+                    const parsed = parseInt(value, 10);
+                    if (Number.isNaN(parsed) || parsed < 1) {
+                        item.qty = 1;
+                        return;
+                    }
+
+                    if (parsed > item.product.stock) {
+                        item.qty = item.product.stock;
+                        alert('Batas stok tercapai. Tersedia ' + item.product.stock + ' pcs.');
+                        return;
+                    }
+
+                    item.qty = parsed;
                 },
 
                 updateQty(productId, delta) {
@@ -524,6 +596,21 @@
                     if (this.cart.length === 0) return false;
                     const paid = parseFloat(this.cashAmount) || 0;
                     return paid < this.grandTotal;
+                },
+                get canCheckout() {
+                    return this.cart.length > 0 && !this.isCashInsufficient;
+                },
+                get cartItemCount() {
+                    return this.cart.reduce((sum, item) => sum + item.qty, 0);
+                },
+
+                payExact() {
+                    if (this.cart.length === 0) return;
+                    this.cashAmount = Math.ceil(this.grandTotal);
+                },
+
+                addCash(amount) {
+                    this.cashAmount = (parseFloat(this.cashAmount) || 0) + amount;
                 },
 
                 submitCheck(e) {

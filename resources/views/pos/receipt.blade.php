@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Struk Belanja - #{{ $invoice ?? 'TRX-20260701-999' }}</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <!-- Fallback Tailwind CDN in case Vite is not active or during standalone popup printing -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/pos.css', 'resources/js/app.js'])
     <style>
         @media print {
             body {

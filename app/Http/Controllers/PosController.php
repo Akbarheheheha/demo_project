@@ -23,7 +23,17 @@ class PosController extends Controller
     }
 
     /**
-     * Display a listing of the products for POS.
+     * Open the POS workspace outside the admin SPA shell.
+     *
+     * @return View
+     */
+    public function launcher()
+    {
+        return view('pos.launcher');
+    }
+
+    /**
+     * Display a listing of the products for the full-page POS.
      *
      * @return View
      */
