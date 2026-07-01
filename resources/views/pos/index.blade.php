@@ -349,7 +349,7 @@
                         <span class="text-[8px] font-bold uppercase tracking-wider text-slate-400">Uang Bayar (Tunai)</span>
                         <div class="flex items-center gap-1 mt-0.5">
                             <span class="text-[10px] font-extrabold text-slate-400">Rp</span>
-                            <input type="text" 
+                            <input type="number" 
                                    placeholder="0" 
                                    id="cash-amount"
                                    :value="formattedCashAmount"
