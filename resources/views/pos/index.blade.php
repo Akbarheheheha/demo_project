@@ -64,6 +64,11 @@
 
     <!-- Success & Error Toast Messages -->
     <div class="fixed top-20 right-6 z-50 flex flex-col gap-2 max-w-sm pointer-events-none">
+        @if(session('print_url'))
+            <script>
+                window.open("{{ session('print_url') }}", "ThermalReceipt", "width=380,height=700,menubar=no,toolbar=no,location=no,status=no");
+            </script>
+        @endif
         @if(session('success'))
             <div class="bg-white border border-emerald-100 p-4 rounded-xl shadow-lg flex items-center gap-3 text-emerald-800 pointer-events-auto" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)">
                 <div class="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg">
@@ -391,9 +396,10 @@
                     <input type="hidden" name="tax_percent" :value="taxPercent">
 
                     <!-- Main submit button -->
-                    <button type="submit"
+                    <button type="button"
                             id="btn-checkout"
                             :disabled="!canCheckout"
+                            @click="openModal()"
                             :class="!canCheckout ? 'bg-slate-200 text-slate-400 cursor-not-allowed border-none shadow-none' : 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:shadow-md hover:shadow-indigo-650/15 active:scale-[0.99] text-white'"
                             class="w-full py-3.5 rounded-xl flex items-center justify-center gap-2 font-bold text-xs shadow-xs transition-all duration-200 mt-1">
                         <i data-lucide="check-circle" class="w-4 h-4"></i>
@@ -405,6 +411,80 @@
         </section>
 
     </main>
+
+    <!-- PAYMENT CONFIRMATION MODAL -->
+    <div x-show="isModalOpen" 
+         class="fixed inset-0 z-50 flex items-center justify-center p-4" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         style="display: none;">
+        
+        <!-- Backdrop Blur Overlay -->
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="closeModal()"></div>
+        
+        <!-- Modal Content Container -->
+        <div class="relative bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md p-6 overflow-hidden z-10 flex flex-col gap-4">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="heading-font font-black text-slate-800 text-sm tracking-wide flex items-center gap-2">
+                    <i data-lucide="check-circle" class="w-5 h-5 text-indigo-600"></i>
+                    Konfirmasi Pembayaran
+                </h3>
+                <button @click="closeModal()" class="text-slate-400 hover:text-slate-650 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <!-- Summary Info -->
+            <div class="space-y-3.5 py-1">
+                <!-- Total Tagihan -->
+                <div class="flex justify-between items-center bg-indigo-50/50 p-3.5 rounded-2xl border border-indigo-100/50">
+                    <span class="text-xs font-bold text-indigo-900 uppercase">Total Tagihan</span>
+                    <span class="text-lg font-black text-indigo-750 font-mono" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(grandTotal)">Rp 0</span>
+                </div>
+                
+                <!-- Uang Diterima -->
+                <div class="flex justify-between items-center bg-slate-50 p-3.5 rounded-2xl border border-slate-200/60">
+                    <span class="text-xs font-bold text-slate-500 uppercase">Uang Diterima</span>
+                    <span class="text-lg font-black text-slate-800 font-mono" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(cashAmount || 0)">Rp 0</span>
+                </div>
+                
+                <!-- Kembalian -->
+                <div :class="isCashInsufficient ? 'bg-rose-50 border-rose-100 text-rose-800' : 'bg-emerald-50 border-emerald-100 text-emerald-950'"
+                     class="flex justify-between items-center p-3.5 rounded-2xl border transition-all duration-200">
+                    <span class="text-xs font-bold uppercase" x-text="isCashInsufficient ? 'UANG KURANG!' : 'Kembalian'"></span>
+                    <span class="text-lg font-black font-mono"
+                          :class="isCashInsufficient ? 'text-rose-700' : 'text-emerald-700'"
+                          x-text="isCashInsufficient ? '- Rp ' + new Intl.NumberFormat('id-ID').format(Math.abs(changeAmount)) : 'Rp ' + new Intl.NumberFormat('id-ID').format(changeAmount)">
+                        Rp 0
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Modal Actions -->
+            <div class="flex flex-col sm:flex-row gap-3 pt-3 border-t border-slate-100">
+                <button type="button" 
+                        @click="closeModal()" 
+                        class="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-1.5">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    Batal / Edit (ESC)
+                </button>
+                <button type="button" 
+                        x-show="!isCashInsufficient"
+                        @click="confirmAndSubmit()" 
+                        :disabled="isSubmitting"
+                        :class="isSubmitting ? 'opacity-70 cursor-not-allowed' : ''"
+                        class="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/10">
+                    <i data-lucide="printer" class="w-4 h-4"></i>
+                    Cetak Struk (ENTER)
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Alpine.js & JavaScript scripts -->
     <script>
@@ -426,6 +506,10 @@
                 cashAmount: '',
                 currentTime: '00:00:00',
 
+                // Modal States
+                isModalOpen: false,
+                isSubmitting: false,
+
                 init() {
                     // Start digital clock
                     setInterval(() => {
@@ -438,6 +522,26 @@
                         const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
                         const typing = ['input', 'textarea', 'select'].includes(activeTag) || document.activeElement?.isContentEditable;
 
+                        // Trap navigation if modal is open
+                        if (this.isModalOpen) {
+                            if (e.key === 'Escape' || e.key === 'Esc') {
+                                e.preventDefault();
+                                this.closeModal();
+                            }
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                if (!this.isCashInsufficient && !this.isSubmitting) {
+                                    this.confirmAndSubmit();
+                                }
+                            }
+                            // Block POS background shortcuts when modal is active
+                            if (['F2', 'F4', 'F9'].includes(e.key) || e.altKey) {
+                                e.preventDefault();
+                            }
+                            return;
+                        }
+
+                        // POS Main shortcuts
                         if (e.key === 'F2') {
                             e.preventDefault();
                             const searchEl = document.getElementById('search-product');
@@ -446,7 +550,7 @@
                                 searchEl.select();
                             }
                         }
-                        if (e.key === 'F3') {
+                        if (e.key === 'F4') {
                             e.preventDefault();
                             const cashEl = document.getElementById('cash-amount');
                             if (cashEl) {
@@ -454,20 +558,35 @@
                                 cashEl.select();
                             }
                         }
-                        if (e.key === 'F4') {
-                            e.preventDefault();
-                            this.focusSelectedQty();
-                        }
                         if (e.key === 'F9') {
                             e.preventDefault();
-                            const checkoutForm = document.getElementById('checkout-form');
-                            if (checkoutForm && this.cart.length > 0 && !this.isCashInsufficient) {
-                                checkoutForm.requestSubmit();
+                            if (this.canCheckout) {
+                                this.openModal();
                             }
                         }
                         if (!typing && e.key.toLowerCase() === 'p') {
                             e.preventDefault();
                             this.payExact();
+                        }
+
+                        // Quick Cash keyboard combos: Alt + 1, Alt + 2, Alt + 3, Alt + 4
+                        if (e.altKey) {
+                            if (e.key === '1') {
+                                e.preventDefault();
+                                this.payExact();
+                            }
+                            if (e.key === '2') {
+                                e.preventDefault();
+                                this.addCash(10000);
+                            }
+                            if (e.key === '3') {
+                                e.preventDefault();
+                                this.addCash(20000);
+                            }
+                            if (e.key === '4') {
+                                e.preventDefault();
+                                this.addCash(50000);
+                            }
                         }
                     });
 
@@ -625,6 +744,43 @@
                         return false;
                     }
                     return true;
+                },
+
+                // Modal Actions
+                openModal() {
+                    if (this.cart.length === 0) {
+                        alert('Peringatan: Keranjang belanja kosong!');
+                        return;
+                    }
+                    if (this.cashAmount === '' || this.cashAmount === null) {
+                        alert('Peringatan: Harap masukkan nominal uang bayar!');
+                        const cashEl = document.getElementById('cash-amount');
+                        if (cashEl) {
+                            cashEl.focus();
+                            cashEl.select();
+                        }
+                        return;
+                    }
+                    this.isSubmitting = false;
+                    this.isModalOpen = true;
+                    
+                    // Trigger Lucide on modal show
+                    setTimeout(() => lucide.createIcons(), 50);
+                },
+
+                closeModal() {
+                    this.isModalOpen = false;
+                },
+
+                confirmAndSubmit() {
+                    if (this.isSubmitting) return;
+                    this.isSubmitting = true;
+                    
+                    // Submit checkout form
+                    const form = document.getElementById('checkout-form');
+                    if (form) {
+                        form.submit();
+                    }
                 }
             };
         }

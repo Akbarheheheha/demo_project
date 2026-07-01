@@ -39,6 +39,7 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::get('/pos', [PosController::class, 'launcher'])->name('pos');
         Route::get('/pos/fullscreen', [PosController::class, 'index'])->name('pos.fullscreen');
         Route::post('/pos', [PosController::class, 'store'])->name('pos.store');
+        Route::get('/pos/receipt/{transaction}', [PosController::class, 'receipt'])->name('pos.receipt');
     });
 
     // Admin Routes (Accessible by Super Admin and Manager)

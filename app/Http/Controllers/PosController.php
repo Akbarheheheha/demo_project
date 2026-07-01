@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Transaction;
 use App\Services\PosService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
@@ -76,9 +77,50 @@ class PosController extends Controller
 
             Cache::tags(['reports', 'sales-summary'])->flush();
 
-            return redirect()->back()->with('success', 'Transaksi Berhasil! Nomor Invoice: '.$transaction->invoice);
+            return redirect()->back()->with([
+                'success' => 'Transaksi Berhasil! Nomor Invoice: '.$transaction->invoice,
+                'print_url' => route('pos.receipt', $transaction->id)
+            ]);
         } catch (Exception $e) {
             return redirect()->back()->withInput()->withErrors(['checkout_error' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * View the thermal print receipt.
+     *
+     * @param Transaction $transaction
+     * @return View
+     */
+    public function receipt(Transaction $transaction): View
+    {
+        $transaction->load(['details.product', 'user']);
+        
+        $subtotal = $transaction->details->sum(function ($detail) {
+            return $detail->harga_jual * $detail->qty;
+        });
+
+        $items = $transaction->details->map(function ($detail) {
+            return [
+                'name' => $detail->product->name,
+                'qty' => $detail->qty,
+                'price' => (float) $detail->harga_jual,
+                'total' => (float) $detail->subtotal,
+            ];
+        })->toArray();
+
+        return view('pos.receipt', [
+            'invoice' => $transaction->invoice,
+            'date' => $transaction->created_at->format('d/m/Y H:i:s'),
+            'cashier' => $transaction->user->name ?? 'Kasir',
+            'paymentMethod' => 'TUNAI',
+            'items' => $items,
+            'subtotal' => $subtotal,
+            'discount' => (float) $transaction->discount,
+            'tax' => (float) $transaction->tax,
+            'grandTotal' => (float) $transaction->total_harga,
+            'cashReceived' => (float) $transaction->total_harga,
+            'change' => 0.0
+        ]);
     }
 }
