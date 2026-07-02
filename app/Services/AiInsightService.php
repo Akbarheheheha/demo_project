@@ -12,86 +12,99 @@ use Exception;
 
 class AiInsightService
 {
-    /**
-     * Get business insights from Gemini API based on current store metrics.
-     *
-     * @return string
-     */
+    protected string $apiKey;
+    protected string $apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+
+    public function __construct()
+    {
+        $this->apiKey = config('services.gemini.key');
+    }
+
     public function getBusinessInsights(): string
     {
         try {
-            // 1. Gather Metrics from Database
-            // a. Total Omset Bulan Ini (status success)
-            $totalOmset = (float) Transaction::whereMonth('created_at', Carbon::now()->month)
-                ->whereYear('created_at', Carbon::now()->year)
-                ->where('status', 'success')
-                ->sum('total_harga');
+            $metrics = $this->gatherMetrics();
 
-            // b. Top 3 Best-Selling Items (status success)
-            $topProducts = TransactionDetail::join('products', 'transaction_details.product_id', '=', 'products.id')
-                ->join('transactions', 'transaction_details.transaction_id', '=', 'transactions.id')
-                ->where('transactions.status', 'success')
-                ->selectRaw('products.name, SUM(transaction_details.qty) as total_qty')
-                ->groupBy('products.id', 'products.name')
-                ->orderByDesc('total_qty')
-                ->limit(3)
-                ->get()
-                ->map(fn($item) => "- {$item->name} (Terjual: {$item->total_qty} pcs)")
-                ->implode("\n");
-
-            // c. Bottom 3 Least-Selling Items
-            $bottomProducts = Product::select('products.name')
-                ->selectRaw('COALESCE(SUM(transaction_details.qty), 0) as total_qty')
-                ->leftJoin('transaction_details', function($join) {
-                    $join->on('products.id', '=', 'transaction_details.product_id')
-                         ->join('transactions', function($joinTrans) {
-                             $joinTrans->on('transaction_details.transaction_id', '=', 'transactions.id')
-                                       ->where('transactions.status', 'success');
-                         });
-                })
-                ->groupBy('products.id', 'products.name')
-                ->orderBy('total_qty', 'asc')
-                ->limit(3)
-                ->get()
-                ->map(fn($item) => "- {$item->name} (Terjual: {$item->total_qty} pcs)")
-                ->implode("\n");
-
-            // Prepare prompt string
-            $formattedOmset = 'Rp ' . number_format($totalOmset, 0, ',', '.');
-            $prompt = "Berikut adalah metrik penjualan toko UMKM kami untuk bulan ini:\n\n" .
-                      "1. **Total Omset Bulan Ini**: {$formattedOmset}\n" .
-                      "2. **3 Produk Paling Laris (Top 3)**:\n" . ($topProducts ?: "- Tidak ada data penjualan\n") . "\n" .
-                      "3. **3 Produk Paling Kurang Laku (Bottom 3)**:\n" . ($bottomProducts ?: "- Tidak ada data produk\n") . "\n" .
-                      "Berikan insight bisnis singkat, padat, dan langsung ke solusi operasional.";
-
-            // 2. HTTP Call to Gemini API
-            $apiKey = config('services.gemini.key');
-
-            if (empty($apiKey) || $apiKey === 'your_gemini_api_key_here') {
-                return "Konfigurasi API Key Gemini belum diset di file .env. Silakan atur GEMINI_API_KEY untuk melihat insight bisnis otomatis.";
+            if (empty($this->apiKey)) {
+                return "Konfigurasi API Key Gemini belum diset. Silakan tambahkan GEMINI_API_KEY di file .env.";
             }
 
-            $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key={$apiKey}";
+            return $this->generateInsight($metrics);
 
-            // System prompt
-            $systemInstruction = "Anda adalah Konsultan Bisnis UMKM profesional yang cerdas, praktis, dan suportif. " .
-                                 "Analisis data metrik penjualan toko dan berikan rekomendasi operasional konkret dalam 1 paragraf singkat saja (maksimal 3 sampai 4 kalimat). " .
-                                 "Gunakan bahasa Indonesia yang santun dan mudah dipahami, hindari penjelasan teoretis yang bertele-tele.";
+        } catch (Exception $e) {
+            Log::warning('AiInsightService Error: ' . $e->getMessage());
+            return $this->fallbackInsight($e->getMessage());
+        }
+    }
 
-            $response = Http::timeout(8) // Set 8 seconds timeout
+    protected function gatherMetrics(): array
+    {
+        $totalOmset = (float) Transaction::whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)
+            ->where('status', 'success')
+            ->sum('total_harga');
+
+        $topProducts = TransactionDetail::join('products', 'transaction_details.product_id', '=', 'products.id')
+            ->join('transactions', 'transaction_details.transaction_id', '=', 'transactions.id')
+            ->where('transactions.status', 'success')
+            ->selectRaw('products.name, SUM(transaction_details.qty) as total_qty')
+            ->groupBy('products.id', 'products.name')
+            ->orderByDesc('total_qty')
+            ->limit(3)
+            ->get()
+            ->map(fn($item) => "- {$item->name} (Terjual: {$item->total_qty} pcs)")
+            ->implode("\n");
+
+        $soldProductIds = TransactionDetail::join('transactions', 'transaction_details.transaction_id', '=', 'transactions.id')
+            ->where('transactions.status', 'success')
+            ->pluck('product_id')
+            ->unique()
+            ->toArray();
+
+        $bottomProducts = Product::whereIn('id', $soldProductIds)
+            ->select('products.id', 'products.name')
+            ->selectRaw('(SELECT COALESCE(SUM(qty), 0) FROM transaction_details 
+                        JOIN transactions ON transaction_details.transaction_id = transactions.id 
+                        WHERE transactions.status = "success" AND transaction_details.product_id = products.id) as total_qty')
+            ->orderBy('total_qty', 'asc')
+            ->limit(3)
+            ->get()
+            ->map(fn($item) => "- {$item->name} (Terjual: {$item->total_qty} pcs)")
+            ->implode("\n");
+
+        $unsoldProducts = Product::whereNotIn('id', $soldProductIds)
+            ->limit(max(0, 3 - Product::whereIn('id', $soldProductIds)->count()))
+            ->get()
+            ->map(fn($item) => "- {$item->name} (Belum terjual)")
+            ->implode("\n");
+
+        return [
+            'total_omset' => $totalOmset,
+            'top_3_products' => $topProducts ?: "- Belum ada penjualan",
+            'bottom_3_products' => $bottomProducts ?: $unsoldProducts ?: "- Tidak ada data",
+        ];
+    }
+
+    protected function generateInsight(array $metrics): string
+    {
+        $prompt = "Berikut adalah metrik penjualan UMKM saya:\n\n" .
+                  "1. Total Omset Bulan Ini: Rp " . number_format($metrics['total_omset'], 0, ',', '.') . "\n\n" .
+                  "2. 3 Produk Terlaris:\n{$metrics['top_3_products']}\n\n" .
+                  "3. 3 Produk Kurang Laku:\n{$metrics['bottom_3_products']}\n\n" .
+                  "Sebagai Konsultan Bisnis UMKM, berikan insight singkat (maks 3-4 kalimat) dengan saran operasional praktis.";
+
+        $systemInstruction = "Anda adalah Konsultan Bisnis UMKM yang ahli menganalisis data penjualan. " .
+                             "Berikan insight & rekomendasi dalam 1 paragraf singkat (3-4 kalimat), gunakan bahasa Indonesia yang jelas dan langsung ke solusi.";
+
+        try {
+            $response = Http::timeout(8)
                 ->withHeaders(['Content-Type' => 'application/json'])
-                ->post($url, [
+                ->post($this->apiUrl . '?key=' . $this->apiKey, [
                     'contents' => [
-                        [
-                            'parts' => [
-                                ['text' => $prompt]
-                            ]
-                        ]
+                        ['parts' => [['text' => $prompt]]]
                     ],
                     'systemInstruction' => [
-                        'parts' => [
-                            ['text' => $systemInstruction]
-                        ]
+                        'parts' => [['text' => $systemInstruction]]
                     ],
                     'generationConfig' => [
                         'temperature' => 0.7,
@@ -101,21 +114,21 @@ class AiInsightService
 
             if ($response->failed()) {
                 Log::error('Gemini API Error: ' . $response->body());
-                return "Maaf, sistem gagal menghubungi AI Advisor saat ini. Coba segarkan halaman beberapa saat lagi.";
+                return $this->fallbackInsight('API request failed');
             }
 
             $result = $response->json();
             $insight = $result['candidates'][0]['content']['parts'][0]['text'] ?? null;
 
-            if (empty($insight)) {
-                return "Tidak ada insight yang dapat dihasilkan dari data saat ini.";
-            }
-
-            return trim($insight);
+            return $insight ? trim($insight) : $this->fallbackInsight('No response');
 
         } catch (Exception $e) {
-            Log::warning('AiInsightService Error: ' . $e->getMessage());
-            return "Koneksi ke server AI Insight mengalami gangguan (timeout). Silakan periksa koneksi internet Anda atau coba kembali nanti.";
+            return $this->fallbackInsight($e->getMessage());
         }
+    }
+
+    protected function fallbackInsight(string $reason): string
+    {
+        return "Koneksi AI Advisor sedang bermasalah ($reason). Silakan cek koneksi internet atau coba lagi nanti.";
     }
 }

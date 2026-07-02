@@ -445,10 +445,27 @@
                 <button @click="closeModal()" class="text-slate-400 hover:text-slate-650 transition-colors">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
-            </div>
+</div>
             
-            <!-- Summary Info -->
-            <div class="space-y-3.5 py-1">
+             <!-- Cart Items List -->
+             <div class="space-y-2">
+                 <label class="text-xs font-bold text-slate-500 uppercase">Daftar Barang</label>
+                 <div class="max-h-40 overflow-y-auto space-y-1.5">
+                     <template x-for="(item, index) in cart" :key="item.product.id">
+                         <div class="flex justify-between items-start text-xs">
+                             <div class="flex-1">
+                                 <span class="font-semibold text-slate-800" x-text="item.product.name"></span>
+                                 <span class="text-slate-500 ml-1" x-text="item.product.sku"></span>
+                                 <span class="text-slate-400 text-[10px] ml-1" x-text="item.qty + ' x Rp ' + new Intl.NumberFormat('id-ID').format(item.product.price)"></span>
+                             </div>
+                             <span class="font-semibold text-slate-800" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(item.product.price * item.qty)"></span>
+                         </div>
+                     </template>
+                 </div>
+             </div>
+             
+             <!-- Summary Info -->
+             <div class="space-y-3.5 py-1">
                 <!-- Total Tagihan -->
                 <div class="flex justify-between items-center bg-indigo-50/50 p-3.5 rounded-2xl border border-indigo-100/50">
                     <span class="text-xs font-bold text-indigo-900 uppercase">Total Tagihan</span>
