@@ -75,30 +75,43 @@
         </div>
     </div>
     
-    <!-- AI Business Insight Banner -->
-    <div class="container_scale bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-900 text-white p-6 rounded-2xl border border-indigo-500/25 shadow-xl relative overflow-hidden">
-        <!-- Background decorative glows -->
-        <div class="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none"></div>
-        <div class="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-violet-500/10 blur-3xl pointer-events-none"></div>
-        
-        <div class="relative z-10 flex flex-col md:flex-row md:items-center gap-5">
-            <!-- Icon -->
-            <div class="p-3.5 bg-white/10 backdrop-blur-md text-indigo-300 rounded-2xl border border-white/15 shadow-inner self-start md:self-center flex-shrink-0">
-                <i data-lucide="sparkles" class="w-7 h-7"></i>
-            </div>
-            
-            <!-- Content -->
-            <div class="flex-1 space-y-1">
-                <div class="flex items-center gap-2">
-                    <span class="px-2 py-0.5 text-[9px] font-mono font-semibold bg-indigo-500/25 border border-indigo-400/30 text-indigo-200 rounded-md tracking-wider uppercase">AI Advisor</span>
-                    <h3 class="font-bold text-sm text-slate-100 tracking-wide">AI Business Insight</h3>
-                </div>
-                <div class="text-xs text-slate-300 leading-relaxed font-sans mt-2 pr-4 whitespace-pre-line">
-                    {!! nl2br(e($ai_insight)) !!}
-                </div>
-            </div>
-        </div>
-    </div>
+<!-- AI Business Insight Banner -->
+     <div class="container_scale bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-900 text-white p-6 rounded-2xl border border-indigo-500/25 shadow-xl relative overflow-hidden"
+          x-data="{ loading: false }"
+          x-init="loading = false">
+         <!-- Background decorative glows -->
+         <div class="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none"></div>
+         <div class="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-violet-500/10 blur-3xl pointer-events-none"></div>
+         
+         <div class="relative z-10 flex flex-col md:flex-row md:items-center gap-5">
+             <!-- Icon -->
+             <div class="p-3.5 bg-white/10 backdrop-blur-md text-indigo-300 rounded-2xl border border-white/15 shadow-inner self-start md:self-center flex-shrink-0">
+                 <i data-lucide="sparkles" class="w-7 h-7"></i>
+             </div>
+             
+             <!-- Content -->
+             <div class="flex-1 space-y-1">
+                 <div class="flex items-center gap-2">
+                     <span class="px-2 py-0.5 text-[9px] font-mono font-semibold bg-indigo-500/25 border border-indigo-400/30 text-indigo-200 rounded-md tracking-wider uppercase">AI Advisor</span>
+                     <h3 class="font-bold text-sm text-slate-100 tracking-wide">✨ AI Business Insight</h3>
+                 </div>
+                 
+                 <!-- Loading State -->
+                 <div x-show="loading" class="flex items-center gap-2 mt-3">
+                     <svg class="animate-spin w-4 h-4 text-indigo-300" fill="none" viewBox="0 0 24 24">
+                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                     </svg>
+                     <span class="text-xs text-slate-400">Sedang menganalisis data bisnis...</span>
+                 </div>
+                 
+                 <!-- Insight Content -->
+                 <div x-show="!loading" class="text-xs text-slate-300 leading-relaxed font-sans mt-2 pr-4">
+                     {!! nl2br(e($ai_insight)) !!}
+                 </div>
+             </div>
+         </div>
+     </div>
     
     <!-- Statistic Cards Grid -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">

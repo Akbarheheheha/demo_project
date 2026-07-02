@@ -258,17 +258,11 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-slate-500">Harga Beli (Rp)</label>
-                            <input type="number" 
-                                   :value="formattedPurchasePrice" 
-                                   @input="setFormattedPurchase($event.target.value)" 
-                                   class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
+                            <input type="number" x-model="form.purchase_price" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
                         </div>
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-slate-500">Harga Jual (Rp)</label>
-                            <input type="number" 
-                                   :value="formattedSellingPrice" 
-                                   @input="setFormattedSelling($event.target.value)" 
-                                   class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
+                            <input type="number" x-model="form.selling_price" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
                         </div>
                     </div>
                 </div>
@@ -347,17 +341,11 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-slate-500">Harga Beli (Rp)</label>
-                            <input type="number" 
-                                   :value="formattedPurchasePrice" 
-                                   @input="setFormattedPurchase($event.target.value)" 
-                                   class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
+                            <input type="number" x-model="form.purchase_price" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
                         </div>
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-slate-500">Harga Jual (Rp)</label>
-                            <input type="number" 
-                                   :value="formattedSellingPrice" 
-                                   @input="setFormattedSelling($event.target.value)" 
-                                   class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
+                            <input type="number" x-model="form.selling_price" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
                         </div>
                     </div>
                 </div>
@@ -497,24 +485,6 @@ function inventoryComponent() {
         
         // Target product for mutation history
         selectedProductForMutation: null,
-
-        // Formatted Price helpers
-        get formattedPurchasePrice() {
-            if (this.form.purchase_price === '' || this.form.purchase_price === null || this.form.purchase_price === 0) return '';
-            return new Intl.NumberFormat('id-ID').format(this.form.purchase_price);
-        },
-        get formattedSellingPrice() {
-            if (this.form.selling_price === '' || this.form.selling_price === null || this.form.selling_price === 0) return '';
-            return new Intl.NumberFormat('id-ID').format(this.form.selling_price);
-        },
-        setFormattedPurchase(val) {
-            const clean = val.replace(/[^0-9]/g, '');
-            this.form.purchase_price = clean ? parseInt(clean, 10) : 0;
-        },
-        setFormattedSelling(val) {
-            const clean = val.replace(/[^0-9]/g, '');
-            this.form.selling_price = clean ? parseInt(clean, 10) : 0;
-        },
         
         // Filtered Inventory List
         get filteredInventory() {

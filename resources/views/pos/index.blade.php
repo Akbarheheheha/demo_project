@@ -445,7 +445,7 @@
                 <button @click="closeModal()" class="text-slate-400 hover:text-slate-650 transition-colors">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
-            </div>
+</div>
             
             <!-- Daftar Barang yang Dibeli -->
             <div class="border-t border-slate-100 pt-3">

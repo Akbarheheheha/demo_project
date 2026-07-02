@@ -295,6 +295,23 @@
                 <!-- Modal Body -->
                 <div class="p-6 space-y-5">
                     
+                    <!-- Items List -->
+                    <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-2 text-xs">
+                        <label class="text-xs font-bold text-slate-500">Daftar Barang</label>
+                        <div class="space-y-1.5 max-h-40 overflow-y-auto">
+                            <template x-for="(item, index) in cart" :key="item.product.id">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <span class="font-semibold text-slate-800" x-text="item.product.name"></span>
+                                        <span class="text-slate-500 ml-1" x-text="item.product.sku"></span>
+                                        <span class="text-slate-400 text-[10px] ml-1" x-text="item.qty + ' x Rp ' + new Intl.NumberFormat('id-ID').format(item.product.price)"></span>
+                                    </div>
+                                    <span class="font-semibold text-slate-800" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(item.product.price * item.qty)"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    
                     <!-- Billing Summary -->
                     <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-1.5 text-xs text-slate-600">
                         <div class="flex justify-between">
