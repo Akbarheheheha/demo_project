@@ -8,6 +8,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\NotificationController;
 
 // Auth Routes (Guest Only)
 Route::middleware(['guest.custom'])->group(function () {
@@ -48,6 +49,7 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
         // Define 'dashboard' alias to maintain compatibility
         Route::get('/main-dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/api/dashboard/low-stock', [DashboardController::class, 'getLowStockApi'])->name('dashboard.low-stock');
         Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory');
         Route::get('/reports', [ReportController::class, 'index'])->name('reports');
         Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
@@ -69,4 +71,8 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::post('/api/settings/users/store', [SettingsController::class, 'storeUser']);
         Route::delete('/api/settings/users/delete/{id}', [SettingsController::class, 'deleteUser']);
     });
+
+    // Notification Routes
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
 });

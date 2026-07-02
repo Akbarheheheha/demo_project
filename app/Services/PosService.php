@@ -92,6 +92,28 @@ class PosService
                 ]);
             }
 
+            // Check for low stock and trigger notifications to admins
+            foreach ($items as $item) {
+                $productId = $item['id'] ?? null;
+                if (!$productId) {
+                    continue;
+                }
+                $product = Product::find($productId);
+                if ($product && $product->stock <= 5) {
+                    $admins = \App\Models\User::role(['Super Admin', 'Manager'])->get();
+                    foreach ($admins as $admin) {
+                        // Check if an unread notification for this product already exists for the admin
+                        $alreadyNotified = $admin->unreadNotifications()
+                            ->where('data->product_id', $product->id)
+                            ->exists();
+
+                        if (!$alreadyNotified) {
+                            $admin->notify(new \App\Notifications\LowStockNotification($product));
+                        }
+                    }
+                }
+            }
+
             return $transaction;
         });
     }

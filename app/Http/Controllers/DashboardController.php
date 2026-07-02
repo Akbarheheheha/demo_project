@@ -93,4 +93,15 @@ class DashboardController extends Controller
             'ai_insight'
         ));
     }
+
+    public function getLowStockApi()
+    {
+        $stok_menipis = Product::whereColumn('stock', '<=', 'min_stock')
+            ->orWhere('stock', '<=', 5)
+            ->orderBy('stock', 'asc')
+            ->limit(5)
+            ->get();
+
+        return response()->json($stok_menipis);
+    }
 }

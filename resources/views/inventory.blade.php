@@ -257,12 +257,12 @@
                     <!-- Pricing Grid -->
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-slate-500">Harga Beli (Rp)</label>
-                            <input type="number" x-model="form.purchase_price" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
+                            <label class="text-xs font-bold text-slate-500">Harga Beli</label>
+                            <input type="text" :value="formatRupiah(form.purchase_price)" @input="form.purchase_price = parseRupiah($event.target.value)" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
                         </div>
                         <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-slate-500">Harga Jual (Rp)</label>
-                            <input type="number" x-model="form.selling_price" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
+                            <label class="text-xs font-bold text-slate-500">Harga Jual</label>
+                            <input type="text" :value="formatRupiah(form.selling_price)" @input="form.selling_price = parseRupiah($event.target.value)" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
                         </div>
                     </div>
                 </div>
@@ -340,12 +340,12 @@
                     <!-- Pricing Grid -->
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-slate-500">Harga Beli (Rp)</label>
-                            <input type="number" x-model="form.purchase_price" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
+                            <label class="text-xs font-bold text-slate-500">Harga Beli</label>
+                            <input type="text" :value="formatRupiah(form.purchase_price)" @input="form.purchase_price = parseRupiah($event.target.value)" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
                         </div>
                         <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-slate-500">Harga Jual (Rp)</label>
-                            <input type="number" x-model="form.selling_price" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
+                            <label class="text-xs font-bold text-slate-500">Harga Jual</label>
+                            <input type="text" :value="formatRupiah(form.selling_price)" @input="form.selling_price = parseRupiah($event.target.value)" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
                         </div>
                     </div>
                 </div>
@@ -460,6 +460,19 @@ function inventoryComponent() {
         mutations: @json($mutations),
         categories: @json($categories),
         
+        init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const editSku = urlParams.get('edit_sku');
+            if (editSku) {
+                this.$nextTick(() => {
+                    const item = this.inventory.find(i => i.sku === editSku);
+                    if (item) {
+                        this.openEditModal(item);
+                    }
+                });
+            }
+        },
+        
         // Modals State
         showAddModal: false,
         showEditModal: false,
@@ -483,6 +496,19 @@ function inventoryComponent() {
             selling_price: 0
         },
         
+        formatRupiah(num) {
+            if (num === null || num === undefined || num === '') return '';
+            const numberString = num.toString().replace(/[^0-9]/g, '');
+            if (!numberString) return '';
+            return 'Rp ' + new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(numberString);
+        },
+        
+        parseRupiah(str) {
+            if (!str) return 0;
+            const cleaned = str.replace(/[^0-9]/g, '');
+            return cleaned ? parseInt(cleaned, 10) : 0;
+        },
+        
         // Target product for mutation history
         selectedProductForMutation: null,
         
@@ -492,13 +518,15 @@ function inventoryComponent() {
                 const matchesCategory = this.selectedCategory === 'all' || item.category === this.selectedCategory;
                 const matchesSearch = item.name.toLowerCase().includes(this.searchQuery.toLowerCase()) || item.sku.toLowerCase().includes(this.searchQuery.toLowerCase());
                 
+                const stock = Number(item.stock);
+                const minStock = Number(item.min_stock);
                 let matchesStock = true;
                 if (this.stockFilter === 'low') {
-                    matchesStock = item.stock <= item.min_stock && item.stock > 0;
+                    matchesStock = stock <= minStock && stock > 0;
                 } else if (this.stockFilter === 'out') {
-                    matchesStock = item.stock === 0;
+                    matchesStock = stock <= 0;
                 } else if (this.stockFilter === 'normal') {
-                    matchesStock = item.stock > item.min_stock;
+                    matchesStock = stock > minStock;
                 }
                 
                 return matchesCategory && matchesSearch && matchesStock;
@@ -507,8 +535,10 @@ function inventoryComponent() {
         
         // Helper to check stock status
         getStockStatus(item) {
-            if (item.stock === 0) return 'out';
-            if (item.stock <= item.min_stock) return 'low';
+            const stock = Number(item.stock);
+            const minStock = Number(item.min_stock);
+            if (stock <= 0) return 'out';
+            if (stock <= minStock) return 'low';
             return 'normal';
         },
 

@@ -203,7 +203,7 @@
         </div>
 
         <!-- Widget Area: Low Stock or Cashier Log (takes 1 col) -->
-        <div class="container_scale bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col" x-data="{ showLog: false }">
+        <div class="container_scale bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col" x-data="dashboardLowStockComponent()">
             
             <!-- Widget Header -->
             <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
@@ -211,37 +211,34 @@
                     <h3 class="font-bold text-slate-800 text-lg" x-text="showLog ? 'Aktivitas Kasir' : 'Peringatan Stok Menipis'">Peringatan Stok Menipis</h3>
                     <p class="text-xs text-slate-400" x-text="showLog ? 'Daftar transaksi kasir terbaru dari database.' : 'Daftar produk dengan stok menipis saat ini.'">Daftar produk dengan stok menipis saat ini.</p>
                 </div>
-                
-                <!-- Toggle Button -->
-                <!-- <button @click="showLog = !showLog" 
-                        class="p-2 rounded-xl bg-slate-50 border border-slate-200/60 hover:bg-slate-100 text-slate-600 transition-all flex items-center justify-center"
-                        :title="showLog ? 'Tampilkan Stok Menipis'  ">
-                    <i :data-lucide="showLog ? 'alert-triangle' : 'history'" class="w-4 h-4"></i>
-                </button> -->
             </div>
 
             <!-- Widget Body: Low Stock List (Default) -->
             <div x-show="!showLog" class="flex-1 flex flex-col justify-between min-h-[300px]">
                 <div class="overflow-y-auto max-h-[300px] space-y-3 pr-1 flex-1">
-                    @forelse($stok_menipis as $item)
-                        <div class="container_stok flex items-center justify-between p-3 rounded-xl bg-indigo-50/20 hover:bg-indigo-50/50 transition-all duration-200">
+                    <template x-for="item in stokMenipis" :key="item.id">
+                        <a :href="'{{ route('inventory') }}?edit_sku=' + item.sku" 
+                           data-spa-ignore
+                           class="container_stok flex items-center justify-between p-3 rounded-xl bg-indigo-50/20 hover:bg-indigo-50/50 transition-all duration-200 block">
                             <div class="flex items-center gap-3">
                                 <div class="h-9 w-9 rounded-xl flex items-center justify-center font-bold bg-indigo-50 text-indigo-600">
                                     <i data-lucide="package" class="w-4 h-4"></i>
                                 </div>
                                 <div>
-                                    <h4 class="text-xs font-bold text-slate-850">{{ $item->name }}</h4>
-                                    <span class="text-[9px] text-slate-450">{{ $item->sku }}</span>
+                                    <h4 class="text-xs font-bold text-slate-850" x-text="item.name"></h4>
+                                    <span class="text-[9px] text-slate-450" x-text="item.sku"></span>
                                 </div>
                             </div>
                             <div class="text-right">
-                                <span class="text-xs font-black text-indigo-600">{{ $item->stock }} Sisa</span>
+                                <span class="text-xs font-black text-indigo-600" x-text="item.stock + ' Sisa'"></span>
                                 <div class="mt-0.5">
-                                    <span class=" text-[8px] font-semibold text-slate-400 font-medium">Min: {{ $item->min_stock }}</span>
+                                    <span class="text-[8px] font-semibold text-slate-400 font-medium" x-text="'Min: ' + item.min_stock"></span>
                                 </div>
                             </div>
-                        </div>
-                    @empty
+                        </a>
+                    </template>
+                    
+                    <template x-if="stokMenipis.length === 0">
                         <div class="flex flex-col items-center justify-center h-full text-center py-12 text-slate-450">
                             <div class="p-3 bg-emerald-50 text-emerald-600 rounded-2xl mb-2">
                                 <i data-lucide="check" class="w-6 h-6"></i>
@@ -249,7 +246,7 @@
                             <h4 class="text-xs font-bold text-slate-700">Semua Stok Aman</h4>
                             <p class="text-[10px] text-slate-400 mt-0.5">Tidak ada barang dengan stok menipis.</p>
                         </div>
-                    @endforelse
+                    </template>
                 </div>
                 
                 <div class="mt-4 pt-4 border-t border-slate-100">
@@ -378,6 +375,31 @@
             }
         });
     });
+
+    function dashboardLowStockComponent() {
+        return {
+            showLog: false,
+            stokMenipis: @json($stok_menipis),
+            
+            init() {
+                setInterval(async () => {
+                    try {
+                        const response = await fetch('{{ route('dashboard.low-stock') }}');
+                        if (response.ok) {
+                            this.stokMenipis = await response.json();
+                            this.$nextTick(() => {
+                                if (window.lucide) {
+                                    window.lucide.createIcons();
+                                }
+                            });
+                        }
+                    } catch (e) {
+                        console.error('Error fetching low stock:', e);
+                    }
+                }, 3000); // Check every 3 seconds
+            }
+        };
+    }
 </script>
 @endpush
 @endsection
