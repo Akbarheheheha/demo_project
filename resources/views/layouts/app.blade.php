@@ -208,6 +208,17 @@
                     <span x-show="sidebarOpen" x-transition.opacity>Laporan Keuangan</span>
                 </a>
                 @endrole
+
+                <!-- Audit Log Link (Super Admin & Manager) -->
+                @hasanyrole('Super Admin|Manager')
+                <a href="{{ route('admin.audit-logs') }}" 
+                   class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
+                   :class="activePage === 'audit-logs' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'"
+                   :title="!sidebarOpen ? 'Log Audit' : ''">
+                    <i data-lucide="shield-check" class="w-5 h-5 flex-shrink-0"></i>
+                    <span x-show="sidebarOpen" x-transition.opacity>Log Audit</span>
+                </a>
+                @endhasanyrole
                 
                 <!-- Pengaturan Link (Super Admin Only) -->
                 @role('Super Admin')

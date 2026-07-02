@@ -71,11 +71,11 @@ class AiInsightService
                 return "Konfigurasi API Key Gemini belum diset di file .env. Silakan atur GEMINI_API_KEY untuk melihat insight bisnis otomatis.";
             }
 
-            $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$apiKey}";
+            $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key={$apiKey}";
 
             // System prompt
             $systemInstruction = "Anda adalah Konsultan Bisnis UMKM profesional yang cerdas, praktis, dan suportif. " .
-                                 "Analisis data metrik penjualan toko dan berikan rekomendasi operasional konkret dalam 1-2 paragraf singkat saja. " .
+                                 "Analisis data metrik penjualan toko dan berikan rekomendasi operasional konkret dalam 1 paragraf singkat saja (maksimal 3 sampai 4 kalimat). " .
                                  "Gunakan bahasa Indonesia yang santun dan mudah dipahami, hindari penjelasan teoretis yang bertele-tele.";
 
             $response = Http::timeout(8) // Set 8 seconds timeout

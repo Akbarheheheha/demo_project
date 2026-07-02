@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Services\PosService;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -76,7 +77,13 @@ class PosController extends Controller
                 (float) $request->input('tax_percent', 11)
             );
 
-            Cache::tags(['reports', 'sales-summary'])->flush();
+            $cacheKey = sprintf(
+                'reports:sales-summary:%s:%s',
+                Carbon::now()->startOfMonth()->toDateString(),
+                Carbon::now()->endOfMonth()->toDateString()
+            );
+
+            Cache::forget($cacheKey);
 
             $cashAmount = (float) $request->input('cash_amount', $transaction->total_harga);
 

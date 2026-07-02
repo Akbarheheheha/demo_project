@@ -127,8 +127,7 @@ class ReportController extends Controller
             $endOfMonth->toDateString()
         );
 
-        return Cache::tags(['reports', 'sales-summary'])
-            ->remember($cacheKey, now()->addHour(), function () use ($startOfMonth, $endOfMonth): array {
+        return Cache::remember($cacheKey, now()->addHour(), function () use ($startOfMonth, $endOfMonth): array {
                 $successfulTransactions = Transaction::query()
                     ->where('status', 'success')
                     ->whereBetween('created_at', [$startOfMonth, $endOfMonth]);
