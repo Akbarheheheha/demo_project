@@ -205,7 +205,35 @@
         </div>
 
         <!-- Widget Area: Low Stock or Cashier Log (takes 1 col) -->
-        <div class="container_scale bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col" x-data="dashboardLowStockComponent()" wire:key="aktivitas-kasir-container">
+        <div class="container_scale bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col" 
+             x-data="{
+                showLog: false,
+                stokMenipis: {{ json_encode($stok_menipis) }},
+                timer: null,
+                init() {
+                    this.timer = setInterval(async () => {
+                        try {
+                            const response = await fetch('{{ route('dashboard.low-stock') }}');
+                            if (response.ok) {
+                                this.stokMenipis = await response.json();
+                                this.$nextTick(() => {
+                                    if (window.lucide) {
+                                        window.lucide.createIcons();
+                                    }
+                                });
+                            }
+                        } catch (e) {
+                            console.error('Error fetching low stock:', e);
+                        }
+                    }, 3000);
+                },
+                destroy() {
+                    if (this.timer) {
+                        clearInterval(this.timer);
+                    }
+                }
+             }" 
+             wire:key="aktivitas-kasir-container">
             
             <!-- Widget Header -->
             <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
@@ -442,30 +470,7 @@
     // Listen to Livewire navigate event (Livewire 3 SPA mode support)
     document.addEventListener('livewire:navigated', initWeeklySalesChart);
 
-    function dashboardLowStockComponent() {
-        return {
-            showLog: false,
-            stokMenipis: @json($stok_menipis),
-            
-            init() {
-                setInterval(async () => {
-                    try {
-                        const response = await fetch('{{ route('dashboard.low-stock') }}');
-                        if (response.ok) {
-                            this.stokMenipis = await response.json();
-                            this.$nextTick(() => {
-                                if (window.lucide) {
-                                    window.lucide.createIcons();
-                                }
-                            });
-                        }
-                    } catch (e) {
-                        console.error('Error fetching low stock:', e);
-                    }
-                }, 3000); // Check every 3 seconds
-            }
-        };
-    }
+
 </script>
 @endpush
 @endsection

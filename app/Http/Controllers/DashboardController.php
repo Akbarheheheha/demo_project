@@ -96,6 +96,8 @@ class DashboardController extends Controller
 
     public function getLowStockApi()
     {
+        session_write_close();
+
         $stok_menipis = Product::whereColumn('stock', '<=', 'min_stock')
             ->orWhere('stock', '<=', 5)
             ->orderBy('stock', 'asc')
