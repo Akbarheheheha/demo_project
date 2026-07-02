@@ -7,6 +7,7 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\AuditLogController;
 
 // Auth Routes (Guest Only)
 Route::middleware(['guest.custom'])->group(function () {
@@ -51,6 +52,7 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::get('/reports', [ReportController::class, 'index'])->name('reports');
         Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
         Route::get('/reports/export/excel', [ReportController::class, 'exportExcel'])->name('reports.export.excel');
+        Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('admin.audit-logs');
     });
 
     // Inventory API CRUD (Accessible by Super Admin and Manager)
