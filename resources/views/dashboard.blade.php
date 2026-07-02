@@ -205,7 +205,7 @@
         </div>
 
         <!-- Widget Area: Low Stock or Cashier Log (takes 1 col) -->
-        <div class="container_scale bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col" x-data="dashboardLowStockComponent()">
+        <div class="container_scale bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col" x-data="dashboardLowStockComponent()" wire:key="aktivitas-kasir-container">
             
             <!-- Widget Header -->
             <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
@@ -213,6 +213,12 @@
                     <h3 class="font-bold text-slate-800 text-lg" x-text="showLog ? 'Aktivitas Kasir' : 'Peringatan Stok Menipis'">Peringatan Stok Menipis</h3>
                     <p class="text-xs text-slate-400" x-text="showLog ? 'Daftar transaksi kasir terbaru dari database.' : 'Daftar produk dengan stok menipis saat ini.'">Daftar produk dengan stok menipis saat ini.</p>
                 </div>
+                <!-- Toggle Button -->
+                <button @click="showLog = !showLog; $nextTick(() => { if(window.lucide) { window.lucide.createIcons(); } })" 
+                        class="p-2 rounded-xl bg-slate-50 border border-slate-200/60 hover:bg-slate-100 text-slate-600 transition-all flex items-center justify-center"
+                        :title="showLog ? 'Tampilkan Stok Menipis' : 'Tampilkan Aktivitas Kasir'">
+                    <i :data-lucide="showLog ? 'alert-triangle' : 'history'" class="w-4 h-4"></i>
+                </button>
             </div>
 
             <!-- Widget Body: Low Stock List (Default) -->
@@ -259,28 +265,48 @@
                     </a>
                 </div>
             </div>
+
+            <!-- Widget Body: Cashier Log (Aktivitas Kasir) -->
+            <div x-show="showLog" class="flex-1 flex flex-col justify-between min-h-[300px]">
+                <div class="overflow-y-auto max-h-[300px] space-y-3 pr-1 flex-1">
+                    @forelse($aktivitas_kasir as $trx)
+                        <div wire:key="trx-item-{{ $trx->id }}" class="flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50/50 transition-all duration-200">
+                            <div class="flex items-center gap-3">
+                                <div class="h-9 w-9 rounded-xl flex items-center justify-center font-bold text-xs bg-indigo-50 text-indigo-600">
+                                    <i data-lucide="receipt" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-xs font-bold text-slate-800">{{ $trx->invoice }}</span>
+                                        <span class="text-[9px] text-slate-450 font-mono">{{ $trx->created_at ? $trx->created_at->format('H:i') : '-' }}</span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-500 font-medium">Pelanggan: <span class="text-slate-700 font-semibold">{{ $trx->customer_name ?? 'Umum' }}</span></p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs font-bold text-slate-800">Rp {{ number_format($trx->total_harga, 0, ',', '.') }}</span>
+                                <div class="mt-1">
+                                    <span class="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider bg-emerald-50 text-emerald-600">
+                                        {{ $trx->status }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div wire:key="trx-empty-state" class="flex flex-col items-center justify-center h-full text-center py-12 text-slate-450">
+                            <div class="p-3 bg-slate-50 text-slate-400 rounded-2xl mb-2">
+                                <i data-lucide="receipt" class="w-6 h-6"></i>
+                            </div>
+                            <h4 class="text-xs font-bold text-slate-700">Tidak Ada Transaksi</h4>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Belum ada transaksi kasir hari ini.</p>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
         </div>
 
     </div>
-
-    <!-- Banner Alert Stok Menipis di bagian paling bawah -->
-    <!-- Komentar: Banner ini hanya akan di-render jika ada produk dengan stok <= 5 -->
-    @if($stok_menipis->isNotEmpty())
-        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-4 mt-6">
-            <div class="flex items-center gap-3">
-                <div class="p-2.5 bg-amber-500/10 text-amber-600 rounded-xl border border-amber-500/20">
-                    <i data-lucide="alert-triangle" class="w-5 h-5"></i>
-                </div>
-                <div>
-                    <h4 class="text-xs font-bold text-slate-800">Perhatian: Beberapa Barang Memiliki Stok Sangat Rendah</h4>
-                    <p class="text-[10px] text-slate-450 mt-0.5">Segera lakukan restock barang berikut untuk menghindari kehabisan stok.</p>
-                </div>
-            </div>
-            <a href="{{ route('inventory', ['filter' => 'low_stock']) }}" class="py-2 px-3.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition-colors">
-                Restock Sekarang
-            </a>
-        </div>
-    @endif
 
 </div>
 
