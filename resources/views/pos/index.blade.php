@@ -447,6 +447,25 @@
                 </button>
             </div>
             
+            <!-- Daftar Barang yang Dibeli -->
+            <div class="border-t border-slate-100 pt-3">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Rincian Belanja:</span>
+                <div class="max-h-36 overflow-y-auto space-y-2 pr-1">
+                    <template x-for="item in cart" :key="item.product.id">
+                        <div class="flex items-center justify-between text-xs bg-slate-50/50 p-2.5 rounded-xl border border-slate-200/50">
+                            <div class="min-w-0 flex-1">
+                                <span class="font-bold text-slate-800 truncate block" x-text="item.product.name"></span>
+                                <span class="text-[9px] text-slate-400 font-mono" x-text="item.product.sku + ' • Rp ' + new Intl.NumberFormat('id-ID').format(item.product.price)"></span>
+                            </div>
+                            <div class="text-right flex-shrink-0 ml-3">
+                                <span class="font-bold text-indigo-650" x-text="item.qty + ' pcs'"></span>
+                                <span class="font-black text-slate-700 block text-[11px]" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(item.product.price * item.qty)"></span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            
             <!-- Summary Info -->
             <div class="space-y-3.5 py-1">
                 <!-- Total Tagihan -->
