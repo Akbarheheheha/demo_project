@@ -126,6 +126,11 @@
         <div class="border-b border-dashed border-slate-300 my-3"></div>
         
         <!-- Summary Calculations -->
+        @php
+            $calculatedTax = $subtotal * 0.11;
+            $calculatedGrandTotal = $subtotal - ($discount ?? 0) + $calculatedTax;
+            $calculatedChange = max(0, $cashReceived - $calculatedGrandTotal);
+        @endphp
         <div class="space-y-1.5 text-[10px]">
             <div class="flex justify-between text-slate-600">
                 <span>Subtotal</span>
@@ -139,14 +144,14 @@
             @endif
             <div class="flex justify-between text-slate-600">
                 <span>Pajak (PPN 11%)</span>
-                <span class="font-semibold text-slate-800">Rp {{ number_format($tax ?? 6820, 0, ',', '.') }}</span>
+                <span class="font-semibold text-slate-800">Rp {{ number_format($calculatedTax, 0, ',', '.') }}</span>
             </div>
             
             <div class="border-b border-dotted border-slate-300 my-1.5"></div>
             
             <div class="flex justify-between text-xs font-black text-slate-900">
                 <span>GRAND TOTAL</span>
-                <span class="text-sm font-extrabold text-indigo-650">Rp {{ number_format($grandTotal ?? 68820, 0, ',', '.') }}</span>
+                <span class="text-sm font-extrabold text-indigo-650">Rp {{ number_format($calculatedGrandTotal, 0, ',', '.') }}</span>
             </div>
             
             <div class="border-b border-dotted border-slate-300 my-1.5"></div>
@@ -157,7 +162,7 @@
             </div>
             <div class="flex justify-between text-slate-600">
                 <span>Kembalian</span>
-                <span class="font-semibold text-emerald-700">Rp {{ number_format($change ?? 31180, 0, ',', '.') }}</span>
+                <span class="font-semibold text-emerald-700">Rp {{ number_format($calculatedChange, 0, ',', '.') }}</span>
             </div>
         </div>
         

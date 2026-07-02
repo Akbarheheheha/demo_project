@@ -89,25 +89,51 @@
                                 <!-- Icon representation (standardizing size/look) -->
                                 <div class="p-3 bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-100 group-hover:scale-110 transition-transform duration-200">
                                     <template x-if="prod.icon === 'shopping-bag'">
-                                        <i data-lucide="shopping-bag" class="w-6 h-6"></i>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-indigo-650">
+                                            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                                            <path d="M16 10a4 4 0 0 1-8 0"></path>
+                                        </svg>
                                     </template>
                                     <template x-if="prod.icon === 'droplet'">
-                                        <i data-lucide="droplet" class="w-6 h-6"></i>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-sky-600">
+                                            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+                                        </svg>
                                     </template>
                                     <template x-if="prod.icon === 'database'">
-                                        <i data-lucide="database" class="w-6 h-6"></i>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-slate-600">
+                                            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                                            <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"></path>
+                                        </svg>
                                     </template>
                                     <template x-if="prod.icon === 'utensils'">
-                                        <i data-lucide="utensils" class="w-6 h-6"></i>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-amber-600">
+                                            <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path>
+                                            <path d="M7 2v20"></path>
+                                            <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3H21z"></path>
+                                            <path d="M19 15v7"></path>
+                                        </svg>
                                     </template>
                                     <template x-if="prod.icon === 'cup-tass'">
-                                        <i data-lucide="cup" class="w-6 h-6"></i>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-rose-600">
+                                            <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+                                            <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+                                            <line x1="6" y1="2" x2="6" y2="4"></line>
+                                            <line x1="10" y1="2" x2="10" y2="4"></line>
+                                            <line x1="14" y1="2" x2="14" y2="4"></line>
+                                        </svg>
                                     </template>
                                     <template x-if="prod.icon === 'candy'">
-                                        <i data-lucide="candy" class="w-6 h-6"></i>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-pink-650">
+                                            <circle cx="12" cy="12" r="6"></circle>
+                                            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+                                        </svg>
                                     </template>
                                     <template x-if="prod.icon === 'sparkles'">
-                                        <i data-lucide="sparkles" class="w-6 h-6"></i>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-purple-600">
+                                            <path d="M12 3v3m0 12v3m9-9h-3M6 12H3m14.07-7.07l-2.12 2.12M8.05 15.95l-2.12 2.12M15.95 15.95l2.12 2.12M8.05 8.05L5.93 5.93"></path>
+                                        </svg>
                                     </template>
                                 </div>
                                 

@@ -163,7 +163,11 @@
                             <!-- Thumbnail representation -->
                             <div class="h-24 w-full bg-slate-50 text-indigo-650 rounded-xl flex items-center justify-center mt-3 mb-2.5 relative overflow-hidden group-hover:bg-indigo-50/50 transition-colors duration-200">
                                 <div class="p-3 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover:scale-110 transition-transform duration-200">
-                                    <i data-lucide="shopping-bag" class="w-6 h-6"></i>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-indigo-650">
+                                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                                        <path d="M16 10a4 4 0 0 1-8 0"></path>
+                                    </svg>
                                 </div>
                                 <span class="absolute bottom-1 right-1 text-[8px] font-bold bg-slate-900/60 text-white px-1.5 py-0.5 rounded-md" x-text="prod.sku"></span>
                                 
@@ -290,7 +294,6 @@
                        @focus="selectCartItem(item.product.id)"
                        @click.stop
                        @change="setQty(item.product.id, $event.target.value)"
-                       @input="focusSelectedQty()"
                        x-model.number="item.qty"
                        class="w-14 text-[10px] text-center font-bold bg-slate-100 px-1.5 py-0.5 rounded-lg border border-slate-200/40 focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400">
                             </div>

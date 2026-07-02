@@ -75,46 +75,47 @@
         </div>
     </div>
     
-<!-- AI Business Insight Banner -->
-     <div class="container_scale bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-900 text-white p-6 rounded-2xl border border-indigo-500/25 shadow-xl relative overflow-hidden"
-          x-data="{ loading: false }"
-          x-init="loading = false">
-         <!-- Background decorative glows -->
-         <div class="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none"></div>
-         <div class="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-violet-500/10 blur-3xl pointer-events-none"></div>
-         
-         <div class="relative z-10 flex flex-col md:flex-row md:items-center gap-5">
-             <!-- Icon -->
-             <div class="p-3.5 bg-white/10 backdrop-blur-md text-indigo-300 rounded-2xl border border-white/15 shadow-inner self-start md:self-center flex-shrink-0">
-                 <i data-lucide="sparkles" class="w-7 h-7"></i>
-             </div>
-             
-             <!-- Content -->
-             <div class="flex-1 space-y-1">
-                 <div class="flex items-center gap-2">
-                     <span class="px-2 py-0.5 text-[9px] font-mono font-semibold bg-indigo-500/25 border border-indigo-400/30 text-indigo-200 rounded-md tracking-wider uppercase">AI Advisor</span>
-                     <h3 class="font-bold text-sm text-slate-100 tracking-wide">✨ AI Business Insight</h3>
-                 </div>
-                 
-                 <!-- Loading State -->
-                 <div x-show="loading" class="flex items-center gap-2 mt-3">
-                     <svg class="animate-spin w-4 h-4 text-indigo-300" fill="none" viewBox="0 0 24 24">
-                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                     </svg>
-                     <span class="text-xs text-slate-400">Sedang menganalisis data bisnis...</span>
-                 </div>
-                 
-                 <!-- Insight Content -->
-                 <div x-show="!loading" class="text-xs text-slate-300 leading-relaxed font-sans mt-2 pr-4">
-                     {!! nl2br(e($ai_insight)) !!}
-                 </div>
-             </div>
-         </div>
-     </div>
+    <!-- AI Business Insight Banner -->
+    <div class="container_scale bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-900 text-white p-6 rounded-2xl border border-indigo-500/25 shadow-xl relative overflow-hidden"
+         x-data="{ loading: false }"
+         x-init="loading = false">
+        <!-- Background decorative glows -->
+        <div class="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none"></div>
+        <div class="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-violet-500/10 blur-3xl pointer-events-none"></div>
+        
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center gap-5">
+            <!-- Icon -->
+            <div class="p-3.5 bg-white/10 backdrop-blur-md text-indigo-300 rounded-2xl border border-white/15 shadow-inner self-start md:self-center flex-shrink-0">
+                <i data-lucide="sparkles" class="w-7 h-7"></i>
+            </div>
+            
+            <!-- Content -->
+            <div class="flex-1 space-y-1">
+                <div class="flex items-center gap-2">
+                    <span class="px-2 py-0.5 text-[9px] font-mono font-semibold bg-indigo-500/25 border border-indigo-400/30 text-indigo-200 rounded-md tracking-wider uppercase">AI Advisor</span>
+                    <h3 class="font-bold text-sm text-slate-100 tracking-wide">✨ AI Business Insight</h3>
+                </div>
+                
+                <!-- Loading State -->
+                <div x-show="loading" class="flex items-center gap-2 mt-3">
+                    <svg class="animate-spin w-4 h-4 text-indigo-300" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span class="text-xs text-slate-450">Sedang menganalisis data bisnis...</span>
+                </div>
+                
+                <!-- Insight Content -->
+                <div x-show="!loading" class="text-xs text-slate-300 leading-relaxed font-sans mt-2 pr-4">
+                    {!! nl2br(e($ai_insight)) !!}
+                </div>
+            </div>
+        </div>
+    </div>
     
     <!-- Statistic Cards Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Proteksi Livewire SPA DOM Morphing -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" wire:key="dashboard-stats">
         
         <!-- Card 1: Total Sales Today -->
         <div class="container_scale group bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-300 relative overflow-hidden">
@@ -184,7 +185,8 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         <!-- Weekly Sales Chart (takes 2 cols) -->
-        <div class="container_scale lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+        <!-- Proteksi Livewire SPA DOM Morphing -->
+        <div class="container_scale lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm" wire:key="dashboard-charts">
             <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
                 <div>
                     <h3 class="font-bold text-slate-800 text-lg">Tren Penjualan Mingguan</h3>
@@ -261,6 +263,24 @@
 
     </div>
 
+    <!-- Banner Alert Stok Menipis di bagian paling bawah -->
+    <!-- Komentar: Banner ini hanya akan di-render jika ada produk dengan stok <= 5 -->
+    @if($stok_menipis->isNotEmpty())
+        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-4 mt-6">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-amber-500/10 text-amber-600 rounded-xl border border-amber-500/20">
+                    <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold text-slate-800">Perhatian: Beberapa Barang Memiliki Stok Sangat Rendah</h4>
+                    <p class="text-[10px] text-slate-450 mt-0.5">Segera lakukan restock barang berikut untuk menghindari kehabisan stok.</p>
+                </div>
+            </div>
+            <a href="{{ route('inventory', ['filter' => 'low_stock']) }}" class="py-2 px-3.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition-colors">
+                Restock Sekarang
+            </a>
+        </div>
+    @endif
 
 </div>
 
@@ -269,10 +289,15 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    function initWeeklySalesChart() {
         const canvas = document.getElementById('weeklySalesChart');
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
+
+        // Destroy previous instance to prevent "Canvas is already in use" and memory leaks
+        if (window.weeklySalesChartInstance) {
+            window.weeklySalesChartInstance.destroy();
+        }
         
         // Setup gradient background untuk chart
         const gradient = ctx.createLinearGradient(0, 0, 0, 300);
@@ -282,7 +307,7 @@
         // Injeksi data tren mingguan dari backend menggunakan directive json
         const weeklySalesData = @json($tren_penjualan_mingguan);
  
-        new Chart(ctx, {
+        window.weeklySalesChartInstance = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: weeklySalesData.labels,
@@ -374,7 +399,22 @@
                 }
             }
         });
-    });
+
+        if (window.ResizeObserver) {
+            const observer = new ResizeObserver(() => {
+                if (window.weeklySalesChartInstance) {
+                    window.weeklySalesChartInstance.resize();
+                }
+            });
+            observer.observe(canvas);
+        }
+    }
+
+    // Run immediately for initial load and custom Axios SPA page insertion
+    initWeeklySalesChart();
+
+    // Listen to Livewire navigate event (Livewire 3 SPA mode support)
+    document.addEventListener('livewire:navigated', initWeeklySalesChart);
 
     function dashboardLowStockComponent() {
         return {
