@@ -261,7 +261,7 @@
                     </div>
                     
                     <div class="flex justify-between text-slate-500">
-                        <span>PPN (11%)</span>
+                        <span x-text="'PPN (' + taxPercent + '%)'">PPN</span>
                         <span class="font-bold text-slate-700" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(taxAmount)"></span>
                     </div>
                     
@@ -349,7 +349,7 @@
                             <span class="font-semibold text-rose-600" x-text="'- Rp ' + new Intl.NumberFormat('id-ID').format(discountAmount)"></span>
                         </div>
                         <div class="flex justify-between">
-                            <span>Pajak (PPN 11%)</span>
+                            <span x-text="'Pajak (PPN ' + taxPercent + '%)'">Pajak (PPN)</span>
                             <span class="font-semibold text-slate-800" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(taxAmount)"></span>
                         </div>
                         <hr class="border-slate-200 my-1">

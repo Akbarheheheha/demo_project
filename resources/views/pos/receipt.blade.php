@@ -127,24 +127,27 @@
         
         <!-- Summary Calculations -->
         @php
-            $calculatedTax = $subtotal * 0.11;
-            $calculatedGrandTotal = $subtotal - ($discount ?? 0) + $calculatedTax;
-            $calculatedChange = max(0, $cashReceived - $calculatedGrandTotal);
+            $taxAmount = $tax ?? 0;
+            $discountAmount = $discount ?? 0;
+            $effectiveSubtotal = $subtotal - $discountAmount;
+            $taxPercentage = $effectiveSubtotal > 0 ? round(($taxAmount * 100) / $effectiveSubtotal) : 0;
+            $calculatedGrandTotal = $grandTotal ?? ($subtotal - $discountAmount + $taxAmount);
+            $calculatedChange = $change ?? max(0, $cashReceived - $calculatedGrandTotal);
         @endphp
         <div class="space-y-1.5 text-[10px]">
             <div class="flex justify-between text-slate-600">
                 <span>Subtotal</span>
                 <span class="font-semibold text-slate-800">Rp {{ number_format($subtotal ?? 67000, 0, ',', '.') }}</span>
             </div>
-            @if(($discount ?? 0) > 0 || !isset($discount))
+            @if($discountAmount > 0)
             <div class="flex justify-between text-slate-600">
                 <span>Diskon</span>
-                <span class="font-semibold text-rose-600">- Rp {{ number_format($discount ?? 5000, 0, ',', '.') }}</span>
+                <span class="font-semibold text-rose-600">- Rp {{ number_format($discountAmount, 0, ',', '.') }}</span>
             </div>
             @endif
             <div class="flex justify-between text-slate-600">
-                <span>Pajak (PPN 11%)</span>
-                <span class="font-semibold text-slate-800">Rp {{ number_format($calculatedTax, 0, ',', '.') }}</span>
+                <span>Pajak (PPN {{ $taxPercentage }}%)</span>
+                <span class="font-semibold text-slate-800">Rp {{ number_format($taxAmount, 0, ',', '.') }}</span>
             </div>
             
             <div class="border-b border-dotted border-slate-300 my-1.5"></div>
