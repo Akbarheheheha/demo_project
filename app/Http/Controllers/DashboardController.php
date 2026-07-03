@@ -27,8 +27,9 @@ class DashboardController extends Controller
         // c. $total_transaksi (Count dari tabel transactions)
         $total_transaksi = Transaction::count();
 
-        // d. $stok_menipis (Ambil 5 produk dengan stok <= 5, order by stok asc)
-        $stok_menipis = Product::where('stock', '<=', 5)
+        // d. $stok_menipis (Ambil 5 produk dengan stok <= min_stock atau stok <= 5, order by stok asc)
+        $stok_menipis = Product::whereColumn('stock', '<=', 'min_stock')
+            ->orWhere('stock', '<=', 5)
             ->orderBy('stock', 'asc')
             ->limit(5)
             ->get();
