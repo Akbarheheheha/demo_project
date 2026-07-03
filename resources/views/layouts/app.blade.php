@@ -178,6 +178,7 @@
                 <!-- Kasir / POS Link -->
                 @hasanyrole('Kasir|Super Admin')
                 <a href="{{ route('pos') }}" 
+                   data-spa-ignore
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
                    :class="activePage === 'pos' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'"
                    :title="!sidebarOpen ? 'Kasir POS' : ''">
@@ -262,7 +263,7 @@
                     <!-- Search Bar -->
                     <form action="{{ route('inventory') }}" method="GET" class="hidden sm:flex items-center gap-2 rounded-xl px-3 py-1.5 w-64 text-slate-500 dark:text-slate-400 border border-indigo-500/60 focus-within:border-indigo-500/60 focus-within:ring-1 focus-within:ring-indigo-500/30 transition-all duration-200">
                         <i data-lucide="search" class="w-4 h-4 text-slate-400 dark:text-slate-500"></i>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search system database..." class="bg-transparent border-none text-xs focus:outline-none w-full  placeholder-slate-400 dark:placeholder-slate-650 font-mono">
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search system database..." class="bg-transparent border-none focus:outline-none w-full  placeholder-slate-400 dark:placeholder-slate-650 font-mono">
                     </form>
                 </div>
                 

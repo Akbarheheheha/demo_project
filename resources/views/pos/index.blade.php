@@ -18,8 +18,8 @@
             </a>
             <div>
                 <h1 class="heading-font font-black text-slate-800 text-sm tracking-wide flex items-center gap-1.5">
-                    SmartBiz POS <span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-indigo-100">PRO MODE</span>
-                </h1>
+                SmartBiz POS   
+            </h1>
                 <p class="text-[10px] text-slate-400">Sistem Kasir Pintar UMKM</p>
             </div>
         </div>
@@ -155,25 +155,13 @@
                 <div x-show="filteredProducts.length > 0" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
                     <template x-for="prod in filteredProducts" :key="prod.id">
                         <div @click="addToCart(prod); selectCartItem(prod.id)"
+                             :class="(prod.stock <= 0) ? 'opacity-40 pointer-events-none' : (cart.some(item => item.product.id === prod.id) ? 'opacity-50 pointer-events-none' : '')"
                              class="group cursor-pointer bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition-all duration-200 flex flex-col relative overflow-hidden select-none">
                             
-                            <!-- Category Badge -->
-                            <span class="absolute top-2 left-2 text-[8px] font-bold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md" x-text="prod.category || 'Umum'"></span>
-                            
-                            <!-- Thumbnail representation -->
-                            <div class="h-24 w-full bg-slate-50 text-indigo-650 rounded-xl flex items-center justify-center mt-3 mb-2.5 relative overflow-hidden group-hover:bg-indigo-50/50 transition-colors duration-200">
-                                <div class="p-3 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover:scale-110 transition-transform duration-200">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-indigo-650">
-                                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                                        <path d="M16 10a4 4 0 0 1-8 0"></path>
-                                    </svg>
-                                </div>
-                                <span class="absolute bottom-1 right-1 text-[8px] font-bold bg-slate-900/60 text-white px-1.5 py-0.5 rounded-md" x-text="prod.sku"></span>
-                                
-                                <template x-if="prod.stock <= 0">
-                                    <span class="absolute inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center text-xs font-bold text-white uppercase tracking-wider">Habis</span>
-                                </template>
+                            <!-- Header Info: SKU & Category -->
+                            <div class="flex items-center justify-between gap-1 mb-2.5">
+                                <span class="text-[8px] font-bold bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded-md" x-text="prod.category || 'Umum'"></span>
+                                <span class="text-[8px] font-semibold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md" x-text="prod.sku"></span>
                             </div>
 
                             <!-- Details -->
@@ -203,7 +191,7 @@
         <section class="w-full lg:w-[390px] xl:w-[460px] bg-white flex flex-col flex-shrink-0 min-h-0 border-l border-slate-200">
             
             <!-- Cart Title / Header -->
-            <div class="px-4 py-3 border-b border-slate-150 flex items-center justify-between bg-slate-50/50 flex-shrink-0">
+            <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between bg-slate-50/50 flex-shrink-0">
                 <div class="flex items-center gap-2">
                     <span class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center">
                         <i data-lucide="shopping-cart" class="w-4 h-4"></i>
@@ -342,7 +330,7 @@
                 <!-- Split Billing Grid (Total Tagihan vs Cash Pay) -->
                 <div class="grid grid-cols-12 gap-2">
                     <!-- Total Tagihan (Left 5 Cols) -->
-                    <div class="col-span-5 bg-indigo-900 text-white p-3 rounded-xl flex flex-col justify-between border border-indigo-950 shadow-sm">
+                    <div class="col-span-5 bg-indigo-900 text-white p-3 rounded-xl flex flex-col justify-between shadow-sm">
                         <span class="text-[8px] font-bold uppercase tracking-wider text-indigo-200">Total Tagihan</span>
                         <span class="text-xs font-black mt-1 tracking-tight truncate" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(grandTotal)">Rp 0</span>
                     </div>
@@ -471,6 +459,7 @@
             
             <!-- Summary Info -->
             <div class="space-y-3.5 py-1">
+                
                 <!-- Total Tagihan -->
                 <div class="flex justify-between items-center bg-indigo-50/50 p-3.5 rounded-2xl border border-indigo-100/50">
                     <span class="text-xs font-bold text-indigo-900 uppercase">Total Tagihan</span>
@@ -479,7 +468,7 @@
                 
                 <!-- Uang Diterima -->
                 <div class="flex justify-between items-center bg-slate-50 p-3.5 rounded-2xl border border-slate-200/60">
-                    <span class="text-xs font-bold text-slate-500 uppercase">Uang Diterima</span>
+                    <span class="text-xs font-bold text-slate-500 uppercase">total bayar</span>
                     <span class="text-lg font-black text-slate-800 font-mono" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(cashAmount || 0)">Rp 0</span>
                 </div>
                 
@@ -554,6 +543,10 @@
 
                         // Trap navigation if modal is open
                         if (this.isModalOpen) {
+                            if (!typing && (e.key === 'x' || e.key === 'X')) {
+                                e.preventDefault();
+                                this.closeModal();
+                            }
                             if (e.key === 'Escape' || e.key === 'Esc') {
                                 e.preventDefault();
                                 this.closeModal();

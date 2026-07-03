@@ -189,5 +189,16 @@
         
     </div>
 
+    <script>
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'x' || event.key === 'X') {
+                if (window.opener || window.history.length === 1) {
+                    window.close();
+                } else {
+                    window.history.back();
+                }
+            }
+        });
+    </script>
 </body>
 </html>

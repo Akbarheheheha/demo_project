@@ -50,6 +50,7 @@ Route::middleware(['auth.custom'])->group(function () {
         // Define 'dashboard' alias to maintain compatibility
         Route::get('/main-dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/api/dashboard/low-stock', [DashboardController::class, 'getLowStockApi'])->name('dashboard.low-stock');
+        Route::get('/api/dashboard/sales-trend', [DashboardController::class, 'getSalesTrendApi'])->name('dashboard.sales-trend');
         Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory');
         Route::get('/reports', [ReportController::class, 'index'])->name('reports');
         Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');

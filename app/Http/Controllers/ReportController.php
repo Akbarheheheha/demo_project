@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\FinancialReportExport;
 use App\Models\Expense;
+use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\TransactionDetail;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -59,62 +60,105 @@ class ReportController extends Controller
         // Fetch transactions with user relationship to avoid N+1 queries
         $transactions = Transaction::with('user')->orderBy('created_at', 'desc')->get();
 
-        // Mock data performa kategori produk (untuk Bar Chart)
+        // 1. Kinerja kategori produk (untuk Bar Chart)
+        $categoriesSales = TransactionDetail::query()
+            ->whereHas('transaction', function ($query) {
+                $query->where('status', 'success');
+            })
+            ->join('products', 'transaction_details.product_id', '=', 'products.id')
+            ->selectRaw('products.category, SUM(transaction_details.subtotal) as total')
+            ->groupBy('products.category')
+            ->pluck('total', 'products.category')
+            ->toArray();
+
+        $categoryLabels = ['Sembako', 'Makanan', 'Minuman', 'Cemilan', 'Rumah Tangga'];
+        $categoryData = [];
+        foreach ($categoryLabels as $cat) {
+            $categoryData[] = (float) ($categoriesSales[$cat] ?? 0.0);
+        }
+
         $categoryPerformance = [
-            'labels' => ['Sembako', 'Makanan', 'Minuman', 'Cemilan', 'Rumah Tangga'],
-            'data' => [14200000, 8900000, 5400000, 3800000, 2540000],
+            'labels' => $categoryLabels,
+            'data' => $categoryData,
         ];
 
-        // Mock data penjualan terlaris (Top Selling Products)
-        $topProducts = [
-            [
-                'sku' => 'SMB-001',
-                'name' => 'Beras Pandan Wangi 5kg',
-                'category' => 'Sembako',
-                'sold_qty' => 120,
-                'total_revenue' => 9360000,
-                'margin' => '12.8%',
-            ],
-            [
-                'sku' => 'MKN-001',
-                'name' => 'Indomie Goreng Spesial',
-                'category' => 'Makanan',
-                'sold_qty' => 840,
-                'total_revenue' => 2940000,
-                'margin' => '20%',
-            ],
-            [
-                'sku' => 'SMB-002',
-                'name' => 'Minyak Goreng Bimoli 2L',
-                'category' => 'Sembako',
-                'sold_qty' => 75,
-                'total_revenue' => 2887500,
-                'margin' => '14.2%',
-            ],
-            [
-                'sku' => 'MNM-003',
-                'name' => 'Air Mineral Aqua 600ml',
-                'category' => 'Minuman',
-                'sold_qty' => 450,
-                'total_revenue' => 1800000,
-                'margin' => '37.5%',
-            ],
-            [
-                'sku' => 'SNC-002',
-                'name' => 'Silverqueen Almond 62g',
-                'category' => 'Cemilan',
-                'sold_qty' => 95,
-                'total_revenue' => 1567500,
-                'margin' => '21.2%',
-            ],
-        ];
+        // 2. Penjualan terlaris (Top Selling Products)
+        $topProductsDetails = TransactionDetail::query()
+            ->whereHas('transaction', function ($query) {
+                $query->where('status', 'success');
+            })
+            ->selectRaw('product_id, SUM(qty) as sold_qty, SUM(subtotal) as total_revenue, SUM(harga_beli * qty) as total_cost')
+            ->groupBy('product_id')
+            ->orderBy('sold_qty', 'desc')
+            ->limit(5)
+            ->with('product')
+            ->get();
 
-        // Mock data tren bulanan perbandingan (Tahun Ini vs Tahun Lalu)
+        $topProducts = [];
+        foreach ($topProductsDetails as $detail) {
+            $product = $detail->product;
+            if (!$product) {
+                continue;
+            }
+            
+            $revenue = (float) $detail->total_revenue;
+            $cost = (float) $detail->total_cost;
+            $marginVal = $revenue > 0 ? (($revenue - $cost) / $revenue) * 100 : 0.0;
+
+            $topProducts[] = [
+                'sku' => $product->sku,
+                'name' => $product->name,
+                'category' => $product->category,
+                'sold_qty' => (int) $detail->sold_qty,
+                'total_revenue' => $revenue,
+                'margin' => round($marginVal, 1) . '%',
+            ];
+        }
+
+        // 3. Tren bulanan perbandingan (Tahun Ini vs Tahun Lalu)
+        $thisYear = Carbon::now()->year;
+        $lastYear = $thisYear - 1;
+
+        $salesThisYear = Transaction::where('status', 'success')
+            ->whereBetween('created_at', [
+                Carbon::create($thisYear, 1, 1)->startOfDay(),
+                Carbon::create($thisYear, 6, 30)->endOfDay()
+            ])
+            ->select('created_at', 'total_harga')
+            ->get()
+            ->groupBy(function ($item) {
+                return Carbon::parse($item->created_at)->month;
+            })
+            ->map(function ($group) {
+                return (float) $group->sum('total_harga');
+            })
+            ->toArray();
+
+        $salesLastYear = Transaction::where('status', 'success')
+            ->whereBetween('created_at', [
+                Carbon::create($lastYear, 1, 1)->startOfDay(),
+                Carbon::create($lastYear, 6, 30)->endOfDay()
+            ])
+            ->select('created_at', 'total_harga')
+            ->get()
+            ->groupBy(function ($item) {
+                return Carbon::parse($item->created_at)->month;
+            })
+            ->map(function ($group) {
+                return (float) $group->sum('total_harga');
+            })
+            ->toArray();
+
         $monthlyComparison = [
             'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
-            'this_year' => [18500000, 22400000, 25800000, 29000000, 31200000, 34840000],
-            'last_year' => [15000000, 16800000, 19200000, 22000000, 25400000, 28100000],
+            'this_year' => [],
+            'last_year' => [],
         ];
+
+        for ($m = 1; $m <= 6; $m++) {
+            $monthlyComparison['this_year'][] = (float) ($salesThisYear[$m] ?? 0.0);
+            $monthlyComparison['last_year'][] = (float) ($salesLastYear[$m] ?? 0.0);
+        }
 
         return compact('financialSummary', 'categoryPerformance', 'topProducts', 'monthlyComparison', 'transactions');
     }

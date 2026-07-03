@@ -184,17 +184,74 @@
     <!-- Chart & Recent Activity Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        <!-- Weekly Sales Chart (takes 2 cols) -->
+        <!-- Sales Trend Chart with Range Filter (Point 1 & 3) -->
         <!-- Proteksi Livewire SPA DOM Morphing -->
-        <div class="container_scale lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm" wire:key="dashboard-charts">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+        <div class="container_scale lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm" 
+             x-data="{
+                filterRange: 'week',
+                startDate: '{{ \Carbon\Carbon::today()->subDays(30)->toDateString() }}',
+                endDate: '{{ \Carbon\Carbon::today()->toDateString() }}',
+                isLoading: false,
+                async updateChartData() {
+                    this.isLoading = true;
+                    try {
+                        const url = new URL('{{ route('dashboard.sales-trend') }}');
+                        url.searchParams.append('range', this.filterRange);
+                        if (this.filterRange === 'range') {
+                            url.searchParams.append('start_date', this.startDate);
+                            url.searchParams.append('end_date', this.endDate);
+                        }
+                        const response = await fetch(url);
+                        if (response.ok) {
+                            const result = await response.json();
+                            if (window.weeklySalesChartInstance) {
+                                window.weeklySalesChartInstance.data.labels = result.labels;
+                                window.weeklySalesChartInstance.data.datasets[0].data = result.data;
+                                window.weeklySalesChartInstance.update();
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Error fetching sales trend:', e);
+                    } finally {
+                        this.isLoading = false;
+                    }
+                }
+             }"
+             x-init="$watch('filterRange', () => updateChartData()); $watch('startDate', () => updateChartData()); $watch('endDate', () => updateChartData())"
+             wire:key="dashboard-charts">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 mb-4 gap-4">
                 <div>
-                    <h3 class="font-bold text-slate-800 text-lg">Tren Penjualan Mingguan</h3>
-                    <p class="text-xs text-slate-400">Total omset pendapatan harian dari 7 hari terakhir.</p>
+                    <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                        <span>Tren Penjualan</span>
+                        <span x-show="isLoading" class="flex items-center" style="display: none;">
+                            <svg class="animate-spin h-4 w-4 text-indigo-650" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </span>
+                    </h3>
+                    <p class="text-xs text-slate-400">Total omset pendapatan penjualan berdasarkan filter waktu.</p>
                 </div>
-                <div class="flex items-center gap-1 bg-slate-50 border border-slate-100 p-1 rounded-lg">
-                    <span class="h-2 w-2 rounded-full bg-indigo-500 ml-2"></span>
-                    <span class="text-[10px] font-semibold text-slate-600 px-2 py-0.5">Omset (Rp)</span>
+                
+                <!-- Dynamic Filters -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <select x-model="filterRange" class="bg-slate-50 border border-slate-200 text-[10px] font-bold text-slate-600 px-3 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-150 transition-all cursor-pointer">
+                        <option value="week">7 Hari Terakhir</option>
+                        <option value="today">Per Hari Ini</option>
+                        <option value="month">Per Bulan Ini</option>
+                        <option value="range">Rentang Tanggal</option>
+                    </select>
+                    
+                    <div x-show="filterRange === 'range'" class="flex items-center gap-1.5" x-transition style="display: none;">
+                        <input type="date" x-model="startDate" class="bg-slate-50 border border-slate-200 text-[10px] text-slate-650 px-2 py-1.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-150 transition-all">
+                        <span class="text-slate-450 text-[10px]">-</span>
+                        <input type="date" x-model="endDate" class="bg-slate-50 border border-slate-200 text-[10px] text-slate-650 px-2 py-1.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-150 transition-all">
+                    </div>
+                    
+                    <div class="hidden sm:flex items-center gap-1 bg-slate-50 border border-slate-100 p-1.5 rounded-xl">
+                        <span class="h-1.5 w-1.5 rounded-full bg-indigo-500 ml-1.5"></span>
+                        <span class="text-[9px] font-semibold text-slate-500 px-1.5">Omset</span>
+                    </div>
                 </div>
             </div>
             
@@ -469,7 +526,6 @@
 
     // Listen to Livewire navigate event (Livewire 3 SPA mode support)
     document.addEventListener('livewire:navigated', initWeeklySalesChart);
-
 
 </script>
 @endpush

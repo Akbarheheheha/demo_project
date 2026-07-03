@@ -57,7 +57,7 @@
     </div>
 
     <!-- Financial Statistics Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- Card 1: Total Omzet -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
             <div class="flex items-start justify-between">
@@ -93,25 +93,7 @@
         </div>
 
         <!-- Card 3: Laba Kotor -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
-            <div class="flex items-start justify-between">
-                <div>
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Laba Kotor</span>
-                    <h3 class="text-xl font-bold text-slate-800 mt-2">Rp {{ number_format($financialSummary['gross_profit'], 0, ',', '.') }}</h3>
-                    <div class="flex items-center gap-1 mt-2">
-                        <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg flex items-center">
-                            <i data-lucide="trending-up" class="w-2.5 h-2.5 mr-0.5"></i>
-                            +{{ $financialSummary['profit_growth'] }}%
-                        </span>
-                        <span class="text-[9px] text-slate-400">vs bulan lalu</span>
-                    </div>
-                </div>
-                <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
-                    <i data-lucide="wallet" class="w-5.5 h-5.5"></i>
-                </div>
-            </div>
-        </div>
-
+       
         <!-- Card 4: Total Pengeluaran -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
             <div class="flex items-start justify-between">
@@ -127,47 +109,11 @@
         </div>
 
         <!-- Card 5: Rata-rata Transaksi -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
-            <div class="flex items-start justify-between">
-                <div>
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Rata-rata Transaksi</span>
-                    <h3 class="text-xl font-bold text-slate-800 mt-2">Rp {{ number_format($financialSummary['average_ticket'], 0, ',', '.') }}</h3>
-                    <p class="text-[10px] text-slate-400 mt-2">Dihitung dari total nilai struk POS</p>
-                </div>
-                <div class="p-2.5 bg-amber-50 text-amber-600 rounded-xl">
-                    <i data-lucide="receipt" class="w-5.5 h-5.5"></i>
-                </div>
-            </div>
-        </div>
+      
         
     </div>
 
-    <!-- Charts Section Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        <!-- Left: Perbandingan Omset Bulanan (Line Chart) -->
-        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
-            <div class="border-b border-slate-100 pb-4 mb-4">
-                <h3 class="font-bold text-slate-800 text-base">Perbandingan Omset Bulanan</h3>
-                <p class="text-xs text-slate-400">Komparasi pendapatan omset semester 1 tahun ini vs. tahun lalu.</p>
-            </div>
-            <div class="h-64 relative">
-                <canvas id="monthlyComparisonChart"></canvas>
-            </div>
-        </div>
 
-        <!-- Right: Kinerja Kategori Produk (Bar Chart) -->
-        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
-            <div class="border-b border-slate-100 pb-4 mb-4">
-                <h3 class="font-bold text-slate-800 text-base">Kontribusi Omset Per Kategori</h3>
-                <p class="text-xs text-slate-400">Total nilai penjualan bruto dikelompokkan berdasarkan kategori produk.</p>
-            </div>
-            <div class="h-64 relative">
-                <canvas id="categoryPerformanceChart"></canvas>
-            </div>
-        </div>
-
-    </div>
 
     <!-- Table: Barang Terlaris (Top Products) -->
     <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">

@@ -107,4 +107,124 @@ class DashboardController extends Controller
 
         return response()->json($stok_menipis);
     }
+
+    public function getSalesTrendApi(Request $request)
+    {
+        session_write_close();
+        
+        $range = $request->input('range', 'week'); // 'week', 'today', 'month', 'range'
+        $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
+        
+        $labels = [];
+        $data = [];
+        
+        if ($range === 'week') {
+            $sevenDaysAgo = Carbon::now()->subDays(6)->startOfDay();
+            $salesData = Transaction::where('status', 'success')
+                ->where('created_at', '>=', $sevenDaysAgo)
+                ->selectRaw('DATE(created_at) as date, SUM(total_harga) as total')
+                ->groupBy('date')
+                ->pluck('total', 'date')
+                ->toArray();
+            
+            Carbon::setLocale('id');
+            for ($i = 6; $i >= 0; $i--) {
+                $date = Carbon::now()->subDays($i);
+                $dateString = $date->toDateString();
+                $dayName = $date->translatedFormat('l');
+                
+                $totalSales = 0.0;
+                if (array_key_exists($dateString, $salesData)) {
+                    $totalSales = (float) $salesData[$dateString];
+                }
+                $labels[] = $dayName;
+                $data[] = $totalSales;
+            }
+        } elseif ($range === 'today') {
+            $today = Carbon::today();
+            if ($driver === 'sqlite') {
+                $sales = Transaction::where('status', 'success')
+                    ->whereDate('created_at', $today)
+                    ->selectRaw('strftime("%H", created_at) as hour, SUM(total_harga) as total')
+                    ->groupBy('hour')
+                    ->pluck('total', 'hour')
+                    ->toArray();
+            } else {
+                $sales = Transaction::where('status', 'success')
+                    ->whereDate('created_at', $today)
+                    ->selectRaw('HOUR(created_at) as hour, SUM(total_harga) as total')
+                    ->groupBy('hour')
+                    ->pluck('total', 'hour')
+                    ->toArray();
+            }
+            
+            for ($h = 0; $h < 24; $h++) {
+                $hourKey = str_pad($h, 2, '0', STR_PAD_LEFT);
+                $labels[] = $hourKey . ':00';
+                
+                $val = 0.0;
+                if (isset($sales[$h])) {
+                    $val = (float) $sales[$h];
+                } elseif (isset($sales[$hourKey])) {
+                    $val = (float) $sales[$hourKey];
+                }
+                $data[] = $val;
+            }
+        } elseif ($range === 'month') {
+            $startOfMonth = Carbon::now()->startOfMonth();
+            $endOfMonth = Carbon::now()->endOfMonth();
+            
+            $sales = Transaction::where('status', 'success')
+                ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+                ->selectRaw('DATE(created_at) as date, SUM(total_harga) as total')
+                ->groupBy('date')
+                ->pluck('total', 'date')
+                ->toArray();
+                
+            $daysInMonth = Carbon::now()->daysInMonth;
+            Carbon::setLocale('id');
+            for ($d = 1; $d <= $daysInMonth; $d++) {
+                $date = Carbon::now()->day($d);
+                $dateString = $date->toDateString();
+                $labels[] = $date->translatedFormat('d M');
+                
+                $val = 0.0;
+                if (isset($sales[$dateString])) {
+                    $val = (float) $sales[$dateString];
+                }
+                $data[] = $val;
+            }
+        } elseif ($range === 'range') {
+            $start = Carbon::parse($request->input('start_date', Carbon::today()->subDays(30)->toDateString()))->startOfDay();
+            $end = Carbon::parse($request->input('end_date', Carbon::today()->toDateString()))->endOfDay();
+            
+            $sales = Transaction::where('status', 'success')
+                ->whereBetween('created_at', [$start, $end])
+                ->selectRaw('DATE(created_at) as date, SUM(total_harga) as total')
+                ->groupBy('date')
+                ->pluck('total', 'date')
+                ->toArray();
+                
+            $diffInDays = $start->diffInDays($end);
+            $diffInDays = min($diffInDays, 365); // Cap to 1 year max
+            
+            Carbon::setLocale('id');
+            for ($i = 0; $i <= $diffInDays; $i++) {
+                $currentDate = $start->copy()->addDays($i);
+                $dateStr = $currentDate->toDateString();
+                $labels[] = $currentDate->translatedFormat('d M');
+                
+                $val = 0.0;
+                if (isset($sales[$dateStr])) {
+                    $val = (float) $sales[$dateStr];
+                }
+                $data[] = $val;
+            }
+        }
+        
+        return response()->json([
+            'labels' => $labels,
+            'data' => $data
+        ]);
+    }
 }
