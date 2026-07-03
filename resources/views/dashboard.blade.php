@@ -60,18 +60,7 @@
             </div>
             
             <!-- Action Buttons / Filter (Visual dummy for scaling) -->
-            <div class="flex items-center gap-2">
-                <button @click="timeRange = 'today'; $dispatch('show-toast', { message: 'Filter hari ini diterapkan (Simulasi)', type: 'info' })"
-                        :class="timeRange === 'today' ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/20' : 'bg-white hover:bg-slate-50 text-slate-700'"
-                        class="px-3.5 py-2 text-xs font-semibold rounded-xl border border-slate-200 transition-all duration-200">
-                    Hari Ini
-                </button>
-                <button @click="timeRange = '7d'; $dispatch('show-toast', { message: 'Filter 7 hari terakhir diterapkan (Simulasi)', type: 'info' })"
-                        :class="timeRange === '7d' ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/20' : 'bg-white hover:bg-slate-50 text-slate-700'"
-                        class="px-3.5 py-2 text-xs font-semibold rounded-xl border border-slate-200 transition-all duration-200">
-                    7 Hari Terakhir
-                </button>
-            </div>
+           
         </div>
     </div>
     

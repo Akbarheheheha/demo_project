@@ -202,6 +202,49 @@
                 </tbody>
             </table>
         </div>
+        <!-- Pagination Links -->
+        <div class="px-6 py-4 bg-white border-t border-slate-100">
+            {{ $transactions->links() }}
+        </div>
+    </div>
+
+    <!-- Table: Kontribusi Omset Per Kasir (Point 3) -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden mt-6">
+        <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+            <div>
+                <h3 class="font-bold text-slate-800 text-base">Kontribusi Omset Per Kasir (Bulan Ini)</h3>
+                <p class="text-xs text-slate-400">Total omset penjualan yang dihasilkan oleh masing-masing kasir.</p>
+            </div>
+            <span class="text-[10px] font-bold bg-indigo-50 text-indigo-700 px-3 py-1 rounded-xl uppercase tracking-wider">Laporan Kasir</span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/50 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                        <th class="px-6 py-4">Nama Kasir</th>
+                        <th class="px-6 py-4 text-right">Total Omset</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs">
+                    @forelse($omset_kasir as $item)
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="px-6 py-3.5 font-semibold text-slate-800">
+                                {{ $item->user->name ?? 'Kasir Tidak Ditemukan/Dihapus' }}
+                            </td>
+                            <td class="px-6 py-3.5 text-right font-black text-indigo-600">
+                                Rp {{ number_format($item->total_omset, 0, ',', '.') }}
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="2" class="text-center py-8 text-slate-400 font-semibold">
+                                Belum ada kontribusi omset kasir pada bulan ini.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 
 </div>

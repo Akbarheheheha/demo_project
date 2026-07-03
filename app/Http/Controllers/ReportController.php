@@ -17,7 +17,7 @@ class ReportController extends Controller
 {
     public function index()
     {
-        $reportData = $this->buildMonthlyReportData();
+        $reportData = $this->buildMonthlyReportData(true);
 
         return view('reports', $reportData);
     }
@@ -30,7 +30,7 @@ class ReportController extends Controller
             'Package barryvdh/laravel-dompdf belum terpasang. Jalankan: composer require barryvdh/laravel-dompdf'
         );
 
-        $reportData = $this->buildMonthlyReportData();
+        $reportData = $this->buildMonthlyReportData(false);
         $pdf = Pdf::loadView('reports.pdf', $reportData)->setPaper('a4', 'portrait');
 
         return $pdf->download('laporan-keuangan-'.now()->format('Y-m').'.pdf');
@@ -45,12 +45,12 @@ class ReportController extends Controller
         );
 
         return Excel::download(
-            new FinancialReportExport($this->buildMonthlyReportData()),
+            new FinancialReportExport($this->buildMonthlyReportData(false)),
             'laporan-keuangan-'.now()->format('Y-m').'.xlsx'
         );
     }
 
-    private function buildMonthlyReportData(): array
+    private function buildMonthlyReportData(bool $paginate = false): array
     {
         $startOfMonth = Carbon::now()->startOfMonth();
         $endOfMonth = Carbon::now()->endOfMonth();
@@ -58,7 +58,20 @@ class ReportController extends Controller
         $financialSummary = $this->getMonthlyFinancialSummary($startOfMonth, $endOfMonth);
 
         // Fetch transactions with user relationship to avoid N+1 queries
-        $transactions = Transaction::with('user')->orderBy('created_at', 'desc')->get();
+        if ($paginate) {
+            $transactions = Transaction::with('user')->orderBy('created_at', 'desc')->paginate(15);
+        } else {
+            $transactions = Transaction::with('user')->orderBy('created_at', 'desc')->get();
+        }
+
+        // Query Pendapatan Per Akun Kasir (Point 3)
+        $omset_kasir = Transaction::where('status', 'success')
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)
+            ->selectRaw('user_id, SUM(total_harga) as total_omset')
+            ->groupBy('user_id')
+            ->with('user:id,name')
+            ->get();
 
         // 1. Kinerja kategori produk (untuk Bar Chart)
         $categoriesSales = TransactionDetail::query()
@@ -160,7 +173,7 @@ class ReportController extends Controller
             $monthlyComparison['last_year'][] = (float) ($salesLastYear[$m] ?? 0.0);
         }
 
-        return compact('financialSummary', 'categoryPerformance', 'topProducts', 'monthlyComparison', 'transactions');
+        return compact('financialSummary', 'categoryPerformance', 'topProducts', 'monthlyComparison', 'transactions', 'omset_kasir');
     }
 
     private function getMonthlyFinancialSummary(Carbon $startOfMonth, Carbon $endOfMonth): array

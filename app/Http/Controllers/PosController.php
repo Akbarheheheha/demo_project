@@ -67,6 +67,7 @@ class PosController extends Controller
             'discount_percent' => 'nullable|numeric|min:0|max:100',
             'tax_percent' => 'nullable|numeric|min:0|max:100',
             'cash_amount' => 'nullable|numeric|min:0',
+            'payment_method' => 'nullable|string|in:Tunai,Transfer,QRIS',
         ]);
 
         try {
@@ -74,7 +75,8 @@ class PosController extends Controller
                 $request->input('items'),
                 $request->input('customer_name'),
                 (float) $request->input('discount_percent', 0),
-                (float) $request->input('tax_percent', 11)
+                (float) $request->input('tax_percent', 11),
+                $request->input('payment_method', 'Tunai')
             );
 
             $cacheKey = sprintf(
@@ -127,7 +129,7 @@ class PosController extends Controller
             'date' => $transaction->created_at->format('d/m/Y H:i:s'),
             'cashier' => $transaction->user->name ?? 'Kasir',
             'customer_name' => $transaction->customer_name,
-            'paymentMethod' => 'TUNAI',
+            'paymentMethod' => $transaction->payment_method ?? 'Tunai',
             'items' => $items,
             'subtotal' => $subtotal,
             'discount' => (float) $transaction->discount,
