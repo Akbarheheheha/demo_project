@@ -130,7 +130,7 @@ class PosController extends Controller
             'date' => $transaction->created_at->format('d/m/Y H:i:s'),
             'cashier' => $transaction->user->name ?? 'Kasir',
             'customer_name' => $transaction->customer_name,
-            'paymentMethod' => $transaction->payment_method,
+            'paymentMethod' => 'TUNAI',
             'items' => $items,
             'subtotal' => $subtotal,
             'discount' => (float) $transaction->discount,

@@ -72,6 +72,7 @@ class PosService
                 'discount' => $discountAmount,
                 'tax' => $taxAmount,
                 'status' => 'success',
+                'payment_method' => $paymentMethod,
             ]);
 
             // Insert Transaction Details
