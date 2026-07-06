@@ -159,6 +159,7 @@
             
             <div class="border-b border-dotted border-slate-300 my-1.5"></div>
             
+            @if($paymentMethod === 'Tunai')
             <div class="flex justify-between text-slate-600">
                 <span>Tunai / Bayar</span>
                 <span class="font-semibold text-slate-800">Rp {{ number_format($cashReceived ?? 100000, 0, ',', '.') }}</span>
@@ -167,6 +168,12 @@
                 <span>Kembalian</span>
                 <span class="font-semibold text-emerald-700">Rp {{ number_format($calculatedChange, 0, ',', '.') }}</span>
             </div>
+            @else
+            <div class="flex justify-between text-slate-600">
+                <span>Dibayar</span>
+                <span class="font-semibold text-slate-800">Rp {{ number_format($calculatedGrandTotal, 0, ',', '.') }}</span>
+            </div>
+            @endif
         </div>
         
         <!-- Divider (Dashed) -->

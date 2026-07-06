@@ -500,16 +500,6 @@
                         Rp 0
                     </span>
                 </div>
-
-                <!-- Metode Pembayaran Selector -->
-                <div class="flex flex-col gap-1 px-1 mt-1">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Metode Pembayaran</span>
-                    <select x-model="paymentMethod" class="w-full bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 px-3 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all cursor-pointer">
-                        <option value="Tunai">💵 Tunai (Cash)</option>
-                        <option value="Transfer">🏦 Transfer Bank</option>
-                        <option value="QRIS">📱 QRIS</option>
-                    </select>
-                </div>
             </div>
             
             <!-- Modal Actions -->
