@@ -13,6 +13,7 @@ class Transaction extends Model
         'user_id',
         'invoice',
         'total_harga',
+        'payment_method',
         'tax_amount',
         'discount_amount',
         'status',
@@ -23,6 +24,7 @@ class Transaction extends Model
 
     protected $casts = [
         'total_harga' => 'decimal:2',
+        'payment_method' => 'string',
         'tax_amount' => 'decimal:2',
         'discount_amount' => 'decimal:2',
         'discount' => 'decimal:2',

@@ -16,12 +16,13 @@ class PosService
      * @param string|null $customerName
      * @param float $discountPercent
      * @param float $taxPercent
+     * @param string $paymentMethod
      * @return Transaction
      * @throws Exception
      */
-    public function processCheckout(array $items, ?string $customerName = null, float $discountPercent = 0, float $taxPercent = 0): Transaction
+    public function processCheckout(array $items, ?string $customerName = null, float $discountPercent = 0, float $taxPercent = 0, string $paymentMethod = 'Tunai'): Transaction
     {
-        return DB::transaction(function () use ($items, $customerName, $discountPercent, $taxPercent) {
+        return DB::transaction(function () use ($items, $customerName, $discountPercent, $taxPercent, $paymentMethod) {
             $subtotal = 0;
 
             foreach ($items as $item) {
@@ -66,6 +67,7 @@ class PosService
                 'user_id' => auth()->id(),
                 'invoice' => $invoice,
                 'total_harga' => $totalHarga,
+                'payment_method' => $paymentMethod,
                 'customer_name' => $customerName,
                 'discount' => $discountAmount,
                 'tax' => $taxAmount,

@@ -159,6 +159,41 @@
         </div>
     </div>
 
+    <!-- Table: Total Omset per Kasir -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden mt-6">
+        <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+            <div>
+                <h3 class="font-bold text-slate-800 text-base">Total Omset per Kasir Bulan Ini</h3>
+                <p class="text-xs text-slate-400">Ringkasan transaksi sukses yang dikelompokkan berdasarkan akun kasir.</p>
+            </div>
+            <span class="text-[10px] font-bold bg-emerald-50 text-emerald-700 px-3 py-1 rounded-xl uppercase tracking-wider">Bulan Ini</span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/50 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                        <th class="px-6 py-4">Nama Kasir</th>
+                        <th class="px-6 py-4 text-right">Total Omset</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs">
+                    @forelse($cashierRevenues as $row)
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="px-6 py-3.5 font-semibold text-slate-800">{{ $row->user->name ?? 'Sistem' }}</td>
+                            <td class="px-6 py-3.5 text-right font-black text-emerald-600">Rp {{ number_format($row->total_omset, 0, ',', '.') }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="2" class="text-center py-12 text-slate-400 font-semibold">
+                                Belum ada omset kasir bulan ini.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- Table: Semua Transaksi Penjualan (Real Database) -->
     <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden mt-6">
         <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
@@ -175,6 +210,7 @@
                         <th class="px-6 py-4">Nomor Invoice</th>
                         <th class="px-6 py-4">Operator / Kasir</th>
                         <th class="px-6 py-4">Tanggal Transaksi</th>
+                        <th class="px-6 py-4">Metode Bayar</th>
                         <th class="px-6 py-4 text-right">Total Nominal</th>
                         <th class="px-6 py-4 text-center">Status</th>
                     </tr>
@@ -185,6 +221,7 @@
                             <td class="px-6 py-3.5 font-mono font-bold text-slate-800">{{ $trx->invoice }}</td>
                             <td class="px-6 py-3.5 font-semibold text-slate-800">{{ $trx->user ? $trx->user->name : 'Sistem' }}</td>
                             <td class="px-6 py-3.5 text-slate-500 font-medium">{{ $trx->created_at->format('d M Y H:i') }}</td>
+                            <td class="px-6 py-3.5 text-slate-600 font-bold">{{ $trx->payment_method ?? 'Tunai' }}</td>
                             <td class="px-6 py-3.5 text-right font-black text-indigo-600">Rp {{ number_format($trx->total_harga, 0, ',', '.') }}</td>
                             <td class="px-6 py-3.5 text-center">
                                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider {{ $trx->status === 'success' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600' }}">
@@ -194,13 +231,16 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center py-12 text-slate-400 font-semibold">
+                            <td colspan="6" class="text-center py-12 text-slate-400 font-semibold">
                                 Belum ada data transaksi penjualan di database.
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
+        </div>
+        <div class="px-6 py-4 border-t border-slate-100">
+            {{ $transactions->links() }}
         </div>
     </div>
 

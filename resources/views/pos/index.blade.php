@@ -393,6 +393,7 @@
                     <input type="hidden" name="discount_percent" :value="discountPercent">
                     <input type="hidden" name="tax_percent" :value="taxPercent">
                     <input type="hidden" name="cash_amount" :value="cashAmount">
+                    <input type="hidden" name="payment_method" :value="paymentMethod">
 
                     <!-- Main submit button -->
                     <button type="button"
@@ -459,6 +460,23 @@
             
             <!-- Summary Info -->
             <div class="space-y-3.5 py-1">
+                <!-- Metode Pembayaran -->
+                <div class="bg-white border border-slate-200 p-3.5 rounded-2xl">
+                    <label for="payment_method" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
+                        Metode Pembayaran
+                    </label>
+                    <select
+                        id="payment_method"
+                        name="payment_method"
+                        x-model="paymentMethod"
+                        class="w-full rounded-xl border-slate-200 text-xs font-bold text-slate-700 focus:border-indigo-500 focus:ring-indigo-500"
+                        required
+                    >
+                        <option value="Tunai">Tunai</option>
+                        <option value="Transfer">Transfer</option>
+                        <option value="QRIS">QRIS</option>
+                    </select>
+                </div>
                 
                 <!-- Total Tagihan -->
                 <div class="flex justify-between items-center bg-indigo-50/50 p-3.5 rounded-2xl border border-indigo-100/50">
@@ -520,6 +538,7 @@
                 customerName: '',
                 discountPercent: 0,
                 taxPercent: 0,
+                paymentMethod: 'Tunai',
                 
                 // Payment State
                 cashAmount: '',
