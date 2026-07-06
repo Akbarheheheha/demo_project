@@ -61,6 +61,12 @@
         @if(session('login_success'))
             setTimeout(() => { $dispatch('show-toast', { message: '{{ session('login_success') }}', type: 'success' }) }, 400);
         @endif
+        @if(session('success'))
+            setTimeout(() => { $dispatch('show-toast', { message: '{{ session('success') }}', type: 'success' }) }, 400);
+        @endif
+        @if(session('error'))
+            setTimeout(() => { $dispatch('show-toast', { message: '{{ session('error') }}', type: 'danger' }) }, 400);
+        @endif
       ">
 
     <!-- Toast Notification Container -->
@@ -174,6 +180,7 @@
                     <span x-show="sidebarOpen" x-transition.opacity>Dashboard</span>
                 </a>
                 @endhasanyrole
+
                 
                 <!-- Kasir / POS Link -->
                 @hasanyrole('Kasir|Super Admin')
@@ -282,10 +289,12 @@
                                 class="relative rounded-xl p-2 bg-white/20 border border-indigo-500/60 text-slate-500 dark:text-slate-400 transition-all duration-200">
                             <i data-lucide="bell" class="h-5 w-5"></i>
                             <!-- Badge -->
+                            @if($unreadCount > 0)
                             <span class="absolute top-1 right-1 flex h-2 w-2">
                                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-450 opacity-75"></span>
                                 <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.8)]"></span>
                             </span>
+                            @endif
                         </button>
                         
                         <!-- Notifications List Menu -->
@@ -297,30 +306,57 @@
                              class="absolute right-0 mt-2 w-80 origin-top-right rounded-2xl bg-gradient-to-br from-[#1e1b4b] to-[#330854] border border-indigo-900/60 p-2 shadow-2xl z-50 text-slate-200">
                             <div class="px-4 py-2.5 border-b border-white/10 flex items-center justify-between">
                                 <h3 class="font-bold text-xs uppercase tracking-wider text-slate-300 font-mono">System Alerts</h3>
-                                <span class="text-[9px] font-mono font-semibold bg-rose-500/20 border border-rose-500/40 text-rose-350 px-2 py-0.5 rounded-full">2 Action Required</span>
+                                <span class="text-[9px] font-mono font-semibold bg-rose-500/20 border border-rose-500/40 text-rose-350 px-2 py-0.5 rounded-full">{{ $unreadCount }} Alerts</span>
                             </div>
                             <div class="max-h-64 overflow-y-auto py-1">
-                                <!-- Notif 1 -->
-                                <a href="{{ route('inventory') }}" class="flex gap-3 px-4 py-3 hover:bg-white/10 rounded-xl transition-colors">
-                                    <div class="p-2 bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-xl h-9 w-9 flex items-center justify-center flex-shrink-0">
-                                        <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                                @forelse ($notifications as $notification)
+                                    <div class="group relative flex gap-3 px-4 py-3 hover:bg-white/10 rounded-xl transition-colors">
+                                        <a href="{{ route('inventory') }}" class="flex gap-3 flex-1">
+                                            @if(($notification->data['type'] ?? '') === 'out_of_stock')
+                                                <div class="p-2 bg-rose-500/10 text-rose-400 border border-rose-500/30 rounded-xl h-9 w-9 flex items-center justify-center flex-shrink-0">
+                                                    <i data-lucide="x-circle" class="w-4 h-4"></i>
+                                                </div>
+                                            @else
+                                                <div class="p-2 bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-xl h-9 w-9 flex items-center justify-center flex-shrink-0">
+                                                    <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                                                </div>
+                                            @endif
+                                            <div>
+                                                <p class="text-xs font-bold text-white">
+                                                    {{ ($notification->data['type'] ?? '') === 'out_of_stock' ? 'Stok Habis!' : 'Stok Menipis Terdeteksi!' }}
+                                                </p>
+                                                <p class="text-[10px] text-slate-350 mt-0.5 font-medium leading-normal">
+                                                    {{ $notification->data['message'] ?? '' }}
+                                                </p>
+                                            </div>
+                                        </a>
+                                        
+                                        <!-- Mark as Read Button -->
+                                        <form action="{{ route('notifications.read', $notification->id) }}" method="POST" class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            @csrf
+                                            <button type="submit" class="p-1 rounded-md text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 transition-all" title="Tandai terbaca">
+                                                <i data-lucide="check" class="w-3 h-3"></i>
+                                            </button>
+                                        </form>
                                     </div>
-                                    <div>
-                                        <p class="text-xs font-bold text-white">Stok Menipis Terdeteksi!</p>
-                                        <p class="text-[10px] text-slate-300 mt-0.5 font-medium">Stok Deterjen Rinso sisa 4 pcs.</p>
+                                @empty
+                                    <div class="px-4 py-6 text-center text-slate-400 text-xs">
+                                        <i data-lucide="bell-off" class="w-6 h-6 mx-auto mb-2 text-slate-500"></i>
+                                        Tidak ada notifikasi sistem baru.
                                     </div>
-                                </a>
-                                <!-- Notif 2 -->
-                                <a href="{{ route('inventory') }}" class="flex gap-3 px-4 py-3 hover:bg-white/10 rounded-xl transition-colors">
-                                    <div class="p-2 bg-rose-550/10 text-rose-400 border border-rose-500/30 rounded-xl h-9 w-9 flex items-center justify-center flex-shrink-0">
-                                        <i data-lucide="x-circle" class="w-4 h-4"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs font-bold text-white">Stok Habis!</p>
-                                        <p class="text-[10px] text-slate-300 mt-0.5 font-medium">Chitato Sapi Panggang habis terjual.</p>
-                                    </div>
-                                </a>
+                                @endforelse
                             </div>
+                            
+                            @if($unreadCount > 0)
+                                <div class="p-1.5 border-t border-white/5 text-center">
+                                    <form action="{{ route('notifications.read-all') }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="w-full py-1.5 text-[10px] font-bold text-indigo-400 hover:text-indigo-300 hover:bg-white/5 rounded-lg transition-all">
+                                            Tandai Semua Terbaca
+                                        </button>
+                                    </form>
+                                </div>
+                            @endif
                         </div>
                     </div>
                     

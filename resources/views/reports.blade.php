@@ -4,7 +4,7 @@
 @section('active_page', 'reports')
 
 @section('content')
-<div class="space-y-6" x-data="{ dateFilter: 'this_month' }">
+<div class="space-y-6">
 
     <!-- Welcome Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -16,14 +16,14 @@
         <!-- Action Buttons (Export) -->
         <div class="flex items-center gap-2">
             <!-- Export PDF -->
-            <a href="{{ route('reports.export.pdf') }}"
+            <a href="{{ route('reports.export.pdf', ['period' => $activePeriod]) }}"
                class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-sm">
                 <i data-lucide="file-text" class="w-4 h-4 text-rose-500"></i>
                 <span>Export PDF</span>
             </a>
             
             <!-- Export Excel -->
-            <a href="{{ route('reports.export.excel') }}"
+            <a href="{{ route('reports.export.excel', ['period' => $activePeriod]) }}"
                class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-sm">
                 <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-500"></i>
                 <span>Export Excel</span>
@@ -34,26 +34,22 @@
     <!-- Quick Date Filter Panel -->
     <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-wrap gap-2 items-center">
         <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mr-2">Periode Laporan:</span>
-        <button @click="dateFilter = 'this_week'; $dispatch('show-toast', { message: 'Filter Minggu Ini diterapkan', type: 'info' })"
-                :class="dateFilter === 'this_week' ? 'bg-indigo-50 border-indigo-200 text-indigo-700 font-bold' : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-600'"
-                class="px-3.5 py-1.5 text-xs font-medium rounded-xl border transition-all">
+        <a href="{{ route('reports', ['period' => 'week']) }}"
+           class="px-3.5 py-1.5 text-xs font-semibold rounded-xl border transition-all {{ $activePeriod === 'week' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-slate-50 hover:bg-slate-105 border-slate-200 text-slate-600' }}">
             Minggu Ini
-        </button>
-        <button @click="dateFilter = 'this_month'; $dispatch('show-toast', { message: 'Filter Bulan Ini diterapkan', type: 'info' })"
-                :class="dateFilter === 'this_month' ? 'bg-indigo-50 border-indigo-200 text-indigo-700 font-bold' : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-600'"
-                class="px-3.5 py-1.5 text-xs font-medium rounded-xl border transition-all">
+        </a>
+        <a href="{{ route('reports', ['period' => 'month']) }}"
+           class="px-3.5 py-1.5 text-xs font-semibold rounded-xl border transition-all {{ $activePeriod === 'month' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-slate-50 hover:bg-slate-105 border-slate-200 text-slate-600' }}">
             Bulan Ini
-        </button>
-        <button @click="dateFilter = 'last_quarter'; $dispatch('show-toast', { message: 'Filter Kuartal Terakhir diterapkan', type: 'info' })"
-                :class="dateFilter === 'last_quarter' ? 'bg-indigo-50 border-indigo-200 text-indigo-700 font-bold' : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-600'"
-                class="px-3.5 py-1.5 text-xs font-medium rounded-xl border transition-all">
+        </a>
+        <a href="{{ route('reports', ['period' => 'quarter']) }}"
+           class="px-3.5 py-1.5 text-xs font-semibold rounded-xl border transition-all {{ $activePeriod === 'quarter' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-slate-50 hover:bg-slate-105 border-slate-200 text-slate-600' }}">
             Kuartal Terakhir
-        </button>
-        <button @click="dateFilter = 'this_year'; $dispatch('show-toast', { message: 'Filter Tahun Ini diterapkan', type: 'info' })"
-                :class="dateFilter === 'this_year' ? 'bg-indigo-50 border-indigo-200 text-indigo-700 font-bold' : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-600'"
-                class="px-3.5 py-1.5 text-xs font-medium rounded-xl border transition-all">
+        </a>
+        <a href="{{ route('reports', ['period' => 'year']) }}"
+           class="px-3.5 py-1.5 text-xs font-semibold rounded-xl border transition-all {{ $activePeriod === 'year' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-slate-50 hover:bg-slate-105 border-slate-200 text-slate-600' }}">
             Tahun Ini
-        </button>
+        </a>
     </div>
 
     <!-- Financial Statistics Cards -->
@@ -239,6 +235,12 @@
                 </tbody>
             </table>
         </div>
+        <!-- Pagination -->
+        @if ($transactions instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator && $transactions->hasPages())
+            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/30">
+                {{ $transactions->links() }}
+            </div>
+        @endif
     </div>
 
 </div>

@@ -179,11 +179,17 @@
                     <h3 class="font-bold text-slate-800 text-base">Daftar Akun Pengguna</h3>
                     <p class="text-xs text-slate-400">Atur hak akses masuk sistem, tambahkan karyawan kasir, atau hapus akses akun.</p>
                 </div>
-                <!-- Tambah User Button -->
-                <button @click="openAddUserModal = true" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold px-3 py-2 rounded-xl text-[11px] flex items-center gap-1.5 transition-colors">
-                    <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
-                    Tambah User
-                </button>
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('cashiers.index') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-2 rounded-xl text-[11px] flex items-center gap-1.5 transition-all shadow-md shadow-indigo-600/10 active:scale-[0.98]">
+                        <i data-lucide="users" class="w-3.5 h-3.5"></i>
+                        Kelola Akun Kasir (CRUD)
+                    </a>
+                    <!-- Tambah User Button -->
+                    <button @click="showAddUserModal = true" class="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 font-bold px-3 py-2 rounded-xl text-[11px] flex items-center gap-1.5 transition-colors">
+                        <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                        Tambah User
+                    </button>
+                </div>
             </div>
             
             <!-- Users Table List -->

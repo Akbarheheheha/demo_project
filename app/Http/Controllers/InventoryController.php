@@ -52,7 +52,14 @@ class InventoryController extends Controller
             })
             ->toArray();
 
-        $categories = ['Sembako', 'Makanan', 'Minuman', 'Cemilan', 'Rumah Tangga'];
+        $categories = \App\Models\Category::withCount('products')->get()->map(function ($cat) {
+            return [
+                'id' => $cat->id,
+                'name' => $cat->name,
+                'slug' => $cat->slug,
+                'products_count' => $cat->products_count
+            ];
+        })->toArray();
 
         return view('inventory', compact('inventory', 'mutations', 'categories'));
     }

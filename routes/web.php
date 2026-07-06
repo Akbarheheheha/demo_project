@@ -9,6 +9,8 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\CashierController;
+use App\Http\Controllers\CategoryController;
 
 // Auth Routes (Guest Only)
 Route::middleware(['guest.custom'])->group(function () {
@@ -56,6 +58,8 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
         Route::get('/reports/export/excel', [ReportController::class, 'exportExcel'])->name('reports.export.excel');
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('admin.audit-logs');
+        Route::resource('cashiers', CashierController::class);
+        Route::resource('categories', CategoryController::class);
     });
 
     // Inventory API CRUD (Accessible by Super Admin and Manager)
@@ -63,6 +67,11 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::post('/api/inventory/store', [InventoryController::class, 'store']);
         Route::put('/api/inventory/update/{id}', [InventoryController::class, 'update']);
         Route::delete('/api/inventory/delete/{id}', [InventoryController::class, 'destroy']);
+
+        // Category API CRUD
+        Route::post('/api/categories/store', [CategoryController::class, 'storeApi']);
+        Route::put('/api/categories/update/{id}', [CategoryController::class, 'updateApi']);
+        Route::delete('/api/categories/delete/{id}', [CategoryController::class, 'destroyApi']);
     });
 
     // Settings & User Access Routes (Super Admin Only)

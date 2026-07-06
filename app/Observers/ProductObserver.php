@@ -33,18 +33,47 @@ class ProductObserver
                     number_format((float) $product->price, 0, ',', '.')
                 )
             );
-
-            return;
+        } else {
+            $this->record(
+                'product.updated',
+                sprintf(
+                    'User [%s] mengubah data barang [%s].',
+                    $this->userName(),
+                    $product->name
+                )
+            );
         }
 
-        $this->record(
-            'product.updated',
-            sprintf(
-                'User [%s] mengubah data barang [%s].',
-                $this->userName(),
-                $product->name
-            )
-        );
+        // Low stock/Out of stock checking logic
+        if ($product->wasChanged('stock')) {
+            if ($product->stock <= 0) {
+                // Out of stock
+                $admins = \App\Models\User::role(['Super Admin', 'Manager'])->get();
+                foreach ($admins as $admin) {
+                    $alreadyNotified = $admin->unreadNotifications()
+                        ->where('data->product_id', $product->id)
+                        ->where('data->type', 'out_of_stock')
+                        ->exists();
+
+                    if (!$alreadyNotified) {
+                        $admin->notify(new \App\Notifications\LowStockNotification($product, 'out_of_stock'));
+                    }
+                }
+            } elseif ($product->stock < $product->min_stock) {
+                // Low stock
+                $admins = \App\Models\User::role(['Super Admin', 'Manager'])->get();
+                foreach ($admins as $admin) {
+                    $alreadyNotified = $admin->unreadNotifications()
+                        ->where('data->product_id', $product->id)
+                        ->where('data->type', 'low_stock')
+                        ->exists();
+
+                    if (!$alreadyNotified) {
+                        $admin->notify(new \App\Notifications\LowStockNotification($product, 'low_stock'));
+                    }
+                }
+            }
+        }
     }
 
     public function deleted(Product $product): void

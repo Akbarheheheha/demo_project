@@ -9,6 +9,7 @@ use App\Models\Transaction;
 use App\Models\TransactionDetail;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
@@ -16,14 +17,16 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $reportData = $this->buildMonthlyReportData(paginateTransactions: true);
+        $period = $request->query('period', 'month');
+        $reportData = $this->buildMonthlyReportData(paginateTransactions: true, period: $period);
+        $reportData['activePeriod'] = $period;
 
         return view('reports', $reportData);
     }
 
-    public function exportPdf()
+    public function exportPdf(Request $request)
     {
         abort_unless(
             class_exists(Pdf::class),
@@ -31,13 +34,16 @@ class ReportController extends Controller
             'Package barryvdh/laravel-dompdf belum terpasang. Jalankan: composer require barryvdh/laravel-dompdf'
         );
 
-        $reportData = $this->buildMonthlyReportData(paginateTransactions: false);
+        $period = $request->query('period', 'month');
+        $reportData = $this->buildMonthlyReportData(paginateTransactions: false, period: $period);
+        $reportData['activePeriod'] = $period;
+
         $pdf = Pdf::loadView('reports.pdf', $reportData)->setPaper('a4', 'portrait');
 
-        return $pdf->download('laporan-keuangan-'.now()->format('Y-m').'.pdf');
+        return $pdf->download('laporan-keuangan-'.$period.'-'.now()->format('Y-m-d').'.pdf');
     }
 
-    public function exportExcel()
+    public function exportExcel(Request $request)
     {
         abort_unless(
             class_exists(Excel::class),
@@ -45,51 +51,89 @@ class ReportController extends Controller
             'Package maatwebsite/excel belum terpasang. Jalankan: composer require maatwebsite/excel'
         );
 
+        $period = $request->query('period', 'month');
+        $reportData = $this->buildMonthlyReportData(paginateTransactions: false, period: $period);
+        $reportData['activePeriod'] = $period;
+
         return Excel::download(
-            new FinancialReportExport($this->buildMonthlyReportData(paginateTransactions: false)),
-            'laporan-keuangan-'.now()->format('Y-m').'.xlsx'
+            new FinancialReportExport($reportData),
+            'laporan-keuangan-'.$period.'-'.now()->format('Y-m-d').'.xlsx'
         );
     }
 
-    private function buildMonthlyReportData(bool $paginateTransactions = false): array
+    private function buildMonthlyReportData(bool $paginateTransactions = false, string $period = 'month'): array
     {
-        $startOfMonth = Carbon::now()->startOfMonth();
-        $endOfMonth = Carbon::now()->endOfMonth();
+        // Calculate date range based on period
+        switch ($period) {
+            case 'week':
+                $startDate = Carbon::now()->startOfWeek();
+                $endDate = Carbon::now()->endOfWeek();
+                break;
+            case 'quarter':
+                $startDate = Carbon::now()->subMonths(3)->startOfDay();
+                $endDate = Carbon::now()->endOfDay();
+                break;
+            case 'year':
+                $startDate = Carbon::now()->startOfYear();
+                $endDate = Carbon::now()->endOfYear();
+                break;
+            case 'month':
+            default:
+                $startDate = Carbon::now()->startOfMonth();
+                $endDate = Carbon::now()->endOfMonth();
+                break;
+        }
 
-        $financialSummary = $this->getMonthlyFinancialSummary($startOfMonth, $endOfMonth);
+        $financialSummary = $this->getMonthlyFinancialSummary($startDate, $endDate);
 
-        // Fetch transactions with user relationship to avoid N+1 queries
+        // Fetch transactions with user relationship filtered by active period
         $transactionsQuery = Transaction::with('user')
+            ->whereBetween('created_at', [$startDate, $endDate])
             ->orderBy('created_at', 'desc');
 
         $transactions = $paginateTransactions
-            ? $transactionsQuery->paginate(15)
+            ? $transactionsQuery->paginate(15)->withQueryString()
             : $transactionsQuery->get();
 
         $cashierRevenues = Transaction::query()
             ->select('user_id', DB::raw('SUM(total_harga) as total_omset'))
             ->with('user:id,name')
             ->where('status', 'success')
-            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->whereBetween('created_at', [$startDate, $endDate])
             ->groupBy('user_id')
             ->orderByDesc('total_omset')
             ->get();
 
-        // 1. Kinerja kategori produk (untuk Bar Chart)
+        // 1. Product category performance (for Bar Chart)
         $categoriesSales = TransactionDetail::query()
-            ->whereHas('transaction', function ($query) {
-                $query->where('status', 'success');
+            ->whereHas('transaction', function ($query) use ($startDate, $endDate) {
+                $query->where('status', 'success')
+                    ->whereBetween('created_at', [$startDate, $endDate]);
             })
             ->join('products', 'transaction_details.product_id', '=', 'products.id')
-            ->selectRaw('products.category, SUM(transaction_details.subtotal) as total')
-            ->groupBy('products.category')
-            ->pluck('total', 'products.category')
-            ->toArray();
+            ->selectRaw('products.category_id, SUM(transaction_details.subtotal) as total')
+            ->groupBy('products.category_id')
+            ->get();
 
-        $categoryLabels = ['Sembako', 'Makanan', 'Minuman', 'Cemilan', 'Rumah Tangga'];
+        // Load categories mapping
+        $categoriesMap = \App\Models\Category::pluck('name', 'id')->toArray();
+        
+        $categoryLabels = array_values($categoriesMap);
+        if (empty($categoryLabels)) {
+            $categoryLabels = ['Sembako', 'Makanan', 'Minuman', 'Cemilan', 'Rumah Tangga'];
+        }
+
         $categoryData = [];
-        foreach ($categoryLabels as $cat) {
-            $categoryData[] = (float) ($categoriesSales[$cat] ?? 0.0);
+        foreach ($categoryLabels as $label) {
+            $catId = array_search($label, $categoriesMap);
+            $total = 0.0;
+            if ($catId !== false) {
+                $total = (float) $categoriesSales->where('category_id', $catId)->sum('total');
+            } else {
+                // Fallback check
+                $total = 0.0;
+            }
+            $categoryData[] = $total;
         }
 
         $categoryPerformance = [
@@ -97,10 +141,11 @@ class ReportController extends Controller
             'data' => $categoryData,
         ];
 
-        // 2. Penjualan terlaris (Top Selling Products)
+        // 2. Top Selling Products
         $topProductsDetails = TransactionDetail::query()
-            ->whereHas('transaction', function ($query) {
-                $query->where('status', 'success');
+            ->whereHas('transaction', function ($query) use ($startDate, $endDate) {
+                $query->where('status', 'success')
+                    ->whereBetween('created_at', [$startDate, $endDate]);
             })
             ->selectRaw('product_id, SUM(qty) as sold_qty, SUM(subtotal) as total_revenue, SUM(harga_beli * qty) as total_cost')
             ->groupBy('product_id')
@@ -130,7 +175,7 @@ class ReportController extends Controller
             ];
         }
 
-        // 3. Tren bulanan perbandingan (Tahun Ini vs Tahun Lalu)
+        // 3. Monthly Comparison Chart (This Year vs Last Year)
         $thisYear = Carbon::now()->year;
         $lastYear = $thisYear - 1;
 
@@ -178,51 +223,51 @@ class ReportController extends Controller
         return compact('financialSummary', 'categoryPerformance', 'topProducts', 'monthlyComparison', 'transactions', 'cashierRevenues');
     }
 
-    private function getMonthlyFinancialSummary(Carbon $startOfMonth, Carbon $endOfMonth): array
+    private function getMonthlyFinancialSummary(Carbon $startDate, Carbon $endDate): array
     {
         $cacheKey = sprintf(
             'reports:sales-summary:%s:%s',
-            $startOfMonth->toDateString(),
-            $endOfMonth->toDateString()
+            $startDate->toDateString(),
+            $endDate->toDateString()
         );
 
-        return Cache::remember($cacheKey, now()->addHour(), function () use ($startOfMonth, $endOfMonth): array {
-                $successfulTransactions = Transaction::query()
-                    ->where('status', 'success')
-                    ->whereBetween('created_at', [$startOfMonth, $endOfMonth]);
+        return Cache::remember($cacheKey, now()->addHour(), function () use ($startDate, $endDate): array {
+            $successfulTransactions = Transaction::query()
+                ->where('status', 'success')
+                ->whereBetween('created_at', [$startDate, $endDate]);
 
-                $totalOmzet = (float) (clone $successfulTransactions)->sum('total_harga');
-                $jumlahTransaksi = (int) (clone $successfulTransactions)->count();
-                $averageTicket = $jumlahTransaksi > 0 ? $totalOmzet / $jumlahTransaksi : 0;
-                $grossProfit = $this->calculateGrossProfit($startOfMonth, $endOfMonth);
+            $totalOmzet = (float) (clone $successfulTransactions)->sum('total_harga');
+            $jumlahTransaksi = (int) (clone $successfulTransactions)->count();
+            $averageTicket = $jumlahTransaksi > 0 ? $totalOmzet / $jumlahTransaksi : 0;
+            $grossProfit = $this->calculateGrossProfit($startDate, $endDate);
 
-                $totalPengeluaran = (float) Expense::query()
-                    ->whereBetween('tanggal', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
-                    ->sum('nominal');
+            $totalPengeluaran = (float) Expense::query()
+                ->whereBetween('tanggal', [$startDate->toDateString(), $endDate->toDateString()])
+                ->sum('nominal');
 
-                return [
-                    'total_omzet' => $totalOmzet,
-                    'gross_profit' => $grossProfit,
-                    'total_pengeluaran' => $totalPengeluaran,
-                    'net_revenue' => $grossProfit - $totalPengeluaran,
-                    'average_ticket' => $averageTicket,
-                    'jumlah_transaksi' => $jumlahTransaksi,
-                    'revenue_growth' => 0,
-                    'profit_growth' => 0,
-                ];
-            });
+            return [
+                'total_omzet' => $totalOmzet,
+                'gross_profit' => $grossProfit,
+                'total_pengeluaran' => $totalPengeluaran,
+                'net_revenue' => $grossProfit - $totalPengeluaran,
+                'average_ticket' => $averageTicket,
+                'jumlah_transaksi' => $jumlahTransaksi,
+                'revenue_growth' => 0,
+                'profit_growth' => 0,
+            ];
+        });
     }
 
-    private function calculateGrossProfit(Carbon $startOfMonth, Carbon $endOfMonth): float
+    private function calculateGrossProfit(Carbon $startDate, Carbon $endDate): float
     {
         if (! Schema::hasTable('transaction_details')) {
             return 0;
         }
 
         return (float) TransactionDetail::query()
-            ->whereHas('transaction', function ($query) use ($startOfMonth, $endOfMonth) {
+            ->whereHas('transaction', function ($query) use ($startDate, $endDate) {
                 $query->where('status', 'success')
-                    ->whereBetween('created_at', [$startOfMonth, $endOfMonth]);
+                    ->whereBetween('created_at', [$startDate, $endDate]);
             })
             ->selectRaw('COALESCE(SUM((harga_jual - harga_beli) * qty), 0) as gross_profit')
             ->value('gross_profit');

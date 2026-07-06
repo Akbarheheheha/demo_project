@@ -13,7 +13,7 @@ class LowStockNotification extends Notification
     /**
      * Create a new notification instance.
      */
-    public function __construct(public Product $product)
+    public function __construct(public Product $product, public string $type = 'low_stock')
     {
         //
     }
@@ -35,11 +35,16 @@ class LowStockNotification extends Notification
      */
     public function toArray(object $notifiable): array
     {
+        $message = $this->type === 'out_of_stock'
+            ? 'Stok barang "' . $this->product->name . '" telah habis terjual!'
+            : 'Stok barang "' . $this->product->name . '" menipis (sisa ' . $this->product->stock . ' pcs), segera restock!';
+
         return [
             'product_id' => $this->product->id,
             'product_name' => $this->product->name,
             'current_stock' => $this->product->stock,
-            'message' => 'Stok barang menipis, segera restock!',
+            'type' => $this->type,
+            'message' => $message,
         ];
     }
 }
