@@ -197,6 +197,16 @@
     </div>
 
     <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                window.print();
+            }, 300);
+        });
+
+        window.onafterprint = function() {
+            window.close();
+        };
+
         document.addEventListener('keydown', function(event) {
             if (event.key === 'x' || event.key === 'X') {
                 if (window.opener || window.history.length === 1) {

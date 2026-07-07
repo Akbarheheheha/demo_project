@@ -43,12 +43,7 @@ class PosController extends Controller
     public function index()
     {
         $products = Product::all();
-        $categories = Product::select('category')
-            ->distinct()
-            ->whereNotNull('category')
-            ->where('category', '!=', '')
-            ->pluck('category')
-            ->toArray();
+        $categories = \App\Models\Category::pluck('name')->toArray();
 
         return view('pos.index', compact('products', 'categories'));
     }

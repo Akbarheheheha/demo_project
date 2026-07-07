@@ -206,45 +206,6 @@
                 </button>
             </div>
 
-            <!-- Customer Name, Discount, and Tax Inline Settings Bar -->
-            <div class="p-3 bg-white border-b border-slate-200 grid grid-cols-12 gap-2 flex-shrink-0">
-                <!-- Customer Name (6 cols) -->
-                <div class="col-span-6">
-                    <label class="text-[9px] font-bold text-slate-450 uppercase tracking-wider block mb-0.5">Nama Pelanggan</label>
-                    <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 focus-within:bg-white focus-within:border-indigo-400 transition-all duration-200">
-                        <i data-lucide="user" class="w-3 h-3 text-slate-400 flex-shrink-0"></i>
-                        <input type="text" 
-                               placeholder="Umum / Baru..." 
-                               x-model="customerName"
-                               name="customerName"
-                               class="bg-transparent border-none text-[11px] focus:outline-none w-full text-slate-700 font-semibold p-0">
-                    </div>
-                </div>
-                <!-- Discount Selector (3 cols) -->
-                <div class="col-span-3">
-                    <label class="text-[9px] font-bold text-slate-455 uppercase tracking-wider block mb-0.5">Disk (%)</label>
-                    <select x-model="discountPercent" 
-                            name="discountPercent"
-                            class="w-full text-[11px] font-bold bg-slate-50 rounded-lg border border-slate-200 px-2 py-1 text-slate-700 focus:outline-none focus:border-indigo-500">
-                        <option :value="0">0%</option>
-                        <option :value="5">5%</option>
-                        <option :value="10">10%</option>
-                        <option :value="15">15%</option>
-                        <option :value="20">20%</option>
-                    </select>
-                </div>
-                <!-- Tax Selector (3 cols) -->
-                <div class="col-span-3">
-                    <label class="text-[9px] font-bold text-slate-455 uppercase tracking-wider block mb-0.5">PPN (%)</label>
-                    <select x-model="taxPercent" 
-                            name="taxPercent"
-                            class="w-full text-[11px] font-bold bg-slate-50 rounded-lg border border-slate-200 px-2 py-1 text-slate-700 focus:outline-none focus:border-indigo-500">
-                        <option :value="0">0%</option>
-                        <option :value="10">10%</option>
-                        <option :value="11">11%</option>
-                    </select>
-                </div>
-            </div>
 
             <!-- Cart Items (Scrollable list - Expanded Height) -->
             <div class="flex-1 overflow-y-auto p-4 min-h-0 space-y-2.5 bg-slate-50/20">
@@ -327,56 +288,10 @@
                     </div>
                 </div>
                 
-                <!-- Split Billing Grid (Total Tagihan vs Cash Pay) -->
-                <div class="grid grid-cols-12 gap-2">
-                    <!-- Total Tagihan (Left 5 Cols) -->
-                    <div class="col-span-5 bg-indigo-900 text-white p-3 rounded-xl flex flex-col justify-between shadow-sm">
-                        <span class="text-[8px] font-bold uppercase tracking-wider text-indigo-200">Total Tagihan</span>
-                        <span class="text-xs font-black mt-1 tracking-tight truncate" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(grandTotal)">Rp 0</span>
-                    </div>
-                    
-                    <!-- Uang Tunai/Bayar (Right 7 Cols) -->
-                    <div class="col-span-7 bg-white border border-slate-200 p-2 rounded-xl flex flex-col justify-between shadow-xs focus-within:border-indigo-400 transition-colors">
-                        <span class="text-[8px] font-bold uppercase tracking-wider text-slate-400">Uang Bayar (Tunai)</span>
-                        <div class="flex items-center gap-1 mt-0.5">
-                            <span class="text-[10px] font-extrabold text-slate-400">Rp</span>
-                            <input type="number" 
-                                   placeholder="0" 
-                                   id="cash-amount"
-                                   :value="formattedCashAmount"
-                                   @input="setFormattedCash($event.target.value)"
-                                   class="bg-transparent border-none text-xs font-black focus:outline-none w-full text-slate-800 p-0">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Quick Cash Actions -->
-                <div class="grid grid-cols-4 gap-2">
-                    <button type="button" @click="payExact()" class="rounded-lg border border-indigo-100 bg-indigo-50 px-2 py-2 text-[10px] font-black text-indigo-700 hover:bg-indigo-100">
-                        Pas
-                    </button>
-                    <button type="button" @click="addCash(10000)" class="rounded-lg border border-slate-200 bg-white px-2 py-2 text-[10px] font-black text-slate-700 hover:bg-slate-50">
-                        +10rb
-                    </button>
-                    <button type="button" @click="addCash(20000)" class="rounded-lg border border-slate-200 bg-white px-2 py-2 text-[10px] font-black text-slate-700 hover:bg-slate-50">
-                        +20rb
-                    </button>
-                    <button type="button" @click="addCash(50000)" class="rounded-lg border border-slate-200 bg-white px-2 py-2 text-[10px] font-black text-slate-700 hover:bg-slate-50">
-                        +50rb
-                    </button>
-                </div>
-                
-                <!-- Kembalian Bar -->
-                <div :class="isCashInsufficient ? 'bg-rose-50 border-rose-100 text-rose-800' : 'bg-emerald-50 border-emerald-100 text-emerald-950'"
-                     class="p-2 px-3 rounded-xl border transition-all duration-200 flex items-center justify-between text-[11px] font-semibold">
-                    <span class="font-bold text-[9px] uppercase tracking-wider flex items-center gap-1.5">
-                        <i :data-lucide="isCashInsufficient ? 'alert-circle' : 'coins'" class="w-3.5 h-3.5"></i>
-                        <span x-text="isCashInsufficient ? 'Uang Kurang!' : 'Uang Kembalian'"></span>
-                    </span>
-                    <span :class="isCashInsufficient ? 'text-rose-700' : 'text-emerald-700'"
-                          class="font-black"
-                          x-text="isCashInsufficient ? '- Rp ' + new Intl.NumberFormat('id-ID').format(Math.abs(changeAmount)) : 'Rp ' + new Intl.NumberFormat('id-ID').format(changeAmount)">
-                    </span>
+                <!-- Split Billing Grid (Total Tagihan Full Width) -->
+                <div class="bg-indigo-900 text-white p-3 rounded-xl flex flex-col justify-between shadow-sm">
+                    <span class="text-[8px] font-bold uppercase tracking-wider text-indigo-200">Total Tagihan</span>
+                    <span class="text-sm font-black mt-1 tracking-tight truncate" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(grandTotal)">Rp 0</span>
                 </div>
 
                 <!-- Hidden form submit wrapper -->
@@ -398,9 +313,9 @@
                     <!-- Main submit button -->
                     <button type="button"
                             id="btn-checkout"
-                            :disabled="!canCheckout"
+                            :disabled="cart.length === 0"
                             @click="openModal()"
-                            :class="!canCheckout ? 'bg-slate-200 text-slate-400 cursor-not-allowed border-none shadow-none' : 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:shadow-md hover:shadow-indigo-650/15 active:scale-[0.99] text-white'"
+                            :class="cart.length === 0 ? 'bg-slate-200 text-slate-400 cursor-not-allowed border-none shadow-none' : 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:shadow-md hover:shadow-indigo-650/15 active:scale-[0.99] text-white'"
                             class="w-full py-3.5 rounded-xl flex items-center justify-center gap-2 font-bold text-xs shadow-xs transition-all duration-200 mt-1">
                         <i data-lucide="check-circle" class="w-4 h-4"></i>
                         <span>SIMPAN PEMBAYARAN (F9)</span>
@@ -414,111 +329,118 @@
 
     <!-- PAYMENT CONFIRMATION MODAL -->
     <div x-show="isModalOpen" 
-         class="fixed inset-0 z-50 flex items-center justify-center p-4" 
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95"
+         class="fixed inset-0 z-50 overflow-y-auto" 
          style="display: none;">
         
-        <!-- Backdrop Blur Overlay -->
         <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="closeModal()"></div>
         
-        <!-- Modal Content Container -->
-        <div class="relative bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md p-6 overflow-hidden z-10 flex flex-col gap-4">
-            <!-- Modal Header -->
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 class="heading-font font-black text-slate-800 text-sm tracking-wide flex items-center gap-2">
-                    <i data-lucide="check-circle" class="w-5 h-5 text-indigo-600"></i>
-                    Konfirmasi Pembayaran
-                </h3>
-                <button @click="closeModal()" class="text-slate-400 hover:text-slate-650 transition-colors">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-</div>
-            
-            <!-- Daftar Barang yang Dibeli -->
-            <div class="border-t border-slate-100 pt-3">
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Rincian Belanja:</span>
-                <div class="max-h-36 overflow-y-auto space-y-2 pr-1">
-                    <template x-for="item in cart" :key="item.product.id">
-                        <div class="flex items-center justify-between text-xs bg-slate-50/50 p-2.5 rounded-xl border border-slate-200/50">
-                            <div class="min-w-0 flex-1">
-                                <span class="font-bold text-slate-800 truncate block" x-text="item.product.name"></span>
-                                <span class="text-[9px] text-slate-400 font-mono" x-text="item.product.sku + ' • Rp ' + new Intl.NumberFormat('id-ID').format(item.product.price)"></span>
+        <div class="flex min-h-screen items-center justify-center p-4 relative z-10">
+            <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md p-6 overflow-hidden flex flex-col gap-4">
+                 
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 class="heading-font font-black text-slate-800 text-sm tracking-wide flex items-center gap-2">
+                        <i data-lucide="check-circle" class="w-5 h-5 text-indigo-600"></i>
+                        Konfirmasi Pembayaran
+                    </h3>
+                    <button @click="closeModal()" class="text-slate-400 hover:text-slate-650 transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                
+                <div class="border-t border-slate-100 pt-3">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Rincian Belanja:</span>
+                    <div class="max-h-36 overflow-y-auto space-y-2 pr-1">
+                        <template x-for="item in cart" :key="item.product.id">
+                            <div class="flex items-center justify-between text-xs bg-slate-50/50 p-2.5 rounded-xl border border-slate-200/50">
+                                <div class="min-w-0 flex-1">
+                                    <span class="font-bold text-slate-800 truncate block" x-text="item.product.name"></span>
+                                    <span class="text-[9px] text-slate-400 font-mono" x-text="item.product.sku + ' • Rp ' + new Intl.NumberFormat('id-ID').format(item.product.price)"></span>
+                                </div>
+                                <div class="text-right flex-shrink-0 ml-3">
+                                    <span class="font-bold text-indigo-650" x-text="item.qty + ' pcs'"></span>
+                                    <span class="font-black text-slate-700 block text-[11px]" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(item.product.price * item.qty)"></span>
+                                </div>
                             </div>
-                            <div class="text-right flex-shrink-0 ml-3">
-                                <span class="font-bold text-indigo-650" x-text="item.qty + ' pcs'"></span>
-                                <span class="font-black text-slate-700 block text-[11px]" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(item.product.price * item.qty)"></span>
+                        </template>
+                    </div>
+                </div>
+                
+                <div class="space-y-3.5 py-1">
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/60 space-y-3.5">
+                        <span class="text-[10px] font-bold text-slate-450 uppercase tracking-wider block">Informasi & Penyesuaian</span>
+                        
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nama Pelanggan</label>
+                            <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+                                <i data-lucide="user" class="w-4 h-4 text-slate-400"></i>
+                                <input type="text" placeholder="Umum / Baru..." x-model="customerName" class="bg-transparent border-none text-xs focus:outline-none w-full text-slate-700 font-semibold p-0">
                             </div>
                         </div>
-                    </template>
-                </div>
-            </div>
-            
-            <!-- Summary Info -->
-            <div class="space-y-3.5 py-1">
-                <!-- Metode Pembayaran -->
-                <div class="bg-white border border-slate-200 p-3.5 rounded-2xl">
-                    <label for="payment_method" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
-                        Metode Pembayaran
-                    </label>
-                    <select
-                        id="payment_method"
-                        name="payment_method"
-                        x-model="paymentMethod"
-                        class="w-full rounded-xl border-slate-200 text-xs font-bold text-slate-700 focus:border-indigo-500 focus:ring-indigo-500"
-                        required
-                    >
-                        <option value="Tunai">Tunai</option>
-                        <option value="Transfer">Transfer</option>
-                        <option value="QRIS">QRIS</option>
-                    </select>
+    
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Diskon (%)</label>
+                                <select x-model="discountPercent" class="w-full text-xs font-bold bg-white rounded-xl border border-slate-200 px-3 py-2 text-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all">
+                                    <option value="0">0%</option>
+                                    <option value="5">5%</option>
+                                    <option value="10">10%</option>
+                                    <option value="15">15%</option>
+                                    <option value="20">20%</option>
+                                </select>
+                            </div>
+    
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">PPN (%)</label>
+                                <select x-model="taxPercent" class="w-full text-xs font-bold bg-white rounded-xl border border-slate-200 px-3 py-2 text-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all">
+                                    <option value="0">0%</option>
+                                    <option value="10">10%</option>
+                                    <option value="11">11%</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+    
+                    <div class="bg-white border border-slate-200 p-3.5 rounded-2xl">
+                        <label for="payment_method" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
+                            Metode Pembayaran
+                        </label>
+                        <select id="payment_method" x-model="paymentMethod" class="w-full rounded-xl border-slate-200 text-xs font-bold text-slate-700 focus:border-indigo-500 focus:ring-indigo-500" required>
+                            <option value="Tunai">Tunai</option>
+                            <option value="Transfer">Transfer</option>
+                            <option value="QRIS">QRIS</option>
+                        </select>
+                    </div>
+
+                    <!-- Uang Bayar -->
+                    <div class="bg-white border border-slate-200 p-3.5 rounded-2xl" x-show="paymentMethod === 'Tunai'">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Uang Bayar</label>
+                        <div class="flex items-center gap-1 mt-0.5 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:border-indigo-500 transition-all">
+                            <span class="text-xs font-extrabold text-slate-400">Rp</span>
+                            <input type="text" 
+                                   placeholder="0" 
+                                   id="cash-amount"
+                                   :value="formattedCashAmount"
+                                   @input="setFormattedCash($event.target.value)"
+                                   class="bg-transparent border-none text-xs font-black focus:outline-none w-full text-slate-800 p-0">
+                        </div>
+                        <div class="flex flex-wrap gap-2 mt-3">
+                            <button type="button" @click="payExact()" class="text-[10px] font-bold bg-indigo-50 border border-indigo-150 text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors">Pas (Alt+1)</button>
+                            <button type="button" @click="addCash(10000)" class="text-[10px] font-bold bg-slate-100 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition-colors">+10rb</button>
+                            <button type="button" @click="addCash(20000)" class="text-[10px] font-bold bg-slate-100 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition-colors">+20rb</button>
+                            <button type="button" @click="addCash(50000)" class="text-[10px] font-bold bg-slate-100 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition-colors">+50rb</button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center bg-indigo-50/50 p-3.5 rounded-2xl border border-indigo-100/50">
+                        <span class="text-xs font-bold text-indigo-900 uppercase">Total Tagihan</span>
+                        <span class="text-lg font-black text-indigo-750 font-mono" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(grandTotal)">Rp 0</span>
+                    </div>
                 </div>
                 
-                <!-- Total Tagihan -->
-                <div class="flex justify-between items-center bg-indigo-50/50 p-3.5 rounded-2xl border border-indigo-100/50">
-                    <span class="text-xs font-bold text-indigo-900 uppercase">Total Tagihan</span>
-                    <span class="text-lg font-black text-indigo-750 font-mono" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(grandTotal)">Rp 0</span>
+                <div class="flex gap-3 pt-3 border-t border-slate-100">
+                    <button type="button" @click="closeModal()" class="flex-1 py-3 bg-slate-100 rounded-xl text-xs font-bold">Batal</button>
+                    <button type="button" @click="confirmAndSubmit()" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-xs font-bold">Cetak Struk</button>
                 </div>
-                
-                <!-- Uang Diterima -->
-                <div class="flex justify-between items-center bg-slate-50 p-3.5 rounded-2xl border border-slate-200/60">
-                    <span class="text-xs font-bold text-slate-500 uppercase">total bayar</span>
-                    <span class="text-lg font-black text-slate-800 font-mono" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(cashAmount || 0)">Rp 0</span>
-                </div>
-                
-                <!-- Kembalian -->
-                <div :class="isCashInsufficient ? 'bg-rose-50 border-rose-100 text-rose-800' : 'bg-emerald-50 border-emerald-100 text-emerald-950'"
-                     class="flex justify-between items-center p-3.5 rounded-2xl border transition-all duration-200">
-                    <span class="text-xs font-bold uppercase" x-text="isCashInsufficient ? 'UANG KURANG!' : 'Kembalian'"></span>
-                    <span class="text-lg font-black font-mono"
-                          :class="isCashInsufficient ? 'text-rose-700' : 'text-emerald-700'"
-                          x-text="isCashInsufficient ? '- Rp ' + new Intl.NumberFormat('id-ID').format(Math.abs(changeAmount)) : 'Rp ' + new Intl.NumberFormat('id-ID').format(changeAmount)">
-                        Rp 0
-                    </span>
-                </div>
-            </div>
-            
-            <!-- Modal Actions -->
-            <div class="flex flex-col sm:flex-row gap-3 pt-3 border-t border-slate-100">
-                <button type="button" 
-                        @click="closeModal()" 
-                        class="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-1.5">
-                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                    Batal / Edit (ESC)
-                </button>
-                <button type="button" 
-                        x-show="!isCashInsufficient"
-                        @click="confirmAndSubmit()" 
-                        :disabled="isSubmitting"
-                        :class="isSubmitting ? 'opacity-70 cursor-not-allowed' : ''"
-                        class="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/10">
-                    <i data-lucide="printer" class="w-4 h-4"></i>
-                    Cetak Struk (ENTER)
-                </button>
             </div>
         </div>
     </div>
@@ -531,32 +453,18 @@
                 categories: @json($categories),
                 selectedCategory: 'all',
                 searchQuery: '',
-                
-                // Cart State
                 cart: [],
                 selectedCartId: null,
                 customerName: '',
                 discountPercent: 0,
                 taxPercent: 0,
                 paymentMethod: 'Tunai',
-                
-                // Payment State
                 cashAmount: '',
-                paymentMethod: 'Tunai',
-                currentTime: '00:00:00',
-
-                // Modal States
                 isModalOpen: false,
                 isSubmitting: false,
+                currentTime: '00:00:00',
 
                 init() {
-                    // Start digital clock
-                    setInterval(() => {
-                        const date = new Date();
-                        this.currentTime = date.toTimeString().split(' ')[0];
-                    }, 1000);
-
-                    // Setup Keyboard shortcuts
                     window.addEventListener('keydown', (e) => {
                         const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
                         const typing = ['input', 'textarea', 'select'].includes(activeTag) || document.activeElement?.isContentEditable;
@@ -577,6 +485,32 @@
                                     this.confirmAndSubmit();
                                 }
                             }
+                            if (e.key === 'd') {
+                                e.preventDefault();
+                                const discountSelect = document.querySelector('select[x-model="discountPercent"]');
+                                if (discountSelect) {
+                                    discountSelect.focus();
+                                }
+                            }
+                            if (e.key === 't') {
+                                e.preventDefault();
+                                const taxSelect = document.querySelector('select[x-model="taxPercent"]');
+                                if (taxSelect) {
+                                    taxSelect.focus();
+                                }
+                            }
+                            if (e.key === 'n') {
+                                e.preventDefault();
+                                const customerNameInput = document.querySelector('input[x-model="customerName"]');
+                                if (customerNameInput) {
+                                    customerNameInput.focus();
+                                    customerNameInput.select();
+                                }
+                            }
+                            if (e.altKey && e.key === '1') {
+                                e.preventDefault();
+                                this.payExact();
+                            }
                             // Block POS background shortcuts when modal is active
                             if (['F2', 'F4', 'F9'].includes(e.key) || e.altKey) {
                                 e.preventDefault();
@@ -593,24 +527,13 @@
                                 searchEl.select();
                             }
                         }
-                        if (e.key === 'F4') {
-                            e.preventDefault();
-                            const cashEl = document.getElementById('cash-amount');
-                            if (cashEl) {
-                                cashEl.focus();
-                                cashEl.select();
-                            }
-                        }
                         if (e.key === 'F9') {
                             e.preventDefault();
-                            if (this.canCheckout) {
+                            if (this.cart.length > 0) {
                                 this.openModal();
                             }
                         }
-                        if (!typing && e.key.toLowerCase() === 'p') {
-                            e.preventDefault();
-                            this.payExact();
-                        }
+
 
                         // Quick Cash keyboard combos: Alt + 1, Alt + 2, Alt + 3, Alt + 4
                         if (e.altKey) {
@@ -630,48 +553,26 @@
                                 e.preventDefault();
                                 this.addCash(50000);
                             }
-                            // New shortcuts for form inputs
-                            if (e.key === 'd') {
-                                e.preventDefault();
-                                // Focus to Discount select (the select element with x-model="discountPercent")
-                                const discountSelect = document.querySelector('select[x-model="discountPercent"]');
-                                if (discountSelect) {
-                                    discountSelect.focus();
-                                    discountSelect.select();
-                                }
-                            }
-                            if (e.key === 't') {
-                                e.preventDefault();
-                                // Focus to PPN/Tax select (the select element with x-model="taxPercent")
-                                const taxSelect = document.querySelector('select[x-model="taxPercent"]');
-                                if (taxSelect) {
-                                    taxSelect.focus();
-                                    taxSelect.select();
-                                }
-                            }
-                            if (e.key === 'n') {
-                                e.preventDefault();
-                                // Focus to Customer Name input (input with x-model="customerName" and placeholder "Umum / Baru...")
-                                const customerNameInput = document.querySelector('input[x-model="customerName"]');
-                                if (customerNameInput) {
-                                    customerNameInput.focus();
-                                    customerNameInput.select();
-                                }
-                            }
-                            if (e.ctrlKey && e.key.toLowerCase() === 'q') {
-                                e.preventDefault();
-                                // Focus to first quantity input
-                                const qtyInput = document.querySelector('[data-qty-input]');
-                                if (qtyInput) {
-                                    qtyInput.focus();
-                                    qtyInput.select();
-                                }
+                        }
+                        if (e.ctrlKey && e.key.toLowerCase() === 'q') {
+                            e.preventDefault();
+                            // Focus to first quantity input
+                            const qtyInput = document.querySelector('[data-qty-input]');
+                            if (qtyInput) {
+                                qtyInput.focus();
+                                qtyInput.select();
                             }
                         }
                     });
 
                     // Initialize Lucide icons
                     setTimeout(() => lucide.createIcons(), 100);
+
+                    // Start digital clock
+                    setInterval(() => {
+                        const date = new Date();
+                        this.currentTime = date.toTimeString().split(' ')[0];
+                    }, 1000);
                 },
 
                 // Filters
@@ -846,20 +747,12 @@
                         alert('Peringatan: Keranjang belanja kosong!');
                         return;
                     }
-                    if (this.cashAmount === '' || this.cashAmount === null) {
-                        alert('Peringatan: Harap masukkan nominal uang bayar!');
-                        const cashEl = document.getElementById('cash-amount');
-                        if (cashEl) {
-                            cashEl.focus();
-                            cashEl.select();
-                        }
-                        return;
-                    }
                     this.isSubmitting = false;
                     this.isModalOpen = true;
                     
-                    // Trigger Lucide on modal show
-                    setTimeout(() => lucide.createIcons(), 50);
+                    setTimeout(() => {
+                        lucide.createIcons();
+                    }, 100);
                 },
 
                 closeModal() {

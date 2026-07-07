@@ -291,6 +291,7 @@
                         <label class="text-xs font-bold text-slate-500">Hak Akses / Peran</label>
                         <select x-model="newUserForm.role" class="w-full text-xs rounded-xl border border-slate-200 bg-white p-2.5 text-slate-800 focus:outline-none focus:border-indigo-500 font-semibold">
                             <option value="Kasir">Kasir</option>
+                            <option value="Gudang">Gudang</option>
                             <option value="Manager">Manager</option>
                             <option value="Super Admin">Super Admin</option>
                         </select>

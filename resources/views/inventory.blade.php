@@ -191,12 +191,21 @@
                                         </button>
                                         
                                         @hasanyrole('Super Admin|Manager')
-                                        <!-- Edit -->
+                                        <!-- Edit Info -->
                                         <button @click="openEditModal(item)"
-                                                title="Edit Barang"
+                                                title="Edit Informasi Barang"
                                                 class="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                        </button>
+                                        
+                                        <!-- Tambah Stok -->
+                                        <button @click="openStockModal(item)"
+                                                title="Tambah/Update Stok"
+                                                class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
                                             </svg>
                                         </button>
                                         
@@ -424,16 +433,10 @@
                         </select>
                     </div>
                     
-                    <!-- Stock Numbers Grid -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-slate-500">Stok Sekarang</label>
-                            <input type="number" x-model="form.stock" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
-                        </div>
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-slate-500">Batas Stok Minimum</label>
-                            <input type="number" x-model="form.min_stock" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
-                        </div>
+                    <!-- Stock Numbers Grid (Only Minimum Stock editable here) -->
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-500">Batas Stok Minimum</label>
+                        <input type="number" x-model="form.min_stock" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
                     </div>
                     
                     <!-- Pricing Grid -->
@@ -459,6 +462,73 @@
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
                         <span x-text="isSaving ? 'Menyimpan...' : 'Simpan Perubahan'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Tambah/Update Stok -->
+    <div x-show="showStockModal" 
+         class="fixed inset-0 z-50 overflow-y-auto"
+         style="display: none;">
+         <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="if(!isSaving) showStockModal = false"></div>
+        
+        <div class="flex min-h-screen items-center justify-center p-4 relative z-10">
+            <div class="bg-white rounded-3xl max-w-sm w-full shadow-2xl overflow-hidden border border-slate-100 flex flex-col"
+                 x-show="showStockModal"
+                 x-transition:enter="transition ease-out duration-300 transform scale-95"
+                 x-transition:enter-start="transform scale-95 opacity-0"
+                 x-transition:enter-end="transform scale-100 opacity-100">
+                
+                <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-sm">Update Stok Barang</h3>
+                        <p class="text-[10px] text-slate-400 mt-0.5" x-text="stockForm.name + ' (' + stockForm.sku + ')'"></p>
+                    </div>
+                    <button @click="showStockModal = false" :disabled="isSaving" class="text-slate-400 hover:text-slate-655">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="p-6 space-y-4">
+                    <!-- Info Stok Saat Ini -->
+                    <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-200/50">
+                        <span class="text-xs text-slate-500 font-semibold">Stok Saat Ini:</span>
+                        <span class="text-sm font-black text-slate-800" x-text="stockForm.stock + ' pcs'"></span>
+                    </div>
+
+                    <!-- Input Tambahan Qty -->
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-500">jumlah stok yang ingin di tambah</label>
+                        <div class="flex items-center gap-2 bg-slate-105 border border-slate-200/50 rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:border-indigo-400 transition-all">
+                            <input type="number" 
+                                   min="1" 
+                                   x-model.number="stockForm.qty_add" 
+                                   placeholder="Masukkan qty tambahan..." 
+                                   class="bg-transparent border-none text-xs focus:outline-none w-full text-slate-700 font-bold p-0">
+                        </div>
+                    </div>
+
+                    <!-- Info Total Stok Baru (Live Preview) -->
+                    <div class="flex justify-between items-center p-3 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-100">
+                        <span class="text-xs font-bold">Estimasi Stok Baru:</span>
+                        <span class="text-sm font-black" x-text="(parseInt(stockForm.stock) + (parseInt(stockForm.qty_add) || 0)) + ' pcs'"></span>
+                    </div>
+                </div>
+                
+                <div class="p-6 border-t border-slate-100 bg-slate-50/50 flex gap-3">
+                    <button @click="showStockModal = false" :disabled="isSaving" class="flex-1 py-3 border border-slate-200 hover:bg-slate-100 text-slate-605 font-semibold rounded-2xl text-xs transition-colors">
+                        Batal
+                    </button>
+                    <button @click="addStock()" :disabled="isSaving" class="flex-[2] py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl text-xs flex items-center justify-center gap-2 transition-all">
+                        <svg x-show="isSaving" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span x-text="isSaving ? 'Menyimpan...' : 'Simpan Stok'"></span>
                     </button>
                 </div>
             </div>
@@ -636,7 +706,7 @@ function inventoryComponent() {
                 this.$nextTick(() => {
                     const item = this.inventory.find(i => i.sku === editSku);
                     if (item) {
-                        this.openEditModal(item);
+                        this.openStockModal(item);
                     }
                 });
             }
@@ -645,6 +715,7 @@ function inventoryComponent() {
         // Modals State
         showAddModal: false,
         showEditModal: false,
+        showStockModal: false, // State baru modal stok
         showMutationModal: false,
         showAddCategoryModal: false,
         showEditCategoryModal: false,
@@ -670,6 +741,14 @@ function inventoryComponent() {
         categoryForm: {
             id: null,
             name: ''
+        },
+
+        stockForm: { // Form fields baru modal stok
+            id: null,
+            sku: '',
+            name: '',
+            stock: 0,
+            qty_add: 0
         },
         
         formatRupiah(num) {
@@ -756,6 +835,19 @@ function inventoryComponent() {
             this.showEditModal = true;
             this.refreshIcons();
         },
+
+        // Open Stock Modal
+        openStockModal(item) {
+            this.stockForm = {
+                id: item.id,
+                sku: item.sku,
+                name: item.name,
+                stock: item.stock,
+                qty_add: 0
+            };
+            this.showStockModal = true;
+            this.refreshIcons();
+        },
         
         // Open Mutation Modal
         openMutationModal(item) {
@@ -821,7 +913,7 @@ function inventoryComponent() {
                     const updatedProduct = response.data.product;
                     const oldProduct = this.inventory[index];
                     
-                    // Track stock difference for mutation history if changed
+                    // Track stock difference for mutation history if changed (just in case)
                     const oldStock = oldProduct.stock;
                     const newStock = updatedProduct.stock;
                     const diff = newStock - oldStock;
@@ -856,6 +948,58 @@ function inventoryComponent() {
             } catch (error) {
                 console.error(error);
                 this.$dispatch('show-toast', { message: 'Gagal memperbarui barang.', type: 'danger' });
+            } finally {
+                this.isSaving = false;
+            }
+        },
+
+        // Add/Update Stock (Axios PUT)
+        async addStock() {
+            const addQty = parseInt(this.stockForm.qty_add, 10);
+            if (Number.isNaN(addQty) || addQty <= 0) {
+                this.$dispatch('show-toast', { message: 'Jumlah tambahan stok harus minimal 1!', type: 'danger' });
+                return;
+            }
+            
+            const product = this.inventory.find(item => item.id === this.stockForm.id);
+            if (!product) {
+                this.$dispatch('show-toast', { message: 'Barang tidak ditemukan!', type: 'danger' });
+                return;
+            }
+            
+            this.isSaving = true;
+            try {
+                const newTotalStock = parseInt(this.stockForm.stock, 10) + addQty;
+                const response = await axios.put('/api/inventory/update/' + this.stockForm.id, {
+                    sku: product.sku,
+                    name: product.name,
+                    category: product.category,
+                    stock: newTotalStock,
+                    min_stock: product.min_stock,
+                    purchase_price: product.purchase_price,
+                    selling_price: product.selling_price || product.price
+                });
+                
+                const index = this.inventory.findIndex(item => item.id === this.stockForm.id);
+                if (index > -1) {
+                    this.inventory[index].stock = newTotalStock;
+                    
+                    // Add stock log to mutations timeline
+                    this.mutations.unshift({
+                        date: new Date().toISOString().slice(0, 16).replace('T', ' '),
+                        sku: this.stockForm.sku,
+                        name: this.stockForm.name,
+                        type: 'IN',
+                        qty: addQty,
+                        ref: 'TAMBAH-STOK',
+                        operator: 'Sistem'
+                    });
+                }
+                this.$dispatch('show-toast', { message: 'Stok barang ' + this.stockForm.name + ' berhasil ditambahkan!', type: 'success' });
+                this.showStockModal = false;
+            } catch (error) {
+                console.error(error);
+                this.$dispatch('show-toast', { message: 'Gagal mengupdate stok barang.', type: 'danger' });
             } finally {
                 this.isSaving = false;
             }
