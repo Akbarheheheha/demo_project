@@ -91,6 +91,10 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::post('/api/categories/store', [CategoryController::class, 'storeApi']);
         Route::put('/api/categories/update/{id}', [CategoryController::class, 'updateApi']);
         Route::delete('/api/categories/delete/{id}', [CategoryController::class, 'destroyApi']);
+
+        // Expense API CRUD
+        Route::post('/api/expenses', [ExpenseController::class, 'storeApi']);
+        Route::delete('/api/expenses/{expense}', [ExpenseController::class, 'destroyApi']);
     });
 
     // Settings & User Access Routes (Super Admin Only)

@@ -76,4 +76,33 @@ class ExpenseController extends Controller
         return redirect()->route('expenses.index')
             ->with('success', 'Catatan pengeluaran berhasil dihapus.');
     }
+
+    /**
+     * Store a newly created resource in storage via API.
+     */
+    public function storeApi(Request $request)
+    {
+        $validated = $request->validate([
+            'tanggal' => 'required|date',
+            'nama_pengeluaran' => 'required|string|max:255',
+            'nominal' => 'required|numeric|min:0',
+            'deskripsi' => 'nullable|string',
+        ]);
+
+        $expense = Expense::create($validated);
+
+        return response()->json($expense, 201);
+    }
+
+    /**
+     * Remove the specified resource from storage via API.
+     */
+    public function destroyApi(Expense $expense)
+    {
+        $expense->delete();
+
+        return response()->json([
+            'success' => true
+        ]);
+    }
 }

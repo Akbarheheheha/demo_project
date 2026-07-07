@@ -13,6 +13,7 @@ class Expense extends Model
         'nama_pengeluaran',
         'nominal',
         'tanggal',
+        'deskripsi',
     ];
 
     protected $casts = [

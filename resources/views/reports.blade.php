@@ -4,7 +4,7 @@
 @section('active_page', 'reports')
 
 @section('content')
-<div class="space-y-6">
+<div class="space-y-6" x-data="reportsComponent()">
 
     <!-- Welcome Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -91,18 +91,23 @@
         <!-- Card 3: Laba Kotor -->
        
         <!-- Card 4: Total Pengeluaran -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
+        <button type="button" @click="showExpenseModal = true" class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden text-left w-full hover:shadow-md hover:border-slate-300 transition-all duration-200 active:scale-[0.99] cursor-pointer focus:outline-none">
             <div class="flex items-start justify-between">
                 <div>
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Pengeluaran</span>
-                    <h3 class="text-xl font-bold text-slate-800 mt-2">Rp {{ number_format($financialSummary['total_pengeluaran'], 0, ',', '.') }}</h3>
-                    <p class="text-[10px] text-slate-400 mt-2">Biaya operasional bulan berjalan</p>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Total Pengeluaran</span>
+                    <h3 class="text-xl font-bold text-slate-800 mt-2" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(totalPengeluaran)">Rp {{ number_format($financialSummary['total_pengeluaran'], 0, ',', '.') }}</h3>
+                    <p class="text-[10px] text-slate-400 mt-2 flex items-center gap-1">
+                        <span>Biaya operasional bulan berjalan</span>
+                        <svg class="w-3 h-3 text-rose-500 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </p>
                 </div>
                 <div class="p-2.5 bg-rose-50 text-rose-600 rounded-xl">
                     <i data-lucide="shopping-bag" class="w-5.5 h-5.5"></i>
                 </div>
             </div>
-        </div>
+        </button>
 
         <!-- Card 5: Rata-rata Transaksi -->
       
@@ -241,6 +246,179 @@
                 {{ $transactions->links() }}
             </div>
         @endif
+    <!-- Modal Detail Pengeluaran -->
+    <div x-show="showExpenseModal" 
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         style="display: none;"
+         @keydown.escape.window="showExpenseModal = false">
+        
+        <!-- Modal Content Container -->
+        <div class="bg-white w-full max-w-2xl rounded-2xl border border-slate-200/80 shadow-2xl overflow-hidden"
+             @click.away="showExpenseModal = false"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+            
+            <!-- Modal Header -->
+            <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div>
+                    <h3 class="font-bold text-slate-800 text-base">Rincian Pengeluaran</h3>
+                    <p class="text-xs text-slate-400">Daftar lengkap biaya operasional pada periode yang dipilih.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" 
+                            @click="showAddExpenseForm = !showAddExpenseForm" 
+                            class="bg-rose-50 hover:bg-rose-100 border border-rose-100 text-rose-700 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all active:scale-95">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        <span x-text="showAddExpenseForm ? 'Batal' : 'Catat Pengeluaran'"></span>
+                    </button>
+                    <button type="button" 
+                            @click="showExpenseModal = false" 
+                            class="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-1.5 rounded-xl transition-all active:scale-95">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Form Input Pengeluaran Baru -->
+            <div x-show="showAddExpenseForm" 
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 transform -translate-y-2"
+                 x-transition:enter-end="opacity-100 transform translate-y-0"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 transform translate-y-0"
+                 x-transition:leave-end="opacity-0 transform -translate-y-2"
+                 class="border-b border-slate-100 bg-slate-50/50 p-5 space-y-4"
+                 style="display: none;">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Nama Pengeluaran -->
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nama Pengeluaran</label>
+                        <input type="text" 
+                               x-model="newExpense.nama_pengeluaran" 
+                               placeholder="Beli kertas kasir, dll" 
+                               class="w-full text-xs bg-white rounded-xl px-3 py-2.5 border border-slate-200 focus:outline-none focus:border-rose-500 text-slate-800 font-medium">
+                    </div>
+                    <!-- Nominal -->
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nominal (Rp)</label>
+                        <div class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 focus-within:border-rose-500 transition-all">
+                            <span class="text-xs font-bold text-slate-400">Rp</span>
+                            <input type="text" 
+                                   :value="formattedNominal" 
+                                   @input="setNominal($event.target.value)"
+                                   placeholder="0" 
+                                   class="bg-transparent border-none text-xs font-semibold focus:outline-none w-full text-slate-800 p-0">
+                        </div>
+                    </div>
+                    <!-- Tanggal -->
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tanggal</label>
+                        <input type="date" 
+                               x-model="newExpense.tanggal" 
+                               class="w-full text-xs bg-white rounded-xl px-3 py-2.5 border border-slate-200 focus:outline-none focus:border-rose-500 text-slate-800 font-medium">
+                    </div>
+                </div>
+                <!-- Deskripsi/Keterangan (Nullable) -->
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Deskripsi / Keterangan (Opsional)</label>
+                    <textarea x-model="newExpense.deskripsi" 
+                              placeholder="Keterangan tambahan mengenai pengeluaran..." 
+                              rows="2"
+                              class="w-full text-xs bg-white rounded-xl px-3 py-2 border border-slate-200 focus:outline-none focus:border-rose-500 text-slate-800 font-medium"></textarea>
+                </div>
+                <div class="flex justify-end gap-2.5">
+                    <button type="button" 
+                            @click="showAddExpenseForm = false" 
+                            class="px-4 py-2 border border-slate-200 text-slate-600 font-semibold rounded-xl text-xs hover:bg-slate-100 transition-colors">
+                        Batal
+                    </button>
+                    <button type="button" 
+                            @click="saveNewExpense()" 
+                            :disabled="isSavingExpense"
+                            class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-md shadow-rose-600/10 active:scale-[0.98]">
+                        <svg x-show="isSavingExpense" class="animate-spin -ml-0.5 mr-1 h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span x-text="isSavingExpense ? 'Menyimpan...' : 'Simpan Pengeluaran'"></span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Body (Table of Expenses) -->
+            <div class="max-h-[60vh] overflow-y-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider sticky top-0">
+                            <th class="px-6 py-3">No.</th>
+                            <th class="px-6 py-3">Nama Pengeluaran</th>
+                            <th class="px-6 py-3 text-right">Nominal</th>
+                            <th class="px-6 py-3 text-center">Tanggal</th>
+                            <th class="px-6 py-3 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-xs">
+                        <template x-for="(exp, index) in expenses" :key="exp.id">
+                            <tr class="hover:bg-slate-50/30 transition-colors">
+                                <td class="px-6 py-4 text-slate-400 font-medium" x-text="index + 1"></td>
+                                <td class="px-6 py-4 font-bold text-slate-800">
+                                    <span x-text="exp.nama_pengeluaran"></span>
+                                    <p class="text-[10px] text-slate-400 font-normal mt-0.5" x-show="exp.deskripsi" x-text="exp.deskripsi"></p>
+                                </td>
+                                <td class="px-6 py-4 font-black font-mono text-right text-rose-600" 
+                                    x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(exp.nominal)"></td>
+                                <td class="px-6 py-4 text-center text-slate-500 font-semibold" 
+                                    x-text="formatDate(exp.tanggal)"></td>
+                                <td class="px-6 py-4 text-center">
+                                    <button type="button" 
+                                            @click="deleteExpense(exp)" 
+                                            class="text-slate-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-all active:scale-90"
+                                            title="Hapus Pengeluaran">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+                        </template>
+
+                        <template x-if="expenses.length === 0">
+                            <tr>
+                                <td colspan="5" class="px-6 py-8 text-center text-slate-400 italic">
+                                    Tidak ada catatan pengeluaran pada periode ini.
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                <div class="text-xs text-slate-500">
+                    Total: <span class="font-bold text-slate-700" x-text="expenses.length"></span> item pengeluaran
+                </div>
+                <button type="button" 
+                        @click="showExpenseModal = false" 
+                        class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-xl text-xs transition-colors active:scale-95">
+                    Tutup
+                </button>
+            </div>
+        </div>
     </div>
 
 </div>
@@ -248,6 +426,81 @@
 @push('scripts')
 <!-- Chart.js Library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+function reportsComponent() {
+    return {
+        showExpenseModal: false,
+        showAddExpenseForm: false,
+        isSavingExpense: false,
+        expenses: @json($expenses),
+        totalPengeluaran: {{ (float) $financialSummary['total_pengeluaran'] }},
+        formattedNominal: '',
+        newExpense: {
+            nama_pengeluaran: '',
+            nominal: '',
+            tanggal: '{{ date('Y-m-d') }}',
+            deskripsi: ''
+        },
+        formatDate(dateStr) {
+            if (!dateStr) return '';
+            return dateStr.split('T')[0];
+        },
+        setNominal(value) {
+            // Remove non-digits
+            const rawValue = value.replace(/\D/g, '');
+            this.newExpense.nominal = rawValue;
+            
+            // Format with thousand separators
+            if (rawValue) {
+                this.formattedNominal = new Intl.NumberFormat('id-ID').format(rawValue);
+            } else {
+                this.formattedNominal = '';
+            }
+        },
+        async saveNewExpense() {
+            if (!this.newExpense.nama_pengeluaran || !this.newExpense.nominal || !this.newExpense.tanggal) {
+                this.$dispatch('show-toast', { message: 'Semua field wajib diisi!', type: 'danger' });
+                return;
+            }
+            this.isSavingExpense = true;
+            try {
+                const response = await axios.post('/api/expenses', this.newExpense);
+                this.expenses.unshift(response.data);
+                this.totalPengeluaran += parseFloat(response.data.nominal);
+                
+                // Reset form
+                this.newExpense.nama_pengeluaran = '';
+                this.newExpense.nominal = '';
+                this.newExpense.tanggal = '{{ date('Y-m-d') }}';
+                this.newExpense.deskripsi = '';
+                this.formattedNominal = '';
+                this.showAddExpenseForm = false;
+                
+                this.$dispatch('show-toast', { message: 'Pengeluaran berhasil dicatat!', type: 'success' });
+            } catch (error) {
+                console.error(error);
+                this.$dispatch('show-toast', { message: 'Gagal mencatat pengeluaran.', type: 'danger' });
+            } finally {
+                this.isSavingExpense = false;
+            }
+        },
+        async deleteExpense(expense) {
+            if (confirm('Apakah Anda yakin ingin menghapus catatan pengeluaran "' + expense.nama_pengeluaran + '"?')) {
+                try {
+                    await axios.delete('/api/expenses/' + expense.id);
+                    this.expenses = this.expenses.filter(e => e.id !== expense.id);
+                    this.totalPengeluaran -= parseFloat(expense.nominal);
+                    this.$dispatch('show-toast', { message: 'Catatan pengeluaran berhasil dihapus.', type: 'warning' });
+                } catch (error) {
+                    console.error(error);
+                    this.$dispatch('show-toast', { message: 'Gagal menghapus pengeluaran.', type: 'danger' });
+                }
+            }
+        }
+    };
+}
+</script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

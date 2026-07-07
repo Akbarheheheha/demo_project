@@ -220,7 +220,16 @@ class ReportController extends Controller
             $monthlyComparison['last_year'][] = (float) ($salesLastYear[$m] ?? 0.0);
         }
 
-        return compact('financialSummary', 'categoryPerformance', 'topProducts', 'monthlyComparison', 'transactions', 'cashierRevenues');
+        $expenses = Expense::query()
+            ->whereBetween('tanggal', [$startDate->toDateString(), $endDate->toDateString()])
+            ->orderBy('tanggal', 'desc')
+            ->get();
+
+        // Override total_pengeluaran to bypass cache lag and keep it in sync
+        $financialSummary['total_pengeluaran'] = (float) $expenses->sum('nominal');
+        $financialSummary['net_revenue'] = $financialSummary['gross_profit'] - $financialSummary['total_pengeluaran'];
+
+        return compact('financialSummary', 'categoryPerformance', 'topProducts', 'monthlyComparison', 'transactions', 'cashierRevenues', 'expenses');
     }
 
     private function getMonthlyFinancialSummary(Carbon $startDate, Carbon $endDate): array
