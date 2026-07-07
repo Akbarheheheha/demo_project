@@ -137,24 +137,76 @@
                     </select>
                 </div>
 
-                <!-- Payment Methods Checkboxes -->
-                <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-500 block">Metode Pembayaran Kasir yang Aktif</label>
-                    <div class="flex flex-wrap gap-4 pt-1">
-                        <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-600 hover:text-slate-800 transition-colors">
-                            <input type="checkbox" checked disabled class="rounded border-slate-200 text-indigo-600 focus:ring-indigo-500">
-                            <span>Tunai (Cash)</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-600 hover:text-slate-800 transition-colors">
-                            <input type="checkbox" checked disabled class="rounded border-slate-200 text-indigo-600 focus:ring-indigo-500">
-                            <span>QRIS / E-Wallet</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-600 hover:text-slate-800 transition-colors">
-                            <input type="checkbox" checked disabled class="rounded border-slate-200 text-indigo-600 focus:ring-indigo-500">
-                            <span>Transfer Bank</span>
-                        </label>
+                <!-- Payment Methods Section (Dynamic CRUD) -->
+                <div class="space-y-4 md:col-span-2 bg-slate-50/50 p-5 rounded-2xl border border-slate-200/60">
+                    <div>
+                        <label class="text-xs font-bold text-slate-700 block mb-1">Master Metode Pembayaran</label>
+                        <p class="text-[11px] text-slate-400">Kelola opsi pembayaran yang tersedia pada sistem POS secara dinamis.</p>
                     </div>
-                    <p class="text-[10px] text-slate-400">Pengaturan metode pembayaran kustom memerlukan integrasi payment gateway eksternal.</p>
+
+                    <!-- Input for New Payment Method -->
+                    <div class="flex items-center gap-2 max-w-md">
+                        <input type="text" 
+                               x-model="newPaymentMethod" 
+                               @keydown.enter.prevent="addPaymentMethod()"
+                               placeholder="Tambah metode baru (misal: ShopeePay, OVO)..." 
+                               class="w-full text-xs bg-white rounded-xl px-3.5 py-2.5 border border-slate-200 focus:outline-none focus:border-indigo-500 text-slate-800 font-medium">
+                        
+                        <button type="button" 
+                                @click="addPaymentMethod()" 
+                                class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs whitespace-nowrap active:scale-[0.98] transition-all flex items-center gap-1.5 shadow-md shadow-indigo-600/10">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Tambah
+                        </button>
+                    </div>
+
+                    <!-- Payment Methods Badges/List -->
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Metode Pembayaran Saat Ini</label>
+                        
+                        <div class="flex flex-wrap gap-2.5">
+                            <template x-for="method in paymentMethods" :key="method.id">
+                                <div :class="method.is_active ? 'bg-white border-slate-200 text-slate-700' : 'bg-slate-100 border-slate-200/50 text-slate-400'" 
+                                     class="flex items-center justify-between gap-3 border pl-3.5 pr-2.5 py-2 rounded-xl transition-all duration-200 shadow-sm hover:shadow">
+                                    
+                                    <!-- Method Name -->
+                                    <div class="flex items-center gap-2">
+                                        <span :class="method.is_active ? 'font-bold text-slate-800' : 'font-medium text-slate-400 line-through'"
+                                              class="text-xs" 
+                                              x-text="method.nama_metode"></span>
+                                    </div>
+
+                                    <!-- Actions: Toggle & Delete -->
+                                    <div class="flex items-center gap-2.5 border-l border-slate-100 pl-2.5">
+                                        <!-- Custom Toggle Switch -->
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" 
+                                                   :checked="method.is_active" 
+                                                   @change="togglePaymentMethod(method)" 
+                                                   class="sr-only peer">
+                                            <div class="w-8 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-indigo-600"></div>
+                                        </label>
+
+                                        <!-- Delete X Button -->
+                                        <button type="button" 
+                                                @click="deletePaymentMethod(method)" 
+                                                class="text-slate-400 hover:text-red-500 hover:bg-red-50 p-1 rounded-md transition-all active:scale-90"
+                                                title="Hapus Metode">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <template x-if="paymentMethods.length === 0">
+                                <p class="text-xs text-slate-400 italic">Belum ada metode pembayaran yang dikonfigurasi.</p>
+                            </template>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Submit pos button -->
@@ -334,6 +386,8 @@ function settingsComponent() {
         store: @json($store),
         pos: @json($posConfig),
         users: @json($users),
+        paymentMethods: @json($paymentMethods),
+        newPaymentMethod: '',
         
         // Modals & Action State
         showAddUserModal: false,
@@ -417,6 +471,63 @@ function settingsComponent() {
                 } catch (error) {
                     console.error(error);
                     this.$dispatch('show-toast', { message: 'Gagal menghapus pengguna.', type: 'danger' });
+                }
+            }
+        },
+
+        // Add Payment Method via API
+        async addPaymentMethod() {
+            const name = this.newPaymentMethod.trim();
+            if (!name) return;
+            
+            this.isSaving = true;
+            try {
+                const response = await axios.post('/api/settings/payment-methods', {
+                    nama_metode: name
+                });
+                this.paymentMethods.push(response.data);
+                this.newPaymentMethod = '';
+                this.$dispatch('show-toast', { message: 'Metode pembayaran ' + name + ' berhasil ditambahkan!', type: 'success' });
+            } catch (error) {
+                console.error(error);
+                let msg = 'Gagal menambahkan metode pembayaran.';
+                if (error.response && error.response.data && error.response.data.errors) {
+                    const errs = error.response.data.errors;
+                    if (errs.nama_metode) {
+                        msg = errs.nama_metode[0];
+                    }
+                }
+                this.$dispatch('show-toast', { message: msg, type: 'danger' });
+            } finally {
+                this.isSaving = false;
+            }
+        },
+
+        // Toggle Active Status via API
+        async togglePaymentMethod(method) {
+            try {
+                const response = await axios.patch('/api/settings/payment-methods/' + method.id + '/toggle');
+                method.is_active = response.data.is_active;
+                this.$dispatch('show-toast', { 
+                    message: 'Status metode ' + method.nama_metode + ' diubah menjadi ' + (method.is_active ? 'Aktif' : 'Nonaktif') + '.', 
+                    type: 'success' 
+                });
+            } catch (error) {
+                console.error(error);
+                this.$dispatch('show-toast', { message: 'Gagal mengubah status metode pembayaran.', type: 'danger' });
+            }
+        },
+
+        // Delete Payment Method via API
+        async deletePaymentMethod(method) {
+            if (confirm('Apakah Anda yakin ingin menghapus metode pembayaran ' + method.nama_metode + '?')) {
+                try {
+                    await axios.delete('/api/settings/payment-methods/' + method.id);
+                    this.paymentMethods = this.paymentMethods.filter(m => m.id !== method.id);
+                    this.$dispatch('show-toast', { message: 'Metode pembayaran ' + method.nama_metode + ' dihapus.', type: 'warning' });
+                } catch (error) {
+                    console.error(error);
+                    this.$dispatch('show-toast', { message: 'Gagal menghapus metode pembayaran.', type: 'danger' });
                 }
             }
         }

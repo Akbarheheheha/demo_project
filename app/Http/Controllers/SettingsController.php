@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
+use App\Models\PaymentMethod;
+
 class SettingsController extends Controller
 {
     /**
@@ -30,8 +32,16 @@ class SettingsController extends Controller
             'tax_percent' => (int) Setting::get('tax_percent', 11),
             'default_discount' => (int) Setting::get('default_discount', 0),
             'receipt_size' => Setting::get('receipt_size', '58mm'),
-            'payment_methods' => ['Tunai', 'QRIS', 'Transfer Bank']
         ];
+
+        // Fetch payment methods from DB, seed if empty
+        $paymentMethods = PaymentMethod::all();
+        if ($paymentMethods->isEmpty()) {
+            PaymentMethod::create(['nama_metode' => 'Tunai', 'is_active' => true]);
+            PaymentMethod::create(['nama_metode' => 'QRIS', 'is_active' => true]);
+            PaymentMethod::create(['nama_metode' => 'Transfer Bank', 'is_active' => true]);
+            $paymentMethods = PaymentMethod::all();
+        }
 
         // Fetch users with their Spatie roles
         $usersFromDb = User::with('roles')->get();
@@ -46,7 +56,7 @@ class SettingsController extends Controller
             ];
         });
 
-        return view('settings', compact('store', 'posConfig', 'users'));
+        return view('settings', compact('store', 'posConfig', 'users', 'paymentMethods'));
     }
 
     /**

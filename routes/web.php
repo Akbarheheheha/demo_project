@@ -99,6 +99,11 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::post('/api/settings/save/{category}', [SettingsController::class, 'save']);
         Route::post('/api/settings/users/store', [SettingsController::class, 'storeUser']);
         Route::delete('/api/settings/users/delete/{id}', [SettingsController::class, 'deleteUser']);
+        
+        // Payment Methods API CRUD
+        Route::post('/api/settings/payment-methods', [PaymentMethodController::class, 'storeApi']);
+        Route::patch('/api/settings/payment-methods/{paymentMethod}/toggle', [PaymentMethodController::class, 'toggleActiveApi']);
+        Route::delete('/api/settings/payment-methods/{paymentMethod}', [PaymentMethodController::class, 'destroyApi']);
     });
 
     // Notification Routes

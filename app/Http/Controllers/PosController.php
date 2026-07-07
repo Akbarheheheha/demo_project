@@ -44,8 +44,9 @@ class PosController extends Controller
     {
         $products = Product::all();
         $categories = \App\Models\Category::pluck('name')->toArray();
+        $paymentMethods = \App\Models\PaymentMethod::where('is_active', true)->get();
 
-        return view('pos.index', compact('products', 'categories'));
+        return view('pos.index', compact('products', 'categories', 'paymentMethods'));
     }
 
     /**

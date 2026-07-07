@@ -59,4 +59,47 @@ class PaymentMethodController extends Controller
         return redirect()->route('payment-methods.index')
             ->with('success', 'Status keaktifan metode pembayaran berhasil diubah.');
     }
+
+    /**
+     * Store a newly created resource in storage via API.
+     */
+    public function storeApi(Request $request)
+    {
+        $validated = $request->validate([
+            'nama_metode' => 'required|string|max:50|unique:payment_methods,nama_metode',
+        ]);
+
+        $validated['is_active'] = true;
+
+        $method = PaymentMethod::create($validated);
+
+        return response()->json($method, 201);
+    }
+
+    /**
+     * Toggle active status via API.
+     */
+    public function toggleActiveApi(PaymentMethod $paymentMethod)
+    {
+        $paymentMethod->update([
+            'is_active' => !$paymentMethod->is_active
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'is_active' => (bool)$paymentMethod->is_active
+        ]);
+    }
+
+    /**
+     * Delete payment method via API.
+     */
+    public function destroyApi(PaymentMethod $paymentMethod)
+    {
+        $paymentMethod->delete();
+
+        return response()->json([
+            'success' => true
+        ]);
+    }
 }

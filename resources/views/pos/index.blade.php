@@ -405,9 +405,9 @@
                             Metode Pembayaran
                         </label>
                         <select id="payment_method" x-model="paymentMethod" class="w-full rounded-xl border-slate-200 text-xs font-bold text-slate-700 focus:border-indigo-500 focus:ring-indigo-500" required>
-                            <option value="Tunai">Tunai</option>
-                            <option value="Transfer">Transfer</option>
-                            <option value="QRIS">QRIS</option>
+                            @foreach($paymentMethods as $method)
+                                <option value="{{ $method->nama_metode }}">{{ $method->nama_metode }}</option>
+                            @endforeach
                         </select>
                     </div>
 
