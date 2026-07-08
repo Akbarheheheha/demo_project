@@ -115,7 +115,7 @@
     <!-- Layout Wrapper -->
     <div class="flex min-h-screen">
         @unless(auth()->user()->hasRole('Gudang'))
-            <!-- Sidebar Backdrop (Mobile Only) -->
+        <!-- Sidebar Backdrop (Mobile Only) -->
         <div x-show="sidebarOpen" 
              @click="sidebarOpen = false" 
              x-transition:enter="transition-opacity ease-out duration-300"
@@ -126,9 +126,7 @@
              x-transition:leave-end="opacity-0"
              class="fixed inset-0 z-30 bg-slate-900/60 backdrop-blur-xs md:hidden"
              style="display: none;"></div>
-             @endunless
 
-        @unless(auth()->user()->hasRole('Gudang'))
         <!-- Sidebar Navigation -->
         <aside class="fixed inset-y-0 left-0 z-40 transform sidebar-animate-bg text-slate-300 transition-all duration-300 ease-in-out"
                :class="sidebarOpen ? 'w-64 translate-x-0' : 'w-20 md:translate-x-0 -translate-x-full'">
@@ -138,7 +136,7 @@
                  :class="sidebarOpen ? 'justify-between px-6' : 'justify-center px-0'">
                 
                 <!-- Logo & Brand (Only visible when sidebar is open) -->
-                <a href="{{ route($rolePrefix . '.dashboard') }}" class="flex items-center gap-2.5" x-show="sidebarOpen" x-transition:enter="transition-opacity ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+                <a href="{{ $rolePrefix === 'gudang' ? route('gudang.inventory') : route($rolePrefix . '.dashboard') }}" class="flex items-center gap-2.5" x-show="sidebarOpen" x-transition:enter="transition-opacity ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
                     <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 shadow-md shadow-indigo-500/20 text-white font-bold text-lg flex-shrink-0">
                         S
                     </div>
@@ -196,7 +194,7 @@
                 @endhasanyrole
                 
                 <!-- Inventaris Link -->
-                @hasanyrole('Super Admin|Manager')
+                @hasanyrole('Super Admin|Manager|Gudang')
                 <a href="{{ route($rolePrefix . '.inventory') }}" 
                    data-spa-ignore
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
@@ -264,7 +262,7 @@
         @endunless
         <!-- Main Content Area -->
         <div class="flex flex-1 flex-col transition-all duration-300"
-             @unless(auth()->user()->hasRole('Gudang')) :class="sidebarOpen ? 'md:ml-64' : 'md:ml-20'" @endunless>
+             @unless(auth()->user()->hasRole('Gudang')):class="sidebarOpen ? 'md:ml-64' : 'md:ml-20'"@endunless>
             
             <!-- Topbar sticky header -->
             <header class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-indigo-500/20 bg-white/30 backdrop-blur-xl px-6 shadow-sm transition-all duration-300">

@@ -120,10 +120,13 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::delete('/api/inventory/delete/{id}', [InventoryController::class, 'destroy']);
     });
 
-    Route::middleware(['role:Super Admin|Manager'])->group(function () {
+    Route::middleware(['role:Super Admin|Manager|Gudang'])->group(function () {
         Route::post('/api/categories/store', [CategoryController::class, 'storeApi']);
         Route::put('/api/categories/update/{id}', [CategoryController::class, 'updateApi']);
         Route::delete('/api/categories/delete/{id}', [CategoryController::class, 'destroyApi']);
+    });
+
+    Route::middleware(['role:Super Admin|Manager'])->group(function () {
         Route::post('/api/expenses', [ExpenseController::class, 'storeApi']);
         Route::delete('/api/expenses/{expense}', [ExpenseController::class, 'destroyApi']);
     });

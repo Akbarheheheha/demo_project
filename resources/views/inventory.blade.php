@@ -15,8 +15,8 @@
             <p class="text-sm text-slate-500">Kelola inventaris barang dagangan, harga beli/jual, dan lihat log keluar-masuk stok.</p>
         </div>
         
-        <!-- Action Buttons (Only Super Admin or Manager) -->
-        @hasanyrole('Super Admin|Manager')
+        <!-- Action Buttons -->
+        @hasanyrole('Super Admin|Manager|Gudang')
         <div class="flex items-center gap-2">
             <!-- Add Product Button -->
             <button @click="openAddModal()" 
@@ -37,7 +37,7 @@
                 class="px-4 py-2.5 text-xs font-semibold whitespace-nowrap transition-all duration-150">
             Daftar Inventaris
         </button>
-        @hasanyrole('Super Admin|Manager')
+        @hasanyrole('Super Admin|Manager|Gudang')
         <button @click="activeTab = 'categories'"
                 :class="activeTab === 'categories' ? 'border-indigo-600 text-indigo-600 font-bold border-b-2' : 'border-transparent text-slate-500 hover:text-slate-700'"
                 class="px-4 py-2.5 text-xs font-semibold whitespace-nowrap transition-all duration-150">
@@ -190,7 +190,7 @@
                                             </svg>
                                         </button>
                                         
-                                        @hasanyrole('Super Admin|Manager')
+                                        @hasanyrole('Super Admin|Manager|Gudang')
                                         <!-- Edit Info -->
                                         <button @click="openEditModal(item)"
                                                 title="Edit Informasi Barang"
@@ -229,7 +229,7 @@
     </div>
 
     <!-- PANEL B: Kelola Kategori -->
-    @hasanyrole('Super Admin|Manager')
+    @hasanyrole('Super Admin|Manager|Gudang')
     <div x-show="activeTab === 'categories'" class="space-y-6" style="display: none;">
         <!-- Header Panel Kategori -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
