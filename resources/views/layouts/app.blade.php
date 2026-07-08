@@ -522,7 +522,13 @@
                 }
             }, 100);
             
-            axios.get(url)
+            axios.get(url, {
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
+            })
                 .then(function(response) {
                     clearInterval(interval);
                     progress.style.width = '100%';
