@@ -65,7 +65,7 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::resource('cashiers', CashierController::class);
         Route::resource('categories', CategoryController::class);
         Route::resource('expenses', ExpenseController::class);
-
+        Route::get('/expenses', [ExpenseController::class, 'index'])->name('expenses');
         // Payment Methods Routes
         Route::get('/payment-methods', [PaymentMethodController::class, 'index'])->name('payment-methods.index');
         Route::post('/payment-methods', [PaymentMethodController::class, 'store'])->name('payment-methods.store');

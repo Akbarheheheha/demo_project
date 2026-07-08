@@ -242,6 +242,7 @@
                        :data-qty-input="item.product.id"
                        @focus="selectCartItem(item.product.id)"
                        @click.stop
+                       @input="if($event.target.value > item.product.stock) { $event.target.value = item.product.stock; item.qty = item.product.stock; alert('Batas stok tercapai. Tersedia ' + item.product.stock + ' pcs.'); }"
                        @change="setQty(item.product.id, $event.target.value)"
                        x-model.number="item.qty"
                        class="w-14 text-[10px] text-center font-bold bg-slate-100 px-1.5 py-0.5 rounded-lg border border-slate-200/40 focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400">

@@ -13,7 +13,9 @@ class ExpenseController extends Controller
     public function index()
     {
         $expenses = Expense::orderBy('tanggal', 'desc')->paginate(10);
-        return view('admin.expenses.index', compact('expenses'));
+        $totalPengeluaran = Expense::sum('nominal');
+        
+        return view('admin.expenses.index', compact('expenses', 'totalPengeluaran'));
     }
 
     /**

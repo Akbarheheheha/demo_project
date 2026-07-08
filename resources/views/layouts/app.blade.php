@@ -112,11 +112,10 @@
             </div>
         </template>
     </div>
-
     <!-- Layout Wrapper -->
     <div class="flex min-h-screen">
-        
-        <!-- Sidebar Backdrop (Mobile Only) -->
+        @unless(auth()->user()->hasRole('Gudang'))
+            <!-- Sidebar Backdrop (Mobile Only) -->
         <div x-show="sidebarOpen" 
              @click="sidebarOpen = false" 
              x-transition:enter="transition-opacity ease-out duration-300"
@@ -127,7 +126,9 @@
              x-transition:leave-end="opacity-0"
              class="fixed inset-0 z-30 bg-slate-900/60 backdrop-blur-xs md:hidden"
              style="display: none;"></div>
-        
+             @endunless
+
+        @unless(auth()->user()->hasRole('Gudang'))
         <!-- Sidebar Navigation -->
         <aside class="fixed inset-y-0 left-0 z-40 transform sidebar-animate-bg text-slate-300 transition-all duration-300 ease-in-out"
                :class="sidebarOpen ? 'w-64 translate-x-0' : 'w-20 md:translate-x-0 -translate-x-full'">
@@ -216,6 +217,15 @@
                     <span x-show="sidebarOpen" x-transition.opacity>Laporan Keuangan</span>
                 </a>
                 @endrole
+                @hasanyrole('Super Admin|Manager')
+                    <a href="{{ route('expenses') }}" 
+                   class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
+                   :class="activePage === 'expenses' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white' "
+                   :title="!sidebarOpen ? 'pengeluaran' : ''">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-banknote-arrow-down-icon lucide-banknote-arrow-down"><path d="M12 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5"/><path d="m16 19 3 3 3-3"/><path d="M18 12h.01"/><path d="M19 16v6"/><path d="M6 12h.01"/><circle cx="12" cy="12" r="2"/></svg>
+                   <span x-show="sidebarOpen" x-transition.opacity>Pengeluaran</span>
+                    </a>
+                @endhasanyrole
 
                 <!-- Audit Log Link (Super Admin & Manager) -->
                 @hasanyrole('Super Admin|Manager')
@@ -254,19 +264,21 @@
                 </div>
             </div>
         </aside>
-
+        @endunless
         <!-- Main Content Area -->
         <div class="flex flex-1 flex-col transition-all duration-300"
-             :class="sidebarOpen ? 'md:ml-64' : 'md:ml-20'">
+             @unless(auth()->user()->hasRole('Gudang')) :class="sidebarOpen ? 'md:ml-64' : 'md:ml-20'" @endunless>
             
             <!-- Topbar sticky header -->
             <header class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-indigo-500/20 bg-white/30 backdrop-blur-xl px-6 shadow-sm transition-all duration-300">
                 
                 <!-- Mobile Sidebar Toggle -->
                 <div class="flex items-center gap-4 bg-transparent">
+                    @unless(auth()->user()->hasRole('Gudang'))
                     <button class="rounded-xl p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white md:hidden transition-all active:scale-95 hover:bg-slate-100 dark:hover:bg-slate-800" @click="sidebarOpen = !sidebarOpen">
                         <i data-lucide="menu" class="h-5 w-5"></i>
                     </button>
+                    @endunless
                     <!-- Search Bar -->
                     <form action="{{ route('inventory') }}" method="GET" class="hidden sm:flex items-center gap-2 rounded-xl px-3 py-1.5 w-64 text-slate-500 dark:text-slate-400 border border-indigo-500/60 focus-within:border-indigo-500/60 focus-within:ring-1 focus-within:ring-indigo-500/30 transition-all duration-200">
                         <i data-lucide="search" class="w-4 h-4 text-slate-400 dark:text-slate-500"></i>
