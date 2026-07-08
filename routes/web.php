@@ -22,7 +22,7 @@ Route::middleware(['guest.custom'])->group(function () {
 
 // Protected ERP Routes
 Route::middleware(['auth.custom'])->group(function () {
-    
+
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -35,7 +35,10 @@ Route::middleware(['auth.custom'])->group(function () {
         if ($user->hasRole('Gudang')) {
             return redirect()->route('inventory');
         }
-        return redirect()->route('admin.dashboard');
+        if ($user->hasRole('Super Admin')) {
+            return redirect()->route('admin.dashboard');
+        }
+        return redirect()->route('manager.dashboard');
     })->name('home');
 
     // Profile Route
@@ -51,12 +54,27 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::get('/pos/receipt/{transaction}', [PosController::class, 'receipt'])->name('pos.receipt');
     });
 
-    // Admin Routes (Accessible by Super Admin and Manager)
-    Route::prefix('admin')->middleware(['role:Super Admin|Manager'])->group(function () {
+    // ─────────────────────────────────────────────
+    // Super Admin Dashboard
+    // ─────────────────────────────────────────────
+    Route::prefix('admin')->middleware(['role:Super Admin'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
         // Define 'dashboard' alias to maintain compatibility
         Route::get('/api/dashboard/low-stock', [DashboardController::class, 'getLowStockApi'])->name('dashboard.low-stock');
         Route::get('/api/dashboard/sales-trend', [DashboardController::class, 'getSalesTrendApi'])->name('dashboard.sales-trend');
+    });
+
+    // ─────────────────────────────────────────────
+    // Manager Dashboard
+    // ─────────────────────────────────────────────
+    Route::prefix('manager')->middleware(['role:Manager'])->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('manager.dashboard');
+    });
+
+    // ─────────────────────────────────────────────
+    // Shared Admin Routes (Super Admin & Manager)
+    // ─────────────────────────────────────────────
+    Route::prefix('admin')->middleware(['role:Super Admin|Manager'])->group(function () {
         Route::get('/reports', [ReportController::class, 'index'])->name('reports');
         Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
         Route::get('/reports/export/excel', [ReportController::class, 'exportExcel'])->name('reports.export.excel');
@@ -64,62 +82,23 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::resource('cashiers', CashierController::class);
         Route::resource('categories', CategoryController::class);
         Route::resource('expenses', ExpenseController::class);
-        Route::get('/expenses', [ExpenseController::class, 'index'])->name('expenses');
-        // Payment Methods Routes
         Route::get('/payment-methods', [PaymentMethodController::class, 'index'])->name('payment-methods.index');
         Route::post('/payment-methods', [PaymentMethodController::class, 'store'])->name('payment-methods.store');
         Route::put('/payment-methods/{paymentMethod}', [PaymentMethodController::class, 'update'])->name('payment-methods.update');
         Route::patch('/payment-methods/{paymentMethod}/toggle', [PaymentMethodController::class, 'toggleActive'])->name('payment-methods.toggle');
     });
 
-    Route::prefix('manager')->middleware(["role:Manager"])->group(function () {
-     Route::get('/dashboard', [DashboardController::class, 'index'])->name('manager.dashboard');
-     Route::get('reports', [ReportController::class, 'index'])->name('reports');
-     Route::get('reports/export/pdf', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
-     Route::get('reports/export/excel', [ReportController::class, 'exportExcel'])->name('reports.export.excel');
-     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('admin.audit-logs');
-    });
-
-    Route::middleware(['role:Super Admin|Manager'])->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    });
-    // Admin Routes accessible by Gudang as well
+    // ─────────────────────────────────────────────
+    // Inventory (Super Admin, Manager & Gudang)
+    // ─────────────────────────────────────────────
     Route::prefix('admin')->middleware(['role:Super Admin|Manager|Gudang'])->group(function () {
         Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory');
     });
 
-    // Inventory API CRUD (Accessible by Super Admin, Manager, and Gudang)
-    Route::middleware(['role:Super Admin|Manager|Gudang'])->group(function () {
-        Route::post('/api/inventory/store', [InventoryController::class, 'store']);
-        Route::put('/api/inventory/update/{id}', [InventoryController::class, 'update']);
-        Route::delete('/api/inventory/delete/{id}', [InventoryController::class, 'destroy']);
-    });
-
-    // Category & API CRUD (Super Admin and Manager only)
     Route::middleware(['role:Super Admin|Manager'])->group(function () {
-        // Category API CRUD
-        Route::post('/api/categories/store', [CategoryController::class, 'storeApi']);
-        Route::put('/api/categories/update/{id}', [CategoryController::class, 'updateApi']);
-        Route::delete('/api/categories/delete/{id}', [CategoryController::class, 'destroyApi']);
-
-        // Expense API CRUD
-        Route::post('/api/expenses', [ExpenseController::class, 'storeApi']);
-        Route::delete('/api/expenses/{expense}', [ExpenseController::class, 'destroyApi']);
+    Route::get('/expenses', [ExpenseController::class, 'index'])->name('expenses');
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
     });
-
-    // Settings & User Access Routes (Super Admin Only)
-    Route::middleware(['role:Super Admin'])->group(function () {
-        Route::get('/admin/settings', [SettingsController::class, 'index'])->name('settings');
-        Route::post('/api/settings/save/{category}', [SettingsController::class, 'save']);
-        Route::post('/api/settings/users/store', [SettingsController::class, 'storeUser']);
-        Route::delete('/api/settings/users/delete/{id}', [SettingsController::class, 'deleteUser']);
-        
-        // Payment Methods API CRUD
-        Route::post('/api/settings/payment-methods', [PaymentMethodController::class, 'storeApi']);
-        Route::patch('/api/settings/payment-methods/{paymentMethod}/toggle', [PaymentMethodController::class, 'toggleActiveApi']);
-        Route::delete('/api/settings/payment-methods/{paymentMethod}', [PaymentMethodController::class, 'destroyApi']);
-    });
-
     // Notification Routes
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');

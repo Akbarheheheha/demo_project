@@ -86,11 +86,26 @@ class PosController extends Controller
 
             $cashAmount = (float) $request->input('cash_amount', $transaction->total_harga);
 
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Transaksi Berhasil! Nomor Invoice: '.$transaction->invoice,
+                    'print_url' => route('pos.receipt', $transaction->id) . '?cash=' . $cashAmount
+                ]);
+            }
+
             return redirect()->back()->with([
                 'success' => 'Transaksi Berhasil! Nomor Invoice: '.$transaction->invoice,
                 'print_url' => route('pos.receipt', $transaction->id) . '?cash=' . $cashAmount
             ]);
         } catch (Exception $e) {
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 422);
+            }
+
             return redirect()->back()->withInput()->withErrors(['checkout_error' => $e->getMessage()]);
         }
     }

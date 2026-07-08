@@ -138,7 +138,7 @@
                  :class="sidebarOpen ? 'justify-between px-6' : 'justify-center px-0'">
                 
                 <!-- Logo & Brand (Only visible when sidebar is open) -->
-                <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5" x-show="sidebarOpen" x-transition:enter="transition-opacity ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+                <a href="{{ auth()->user()->hasRole('Super Admin') ? route('admin.dashboard') : route('manager.dashboard') }}" class="flex items-center gap-2.5" x-show="sidebarOpen" x-transition:enter="transition-opacity ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
                     <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 shadow-md shadow-indigo-500/20 text-white font-bold text-lg flex-shrink-0">
                         S
                     </div>
@@ -173,7 +173,7 @@
             <nav class="flex-1 space-y-1.5 px-3 py-6" @click="if(window.innerWidth < 768) sidebarOpen = false">
                 <!-- Dashboard Link -->
                 @hasanyrole('Super Admin|Manager')
-                <a href="{{ route('admin.dashboard') }}" 
+                <a href="{{ auth()->user()->hasRole('Super Admin') ? route('admin.dashboard') : route('manager.dashboard') }}" 
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
                    :class="activePage === 'dashboard' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'"
                    :title="!sidebarOpen ? 'Dashboard' : ''">

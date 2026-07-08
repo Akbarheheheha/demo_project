@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('nama_pengeluaran');
             $table->decimal('nominal', 15, 2);
             $table->date('tanggal');
+            $table->string('deskripsi')->nullable();
             $table->timestamps();
         });
     }

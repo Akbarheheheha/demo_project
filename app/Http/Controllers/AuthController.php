@@ -45,9 +45,12 @@ class AuthController extends Controller
                 return redirect()->route('pos')->with('login_success', 'Selamat datang kembali, ' . $user->name . ' (Kasir)!');
             }
 
-            if ($user->hasAnyRole(['Super Admin', 'Manager'])) {
-                // Sesuai dengan instruksi user, arahkan ke rute dashboard admin
-                return redirect()->route('dashboard')->with('login_success', 'Selamat datang kembali, ' . $user->name . '!');
+            if ($user->hasRole('Super Admin')) {
+                return redirect()->route('admin.dashboard')->with('login_success', 'Selamat datang kembali, ' . $user->name . '!');
+            }
+
+            if ($user->hasRole('Manager')) {
+                return redirect()->route('manager.dashboard')->with('login_success', 'Selamat datang kembali, ' . $user->name . '!');
             }
 
             return redirect()->intended('/')->with('login_success', 'Selamat datang!');
