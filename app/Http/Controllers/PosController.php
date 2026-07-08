@@ -64,7 +64,7 @@ class PosController extends Controller
             'discount_percent' => 'nullable|numeric|min:0|max:100',
             'tax_percent' => 'nullable|numeric|min:0|max:100',
             'cash_amount' => 'nullable|numeric|min:0',
-            'payment_method' => ['required', Rule::in(['Tunai', 'Transfer', 'QRIS'])],
+            'payment_method' => 'required|string|exists:payment_methods,nama_metode',
         ]);
 
         try {

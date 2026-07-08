@@ -427,7 +427,7 @@
                         <label for="payment_method" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
                             Metode Pembayaran
                         </label>
-                        <select id="payment_method" x-model="paymentMethod" class="w-full rounded-xl border-slate-200 text-xs font-bold text-slate-700 focus:border-indigo-500 focus:ring-indigo-500" required>
+                        <select id="payment_method" name="payment_method" x-model="paymentMethod" class="w-full rounded-xl border-slate-200 text-xs font-bold text-slate-700 focus:border-indigo-500 focus:ring-indigo-500" required>
                             @foreach($paymentMethods as $method)
                                 <option value="{{ $method->nama_metode }}">{{ $method->nama_metode }}</option>
                             @endforeach
@@ -504,7 +504,8 @@
                             }
                             if (e.key === 'Enter') {
                                 e.preventDefault();
-                                if (!this.isCashInsufficient && !this.isSubmitting) {
+                                const canProceed = this.paymentMethod !== 'Tunai' || !this.isCashInsufficient;
+                                if (canProceed && !this.isSubmitting) {
                                     this.confirmAndSubmit();
                                 }
                             }
@@ -720,6 +721,7 @@
                 },
                 get isCashInsufficient() {
                     if (this.cart.length === 0) return false;
+                    if (this.paymentMethod !== 'Tunai') return false;
                     const paid = parseFloat(this.cashAmount) || 0;
                     return paid < this.grandTotal;
                 },
@@ -745,7 +747,7 @@
                         alert('Peringatan: Keranjang masih kosong!');
                         return false;
                     }
-                    if (this.isCashInsufficient) {
+                    if (this.paymentMethod === 'Tunai' && this.isCashInsufficient) {
                         e.preventDefault();
                         alert('Uang pembayaran kurang!');
                         return false;
@@ -785,9 +787,24 @@
                 confirmAndSubmit() {
                     if (this.isSubmitting) return;
 
-                    if (this.cart.length === 0) {
-                        alert('Keranjang belanja masih kosong!');
-                        return;
+                    if (this.paymentMethod === 'Tunai') {
+                        const paid = parseFloat(this.cashAmount) || 0;
+                        if (paid <= 0) {
+                            alert('Peringatan: Nominal Uang Bayar wajib diisi!');
+                            return;
+                        }
+                        if (this.isCashInsufficient) {
+                            alert('Peringatan: Uang pembayaran kurang!');
+                            return;
+                        }
+                    }
+
+                    this.isSubmitting = true;
+                    
+                    // Submit checkout form
+                    const form = document.getElementById('checkout-form');
+                    if (form) {
+                        form.submit();
                     }
 
                     if (this.isCashInsufficient) {

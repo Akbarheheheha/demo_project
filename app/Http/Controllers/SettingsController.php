@@ -99,7 +99,7 @@ class SettingsController extends Controller
 
         // Assign Spatie Role
         $roleName = $request->input('role');
-        if (in_array($roleName, ['Super Admin', 'Manager', 'Kasir'])) {
+        if (\Spatie\Permission\Models\Role::where('name', $roleName)->exists()) {
             $user->assignRole($roleName);
         } else {
             $user->assignRole('Kasir'); // Fallback
