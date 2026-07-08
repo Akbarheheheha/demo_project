@@ -66,7 +66,29 @@
     <div class="fixed top-20 right-6 z-50 flex flex-col gap-2 max-w-sm pointer-events-none">
         @if(session('print_url'))
             <script>
-                window.open("{{ session('print_url') }}", "ThermalReceipt", "width=380,height=700,menubar=no,toolbar=no,location=no,status=no");
+                document.addEventListener('DOMContentLoaded', function() {
+                    const iframe = document.createElement('iframe');
+                    iframe.style.display = 'none';
+                    iframe.style.visibility = 'hidden';
+                    iframe.src = "{{ session('print_url') }}";
+                    
+                    iframe.onload = function() {
+                        try {
+                            iframe.contentWindow.focus();
+                            iframe.contentWindow.print();
+                            
+                            setTimeout(() => {
+                                if (document.body.contains(iframe)) {
+                                    document.body.removeChild(iframe);
+                                }
+                            }, 5000);
+                        } catch (error) {
+                            console.error('Gagal memicu print dialog pada iframe:', error);
+                        }
+                    };
+                    
+                    document.body.appendChild(iframe);
+                });
             </script>
         @endif
         @if(session('success'))
