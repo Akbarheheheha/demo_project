@@ -817,6 +817,14 @@
                     .then(res => res.json())
                     .then(data => {
                         if (data.success) {
+                            // Update local stock in real-time so we don't need a page refresh
+                            this.cart.forEach(cartItem => {
+                                const p = this.products.find(prod => prod.id === cartItem.product.id);
+                                if (p) {
+                                    p.stock -= cartItem.qty;
+                                }
+                            });
+
                             // Hidden Iframe Printing
                             const printFrame = document.createElement('iframe');
                             printFrame.style.display = 'none';

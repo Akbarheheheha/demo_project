@@ -279,7 +279,7 @@
                     <!-- Search Bar -->
                     <form action="{{ route($rolePrefix . '.inventory') }}" method="GET" class="hidden sm:flex items-center gap-2 rounded-xl px-3 py-1.5 w-64 text-slate-500 dark:text-slate-400 border border-indigo-500/60 focus-within:border-indigo-500/60 focus-within:ring-1 focus-within:ring-indigo-500/30 transition-all duration-200">
                         <i data-lucide="search" class="w-4 h-4 text-slate-400 dark:text-slate-500"></i>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search system database..." class="bg-transparent border-none focus:outline-none w-full  placeholder-slate-400 dark:placeholder-slate-650 font-mono">
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="cari barang" class="bg-transparent border-none focus:outline-none w-full  placeholder-slate-400 dark:placeholder-slate-650 font-mono">
                     </form>
                 </div>
                 
