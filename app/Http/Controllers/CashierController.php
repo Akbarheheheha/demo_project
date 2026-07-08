@@ -48,7 +48,7 @@ class CashierController extends Controller
         // Assign 'Kasir' role using Spatie Permission
         $cashier->assignRole('Kasir');
 
-        return redirect()->route('cashiers.index')
+        return redirect()->route($this->rolePrefix() . '.cashiers.index')
             ->with('success', 'Akun Kasir berhasil ditambahkan.');
     }
 
@@ -86,7 +86,7 @@ class CashierController extends Controller
 
         $cashier->update($data);
 
-        return redirect()->route('cashiers.index')
+        return redirect()->route($this->rolePrefix() . '.cashiers.index')
             ->with('success', 'Akun Kasir berhasil diperbarui.');
     }
 
@@ -98,7 +98,7 @@ class CashierController extends Controller
         $cashier = User::role('Kasir')->findOrFail($id);
         $cashier->delete();
 
-        return redirect()->route('cashiers.index')
+        return redirect()->route($this->rolePrefix() . '.cashiers.index')
             ->with('success', 'Akun Kasir berhasil dihapus.');
     }
 }

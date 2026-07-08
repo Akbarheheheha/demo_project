@@ -151,7 +151,7 @@
         </div>
 
         <!-- Card 3: Low Stock Warning -->
-        <a href="{{ route('inventory') }}" class="container_scale block group bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-rose-200 transition-all duration-300 relative overflow-hidden">
+        <a href="{{ route($rolePrefix . '.inventory') }}" class="container_scale block group bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-rose-200 transition-all duration-300 relative overflow-hidden">
             <div class="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-rose-50 group-hover:bg-rose-100/70 transition-colors duration-300 -z-0"></div>
             
             <div class="relative z-10 flex items-start justify-between">
@@ -299,7 +299,7 @@
             <div x-show="!showLog" class="flex-1 flex flex-col justify-between min-h-[300px]">
                 <div class="overflow-y-auto max-h-[300px] space-y-3 pr-1 flex-1">
                     <template x-for="item in stokMenipis" :key="item.id">
-                        <a :href="'{{ route('inventory') }}?edit_sku=' + item.sku" 
+                        <a :href="'{{ route($rolePrefix . '.inventory') }}?edit_sku=' + item.sku" 
                            data-spa-ignore
                            class="container_stok flex items-center justify-between p-3 rounded-xl bg-indigo-50/20 hover:bg-indigo-50/50 transition-all duration-200 block">
                             <div class="flex items-center gap-3">
@@ -332,7 +332,7 @@
                 </div>
                 
                 <div class="mt-4 pt-4 border-t border-slate-100">
-                    <a href="{{ route('inventory', ['filter' => 'low_stock']) }}" 
+                    <a href="{{ route($rolePrefix . '.inventory', ['filter' => 'low_stock']) }}" 
                        class="btn-kelola w-full py-2.5 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm shadow-indigo-900/10 active:scale-[0.98]">
                         <i data-lucide="settings-2" class="w-4 h-4"></i>
                         <span>Kelola & Restock Barang</span>

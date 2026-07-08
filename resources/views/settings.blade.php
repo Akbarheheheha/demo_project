@@ -232,7 +232,7 @@
                     <p class="text-xs text-slate-400">Atur hak akses masuk sistem, tambahkan karyawan kasir, atau hapus akses akun.</p>
                 </div>
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('cashiers.index') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-2 rounded-xl text-[11px] flex items-center gap-1.5 transition-all shadow-md shadow-indigo-600/10 active:scale-[0.98]">
+                    <a href="{{ route('admin.cashiers.index') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-2 rounded-xl text-[11px] flex items-center gap-1.5 transition-all shadow-md shadow-indigo-600/10 active:scale-[0.98]">
                         <i data-lucide="users" class="w-3.5 h-3.5"></i>
                         Kelola Akun Kasir (CRUD)
                     </a>
