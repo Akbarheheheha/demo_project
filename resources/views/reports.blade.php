@@ -4,7 +4,18 @@
 @section('active_page', 'reports')
 
 @section('content')
-<div class="space-y-6" x-data="reportsComponent()">
+<div class="space-y-6" x-data="reportsComponent()"
+     x-init="
+        const el = document.getElementById('reports-data');
+        if (el) {
+            const data = JSON.parse(el.textContent);
+            totalPengeluaran = data.totalPengeluaran;
+            expenses = data.expenses;
+        }
+     ">
+
+    <!-- Embedded data for Alpine (avoids push script timing issues on SPA navigation) -->
+    <script id="reports-data" type="application/json">{!! json_encode(['totalPengeluaran' => (float) $financialSummary['total_pengeluaran'], 'expenses' => $expenses], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
 
     <!-- Welcome Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

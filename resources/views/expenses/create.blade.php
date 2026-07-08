@@ -44,15 +44,27 @@
                     </div>
                 </div>
 
+                <!-- Nama Pengeluaran -->
+                  <div>
+                    <label for="nama_pengeluaran" class="block mb-2 text-xs font-bold text-slate-500 uppercase tracking-wider">Nama Pengeluaran</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-slate-400" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-notepad-text-icon lucide-notepad-text"><path d="M8 2v4"/><path d="M12 2v4"/><path d="M16 2v4"/><rect width="16" height="18" x="4" y="4" rx="2"/><path d="M8 10h6"/><path d="M8 14h8"/><path d="M8 18h5"/></svg>
+                        </div>
+                        <input type="text" id="nama_pengeluaran" name="nama_pengeluaran" value="{{ old('nama_pengeluaran') }}" placeholder="Contoh: Bayar listrik bulan ini..."
+                               class="bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 block w-full pl-11 p-3 transition duration-200 font-medium" required>
+                    </div>
+                </div>
+
                 <!-- Deskripsi -->
                 <div>
-                    <label for="deskripsi" class="block mb-2 text-xs font-bold text-slate-500 uppercase tracking-wider">Deskripsi Pengeluaran</label>
+                    <label for="deskripsi" class="block mb-2 text-xs font-bold text-slate-500 uppercase tracking-wider">Deskripsi Pengeluaran (OPSIONAL)</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <i data-lucide="file-text" class="w-5 h-5 text-slate-400"></i>
                         </div>
-                        <input type="text" id="deskripsi" name="deskripsi" value="{{ old('deskripsi') }}" placeholder="Contoh: Bayar listrik bulan ini..."
-                               class="bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 block w-full pl-11 p-3 transition duration-200 font-medium" required>
+                        <input type="text" id="deskripsi" name="deskripsi" value="{{ old('deskripsi') }}" placeholder="Contoh: Untuk membayar tagihan listrik bulan ini..."
+                               class="bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 block w-full pl-11 p-3 transition duration-200 font-medium">
                     </div>
                 </div>
 
@@ -63,8 +75,8 @@
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <span class="text-slate-500 font-bold">Rp</span>
                         </div>
-                        <input type="number" id="nominal" name="nominal" value="{{ old('nominal') }}" placeholder="0"
-                               class="bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 block w-full pl-12 p-3 transition duration-200 font-bold tracking-wide" required min="0" step="1">
+                        <input type="text" id="nominal" name="nominal" value="{{ old('nominal') ? number_format(old('nominal'), 0, ',', '.') : '' }}" placeholder="0"
+                               class="bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 block w-full pl-12 p-3 transition duration-200 font-bold tracking-wide" required>
                     </div>
                 </div>
             </div>
@@ -86,4 +98,21 @@
         </form>
     </div>
 </div>
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('nominal');
+    if (!input) return;
+
+    input.addEventListener('input', function() {
+        const raw = this.value.replace(/\D/g, '');
+        this.value = raw.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    });
+
+    input.closest('form').addEventListener('submit', function() {
+        input.value = input.value.replace(/\./g, '');
+    });
+});
+</script>
+@endpush
 @endsection

@@ -35,6 +35,7 @@ class ExpenseController extends Controller
             'tanggal' => 'required|date',
             'nama_pengeluaran' => 'required|string|max:255',
             'nominal' => 'required|numeric|min:0',
+            'deskripsi' => 'nullable|string',
         ]);
 
         Expense::create($validated);

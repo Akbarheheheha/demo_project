@@ -53,6 +53,10 @@ class AuthController extends Controller
                 return redirect()->route('manager.dashboard')->with('login_success', 'Selamat datang kembali, ' . $user->name . '!');
             }
 
+            if ($user->hasRole('Gudang')) {
+                return redirect()->route('gudang.inventory')->with('login_success', 'Selamat datang kembali, ' . $user->name . ' (Gudang)!');
+            }
+
             return redirect()->intended('/')->with('login_success', 'Selamat datang!');
         }
 

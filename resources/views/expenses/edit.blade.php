@@ -64,8 +64,8 @@
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <span class="text-slate-500 font-bold">Rp</span>
                         </div>
-                        <input type="number" id="nominal" name="nominal" value="{{ old('nominal', $expense->nominal) }}" placeholder="0"
-                               class="bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 block w-full pl-12 p-3 transition duration-200 font-bold tracking-wide" required min="0" step="1">
+                        <input type="text" id="nominal" name="nominal" value="{{ old('nominal', $expense->nominal) ? number_format(old('nominal', $expense->nominal), 0, ',', '.') : '' }}" placeholder="0"
+                               class="bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 block w-full pl-12 p-3 transition duration-200 font-bold tracking-wide" required>
                     </div>
                 </div>
             </div>
@@ -87,4 +87,21 @@
         </form>
     </div>
 </div>
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('nominal');
+    if (!input) return;
+
+    input.addEventListener('input', function() {
+        const raw = this.value.replace(/\D/g, '');
+        this.value = raw.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    });
+
+    input.closest('form').addEventListener('submit', function() {
+        input.value = input.value.replace(/\./g, '');
+    });
+});
+</script>
+@endpush
 @endsection

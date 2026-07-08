@@ -23,7 +23,7 @@ class GudangMiddleware
         }
 
         // Assuming you use Spatie Permission; user has method hasRole()
-        if (!Auth::user()->hasRole('gudang')) {
+        if (!Auth::user()->hasRole('Gudang')) {
             // Redirect or abort
             return redirect()->route('home')
                 ->with('error', 'Anda tidak memiliki akses ke halaman ini.');
