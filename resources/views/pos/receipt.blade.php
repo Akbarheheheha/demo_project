@@ -48,7 +48,7 @@
         <button onclick="window.history.back()" class="flex-1 py-2 px-3 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-medium rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm">
             &larr; Kembali
         </button>
-        <button onclick="manualPrint()" class="flex-[2] py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shadow-md shadow-indigo-650/15">
+        <button onclick="window.print()" class="flex-[2] py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shadow-md shadow-indigo-650/15">
             Cetak Struk (Print)
         </button>
     </div>
@@ -197,31 +197,16 @@
     </div>
 
     <script>
-        const invoiceId = "{{ $invoice ?? 'unknown' }}";
-
-        window.addEventListener('load', () => {
-            // Jika halaman ini dimuat di dalam iframe (contohnya dari pos/index.blade.php), 
-            // jangan panggil auto-print, biarkan parent window yang memanggil iframe.contentWindow.print()
-            if (window.self !== window.top) {
-                return;
-            }
-
-            const printKey = 'auto_printed_' + invoiceId;
-            if (!sessionStorage.getItem(printKey)) {
-                sessionStorage.setItem(printKey, 'true');
-                setTimeout(() => {
-                    window.print();
-                }, 500);
-            }
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.self !== window.top) return; // Prevent auto-print if loaded inside iframe
+            setTimeout(() => {
+                window.print();
+            }, 300);
         });
 
         window.onafterprint = function() {
-            // Biarkan kosong
+            window.close();
         };
-
-        function manualPrint() {
-            window.print();
-        }
 
         document.addEventListener('keydown', function(event) {
             if (event.key === 'x' || event.key === 'X') {

@@ -799,18 +799,7 @@
                         }
                     }
 
-                    this.isSubmitting = true;
-                    
-                    // Submit checkout form
-                    const form = document.getElementById('checkout-form');
-                    if (form) {
-                        form.submit();
-                    }
 
-                    if (this.isCashInsufficient) {
-                        alert('Uang pembayaran kurang!');
-                        return;
-                    }
 
                     this.isSubmitting = true;
 
@@ -828,11 +817,22 @@
                     .then(res => res.json())
                     .then(data => {
                         if (data.success) {
-                            const w = 380, h = 700;
-                            const left = (screen.width - w) / 2;
-                            const top = (screen.height - h) / 2;
-                            window.open(data.print_url, 'ThermalReceipt',
-                                `width=${w},height=${h},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no`);
+                            // Hidden Iframe Printing
+                            const printFrame = document.createElement('iframe');
+                            printFrame.style.display = 'none';
+                            printFrame.src = data.print_url;
+                            
+                            printFrame.onload = function() {
+                                printFrame.contentWindow.focus();
+                                printFrame.contentWindow.print();
+                                
+                                // Hapus iframe setelah beberapa saat agar memori tidak penuh
+                                setTimeout(() => {
+                                    document.body.removeChild(printFrame);
+                                }, 5000);
+                            };
+                            
+                            document.body.appendChild(printFrame);
 
                             this.cart = [];
                             this.customerName = '';
