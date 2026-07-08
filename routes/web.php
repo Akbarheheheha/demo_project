@@ -59,6 +59,7 @@ Route::middleware(['auth.custom'])->group(function () {
     // ─────────────────────────────────────────────
     Route::prefix('admin')->middleware(['role:Super Admin'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+        // Define 'dashboard' alias to maintain compatibility
         Route::get('/api/dashboard/low-stock', [DashboardController::class, 'getLowStockApi'])->name('dashboard.low-stock');
         Route::get('/api/dashboard/sales-trend', [DashboardController::class, 'getSalesTrendApi'])->name('dashboard.sales-trend');
     });

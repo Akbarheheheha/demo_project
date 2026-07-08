@@ -64,6 +64,33 @@
 
     <!-- Success & Error Toast Messages -->
     <div class="fixed top-20 right-6 z-50 flex flex-col gap-2 max-w-sm pointer-events-none">
+        @if(session('print_url'))
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const iframe = document.createElement('iframe');
+                    iframe.style.display = 'none';
+                    iframe.style.visibility = 'hidden';
+                    iframe.src = "{{ session('print_url') }}";
+                    
+                    iframe.onload = function() {
+                        try {
+                            iframe.contentWindow.focus();
+                            iframe.contentWindow.print();
+                            
+                            setTimeout(() => {
+                                if (document.body.contains(iframe)) {
+                                    document.body.removeChild(iframe);
+                                }
+                            }, 5000);
+                        } catch (error) {
+                            console.error('Gagal memicu print dialog pada iframe:', error);
+                        }
+                    };
+                    
+                    document.body.appendChild(iframe);
+                });
+            </script>
+        @endif
         @if(session('success'))
             <div class="bg-white border border-emerald-100 p-4 rounded-xl shadow-lg flex items-center gap-3 text-emerald-800 pointer-events-auto" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)">
                 <div class="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg">
