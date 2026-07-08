@@ -17,7 +17,7 @@
             </div>
         @endif
 
-        <form action="{{ route('expenses.store') }}" method="POST" class="space-y-4">
+        <form action="{{ route($rolePrefix . '.expenses.store') }}" method="POST" class="space-y-4">
             @csrf
             <div>
                 <label for="tanggal" class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
@@ -32,7 +32,7 @@
                 <input type="number" id="nominal" name="nominal" value="{{ old('nominal') }}" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required min="0" step="0.01">
             </div>
             <div class="flex items-center justify-between">
-                <a href="{{ route('expenses.index') }}" class="btn btn-secondary">Kembali</a>
+                <a href="{{ route($rolePrefix . '.expenses.index') }}" class="btn btn-secondary">Kembali</a>
                 <button type="submit" class="btn btn-primary">Simpan Pengeluaran</button>
             </div>
         </form>

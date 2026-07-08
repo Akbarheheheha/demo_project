@@ -27,7 +27,7 @@ class PaymentMethodController extends Controller
 
         PaymentMethod::create($validated);
 
-        return redirect()->route('payment-methods.index')
+        return redirect()->route($this->rolePrefix() . '.payment-methods.index')
             ->with('success', 'Metode pembayaran baru berhasil ditambahkan.');
     }
 
@@ -43,7 +43,7 @@ class PaymentMethodController extends Controller
 
         $paymentMethod->update($validated);
 
-        return redirect()->route('payment-methods.index')
+        return redirect()->route($this->rolePrefix() . '.payment-methods.index')
             ->with('success', 'Metode pembayaran berhasil diperbarui.');
     }
 
@@ -56,7 +56,7 @@ class PaymentMethodController extends Controller
             'is_active' => !$paymentMethod->is_active
         ]);
 
-        return redirect()->route('payment-methods.index')
+        return redirect()->route($this->rolePrefix() . '.payment-methods.index')
             ->with('success', 'Status keaktifan metode pembayaran berhasil diubah.');
     }
 

@@ -39,7 +39,7 @@ class ExpenseController extends Controller
 
         Expense::create($validated);
 
-        return redirect()->route('expenses.index')
+        return redirect()->route($this->rolePrefix() . '.expenses.index')
             ->with('success', 'Pengeluaran berhasil dicatat.');
     }
 
@@ -64,7 +64,7 @@ class ExpenseController extends Controller
 
         $expense->update($validated);
 
-        return redirect()->route('expenses.index')
+        return redirect()->route($this->rolePrefix() . '.expenses.index')
             ->with('success', 'Catatan pengeluaran berhasil diperbarui.');
     }
 
@@ -75,7 +75,7 @@ class ExpenseController extends Controller
     {
         $expense->delete();
 
-        return redirect()->route('expenses.index')
+        return redirect()->route($this->rolePrefix() . '.expenses.index')
             ->with('success', 'Catatan pengeluaran berhasil dihapus.');
     }
 

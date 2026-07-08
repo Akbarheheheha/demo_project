@@ -138,7 +138,7 @@
                  :class="sidebarOpen ? 'justify-between px-6' : 'justify-center px-0'">
                 
                 <!-- Logo & Brand (Only visible when sidebar is open) -->
-                <a href="{{ auth()->user()->hasRole('Super Admin') ? route('admin.dashboard') : route('manager.dashboard') }}" class="flex items-center gap-2.5" x-show="sidebarOpen" x-transition:enter="transition-opacity ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+                <a href="{{ route($rolePrefix . '.dashboard') }}" class="flex items-center gap-2.5" x-show="sidebarOpen" x-transition:enter="transition-opacity ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
                     <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 shadow-md shadow-indigo-500/20 text-white font-bold text-lg flex-shrink-0">
                         S
                     </div>
@@ -173,7 +173,7 @@
             <nav class="flex-1 space-y-1.5 px-3 py-6" @click="if(window.innerWidth < 768) sidebarOpen = false">
                 <!-- Dashboard Link -->
                 @hasanyrole('Super Admin|Manager')
-                <a href="{{ auth()->user()->hasRole('Super Admin') ? route('admin.dashboard') : route('manager.dashboard') }}" 
+                <a href="{{ route($rolePrefix . '.dashboard') }}" 
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
                    :class="activePage === 'dashboard' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'"
                    :title="!sidebarOpen ? 'Dashboard' : ''">
@@ -197,7 +197,7 @@
                 
                 <!-- Inventaris Link -->
                 @hasanyrole('Super Admin|Manager')
-                <a href="{{ route('inventory') }}" 
+                <a href="{{ route($rolePrefix . '.inventory') }}" 
                    data-spa-ignore
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
                    :class="activePage === 'inventory' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'"
@@ -207,29 +207,26 @@
                 </a>
                 @endhasanyrole
                 
-                <!-- Laporan Link (Super Admin Only) -->
-                @role('Super Admin')
-                <a href="{{ route('reports') }}" 
+                <!-- Laporan Link -->
+                @hasanyrole('Super Admin|Manager')
+                <a href="{{ route($rolePrefix . '.reports') }}" 
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
                    :class="activePage === 'reports' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white' "
                    :title="!sidebarOpen ? 'Laporan Keuangan' : ''">
                     <i data-lucide="bar-chart-3" class="w-5 h-5 flex-shrink-0"></i>
                     <span x-show="sidebarOpen" x-transition.opacity>Laporan Keuangan</span>
                 </a>
-                @endrole
-                @hasanyrole('Super Admin|Manager')
-                    <a href="{{ route('expenses') }}" 
+
+                <a href="{{ route($rolePrefix . '.expenses.index') }}" 
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
                    :class="activePage === 'expenses' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white' "
                    :title="!sidebarOpen ? 'Pengeluaran' : ''">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-banknote-arrow-down-icon lucide-banknote-arrow-down"><path d="M12 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5"/><path d="m16 19 3 3 3-3"/><path d="M18 12h.01"/><path d="M19 16v6"/><path d="M6 12h.01"/><circle cx="12" cy="12" r="2"/></svg>
                    <span x-show="sidebarOpen" x-transition.opacity>Pengeluaran</span>
-                    </a>
-                @endhasanyrole
+                </a>
 
-                <!-- Audit Log Link (Super Admin & Manager) -->
-                @hasanyrole('Super Admin|Manager')
-                <a href="{{ route('admin.audit-logs') }}" 
+                <!-- Audit Log Link -->
+                <a href="{{ route($rolePrefix . '.audit-logs') }}" 
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
                    :class="activePage === 'audit-logs' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'"
                    :title="!sidebarOpen ? 'Log Audit' : ''">
@@ -240,7 +237,7 @@
                 
                 <!-- Pengaturan Link (Super Admin Only) -->
                 @role('Super Admin')
-                <a href="{{ route('settings') }}" 
+                <a href="{{ route('admin.settings') }}" 
                    data-spa-ignore
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
                    :class="activePage === 'settings' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'"
@@ -280,7 +277,7 @@
                     </button>
                     @endunless
                     <!-- Search Bar -->
-                    <form action="{{ route('inventory') }}" method="GET" class="hidden sm:flex items-center gap-2 rounded-xl px-3 py-1.5 w-64 text-slate-500 dark:text-slate-400 border border-indigo-500/60 focus-within:border-indigo-500/60 focus-within:ring-1 focus-within:ring-indigo-500/30 transition-all duration-200">
+                    <form action="{{ route($rolePrefix . '.inventory') }}" method="GET" class="hidden sm:flex items-center gap-2 rounded-xl px-3 py-1.5 w-64 text-slate-500 dark:text-slate-400 border border-indigo-500/60 focus-within:border-indigo-500/60 focus-within:ring-1 focus-within:ring-indigo-500/30 transition-all duration-200">
                         <i data-lucide="search" class="w-4 h-4 text-slate-400 dark:text-slate-500"></i>
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="Search system database..." class="bg-transparent border-none focus:outline-none w-full  placeholder-slate-400 dark:placeholder-slate-650 font-mono">
                     </form>
@@ -323,7 +320,7 @@
                             <div class="max-h-64 overflow-y-auto py-1">
                                 @forelse ($notifications as $notification)
                                     <div class="group relative flex gap-3 px-4 py-3 hover:bg-white/10 rounded-xl transition-colors">
-                                        <a href="{{ route('inventory') }}" class="flex gap-3 flex-1">
+                                        <a href="{{ route($rolePrefix . '.inventory') }}" class="flex gap-3 flex-1">
                                             @if(($notification->data['type'] ?? '') === 'out_of_stock')
                                                 <div class="p-2 bg-rose-500/10 text-rose-400 border border-rose-500/30 rounded-xl h-9 w-9 flex items-center justify-center flex-shrink-0">
                                                     <i data-lucide="x-circle" class="w-4 h-4"></i>
@@ -400,11 +397,13 @@
                                 Profil Saya
                             </a>
                             
-                            <a href="{{ route('settings') }}"
+                            @hasanyrole('Super Admin|Manager')
+                            <a href="{{ route($rolePrefix . '.settings') }}"
                                class="flex items-center gap-2.5 px-3 py-2.5 text-xs rounded-xl font-bold text-slate-200 hover:bg-white/10 hover:text-white transition-colors">
                                 <i data-lucide="settings" class="w-4 h-4 text-slate-355"></i>
                                 Pengaturan
                             </a>
+                            @endhasanyrole
                             
                             <hr class="my-1 border-white/10">
                             

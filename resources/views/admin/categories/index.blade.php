@@ -13,7 +13,7 @@
             <p class="text-sm text-slate-500">Kelola kategori barang untuk merapikan inventaris dan POS.</p>
         </div>
         <div>
-            <a href="{{ route('categories.create') }}" 
+            <a href="{{ route($rolePrefix . '.categories.create') }}" 
                class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-md shadow-indigo-600/10 active:scale-[0.98] transition-all">
                 <i data-lucide="plus" class="w-4 h-4"></i>
                 <span>Tambah Kategori</span>
@@ -64,14 +64,14 @@
                             <td class="px-6 py-3.5 text-center">
                                 <div class="flex items-center justify-center gap-2">
                                     <!-- Edit Button -->
-                                    <a href="{{ route('categories.edit', $category->id) }}" 
+                                    <a href="{{ route($rolePrefix . '.categories.edit', $category->id) }}" 
                                        class="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50/50 transition-all"
                                        title="Edit Kategori">
                                         <i data-lucide="edit-2" class="w-4 h-4"></i>
                                     </a>
                                     
                                     <!-- Delete Button -->
-                                    <form action="{{ route('categories.destroy', $category->id) }}" 
+                                    <form action="{{ route($rolePrefix . '.categories.destroy', $category->id) }}" 
                                           method="POST" 
                                           onsubmit="return confirm('Apakah Anda yakin ingin menghapus kategori {{ $category->name }}? Produk dengan kategori ini akan diubah kategorinya menjadi Tidak Berkategori.');"
                                           class="inline-block">

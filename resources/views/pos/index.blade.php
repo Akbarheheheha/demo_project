@@ -47,7 +47,7 @@
                 {{ substr(auth()->user()->name, 0, 2) }}
             </div>
             @hasanyrole('Super Admin|Manager')
-            <a href="{{ route('admin.dashboard') }}" class="py-2 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5">
+            <a href="{{ route($rolePrefix . '.dashboard') }}" class="py-2 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5">
                 <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
                 <span class="hidden sm:inline">Dashboard</span>
             </a>

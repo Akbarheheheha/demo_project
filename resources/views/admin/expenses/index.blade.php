@@ -13,7 +13,7 @@
             </h1>
             <p class="text-slate-500 mt-1 text-sm">Keseluruhan pengeluaran operasional bisnis.</p>
         </div>
-        <a href="{{ route('expenses.create') }}" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl shadow-md transition-all flex items-center gap-2">
+        <a href="{{ route($rolePrefix . '.expenses.create') }}" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl shadow-md transition-all flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
             </svg>
@@ -56,12 +56,12 @@
                                 Rp. {{ number_format($expense->nominal, 0, ',', '.') }}
                             </td>
                             <td class="px-6 py-4 flex items-center justify-center gap-3">
-                                <a href="{{ route('expenses.edit', $expense->id) }}" class="text-indigo-600 hover:text-indigo-800 transition-colors" title="Edit">
+                                <a href="{{ route($rolePrefix . '.expenses.edit', $expense->id) }}" class="text-indigo-600 hover:text-indigo-800 transition-colors" title="Edit">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                         <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.379-8.379-2.828-2.828z" />
                                     </svg>
                                 </a>
-                                <form action="{{ route('expenses.destroy', $expense->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus catatan pengeluaran ini?');">
+                                <form action="{{ route($rolePrefix . '.expenses.destroy', $expense->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus catatan pengeluaran ini?');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="text-rose-600 hover:text-rose-800 transition-colors" title="Hapus">
