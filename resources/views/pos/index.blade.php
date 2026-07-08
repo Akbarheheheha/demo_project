@@ -64,11 +64,6 @@
 
     <!-- Success & Error Toast Messages -->
     <div class="fixed top-20 right-6 z-50 flex flex-col gap-2 max-w-sm pointer-events-none">
-        @if(session('print_url'))
-            <script>
-                window.open("{{ session('print_url') }}", "ThermalReceipt", "width=380,height=700,menubar=no,toolbar=no,location=no,status=no");
-            </script>
-        @endif
         @if(session('success'))
             <div class="bg-white border border-emerald-100 p-4 rounded-xl shadow-lg flex items-center gap-3 text-emerald-800 pointer-events-auto" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)">
                 <div class="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg">
@@ -762,13 +757,56 @@
 
                 confirmAndSubmit() {
                     if (this.isSubmitting) return;
-                    this.isSubmitting = true;
-                    
-                    // Submit checkout form
-                    const form = document.getElementById('checkout-form');
-                    if (form) {
-                        form.submit();
+
+                    if (this.cart.length === 0) {
+                        alert('Keranjang belanja masih kosong!');
+                        return;
                     }
+
+                    if (this.isCashInsufficient) {
+                        alert('Uang pembayaran kurang!');
+                        return;
+                    }
+
+                    this.isSubmitting = true;
+
+                    const form = document.getElementById('checkout-form');
+                    if (!form) return;
+
+                    fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        },
+                        body: new FormData(form),
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            const w = 380, h = 700;
+                            const left = (screen.width - w) / 2;
+                            const top = (screen.height - h) / 2;
+                            window.open(data.print_url, 'ThermalReceipt',
+                                `width=${w},height=${h},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no`);
+
+                            this.cart = [];
+                            this.customerName = '';
+                            this.discountPercent = 0;
+                            this.taxPercent = 0;
+                            this.cashAmount = '';
+                            this.isModalOpen = false;
+                            this.selectedCartId = null;
+                        } else {
+                            alert(data.message || 'Transaksi gagal');
+                        }
+                    })
+                    .catch(err => {
+                        alert('Terjadi kesalahan: ' + (err.message || 'Silakan coba lagi'));
+                    })
+                    .finally(() => {
+                        this.isSubmitting = false;
+                    });
                 }
             };
         }
