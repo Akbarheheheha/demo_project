@@ -55,7 +55,6 @@ Route::middleware(['auth.custom'])->group(function () {
     Route::prefix('admin')->middleware(['role:Super Admin|Manager'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
         // Define 'dashboard' alias to maintain compatibility
-        Route::get('/main-dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/api/dashboard/low-stock', [DashboardController::class, 'getLowStockApi'])->name('dashboard.low-stock');
         Route::get('/api/dashboard/sales-trend', [DashboardController::class, 'getSalesTrendApi'])->name('dashboard.sales-trend');
         Route::get('/reports', [ReportController::class, 'index'])->name('reports');
@@ -73,6 +72,17 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::patch('/payment-methods/{paymentMethod}/toggle', [PaymentMethodController::class, 'toggleActive'])->name('payment-methods.toggle');
     });
 
+    Route::prefix('manager')->middleware(["role:Manager"])->group(function () {
+     Route::get('/dashboard', [DashboardController::class, 'index'])->name('manager.dashboard');
+     Route::get('reports', [ReportController::class, 'index'])->name('reports');
+     Route::get('reports/export/pdf', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
+     Route::get('reports/export/excel', [ReportController::class, 'exportExcel'])->name('reports.export.excel');
+     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('admin.audit-logs');
+    });
+
+    Route::middleware(['role:Super Admin|Manager'])->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    });
     // Admin Routes accessible by Gudang as well
     Route::prefix('admin')->middleware(['role:Super Admin|Manager|Gudang'])->group(function () {
         Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory');

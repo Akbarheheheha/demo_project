@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Daftar Pengeluaran')
+@section('active_page', 'expenses')
 
 @section('content')
 <div class="p-6 bg-slate-50 min-h-screen">

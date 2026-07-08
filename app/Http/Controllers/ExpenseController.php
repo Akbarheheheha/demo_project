@@ -23,7 +23,7 @@ class ExpenseController extends Controller
      */
     public function create()
     {
-        return view('admin.expenses.create');
+        return view('expenses.create');
     }
 
     /**
