@@ -15,7 +15,7 @@
 </head>
 <body>
     <h1>Laporan Keuangan</h1>
-    <p>Periode: {{ now()->translatedFormat('F Y') }}</p>
+    <p>Periode: {{ isset($startDate) && isset($endDate) ? \Carbon\Carbon::parse($startDate)->translatedFormat('d M Y') . ' - ' . \Carbon\Carbon::parse($endDate)->translatedFormat('d M Y') : now()->translatedFormat('F Y') }}</p>
 
     <table>
         <thead>

@@ -509,28 +509,7 @@
                                     this.confirmAndSubmit();
                                 }
                             }
-                            if (e.key === 'd') {
-                                e.preventDefault();
-                                const discountSelect = document.querySelector('select[x-model="discountPercent"]');
-                                if (discountSelect) {
-                                    discountSelect.focus();
-                                }
-                            }
-                            if (e.key === 't') {
-                                e.preventDefault();
-                                const taxSelect = document.querySelector('select[x-model="taxPercent"]');
-                                if (taxSelect) {
-                                    taxSelect.focus();
-                                }
-                            }
-                            if (e.key === 'n') {
-                                e.preventDefault();
-                                const customerNameInput = document.querySelector('input[x-model="customerName"]');
-                                if (customerNameInput) {
-                                    customerNameInput.focus();
-                                    customerNameInput.select();
-                                }
-                            }
+
                             if (e.altKey && e.key === '1') {
                                 e.preventDefault();
                                 this.payExact();

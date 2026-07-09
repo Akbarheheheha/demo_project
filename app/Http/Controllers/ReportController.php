@@ -20,8 +20,13 @@ class ReportController extends Controller
     public function index(Request $request)
     {
         $period = $request->query('period', 'month');
-        $reportData = $this->buildMonthlyReportData(paginateTransactions: true, period: $period);
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+        
+        $reportData = $this->buildMonthlyReportData(paginateTransactions: true, period: $period, startDateReq: $startDate, endDateReq: $endDate);
         $reportData['activePeriod'] = $period;
+        $reportData['startDate'] = $startDate;
+        $reportData['endDate'] = $endDate;
 
         return view('reports', $reportData);
     }
@@ -35,8 +40,13 @@ class ReportController extends Controller
         );
 
         $period = $request->query('period', 'month');
-        $reportData = $this->buildMonthlyReportData(paginateTransactions: false, period: $period);
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+        
+        $reportData = $this->buildMonthlyReportData(paginateTransactions: false, period: $period, startDateReq: $startDate, endDateReq: $endDate);
         $reportData['activePeriod'] = $period;
+        $reportData['startDate'] = $startDate;
+        $reportData['endDate'] = $endDate;
 
         $pdf = Pdf::loadView('reports.pdf', $reportData)->setPaper('a4', 'portrait');
 
@@ -52,8 +62,13 @@ class ReportController extends Controller
         );
 
         $period = $request->query('period', 'month');
-        $reportData = $this->buildMonthlyReportData(paginateTransactions: false, period: $period);
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+        
+        $reportData = $this->buildMonthlyReportData(paginateTransactions: false, period: $period, startDateReq: $startDate, endDateReq: $endDate);
         $reportData['activePeriod'] = $period;
+        $reportData['startDate'] = $startDate;
+        $reportData['endDate'] = $endDate;
 
         return Excel::download(
             new FinancialReportExport($reportData),
@@ -61,27 +76,32 @@ class ReportController extends Controller
         );
     }
 
-    private function buildMonthlyReportData(bool $paginateTransactions = false, string $period = 'month'): array
+    private function buildMonthlyReportData(bool $paginateTransactions = false, string $period = 'month', ?string $startDateReq = null, ?string $endDateReq = null): array
     {
-        // Calculate date range based on period
-        switch ($period) {
-            case 'week':
-                $startDate = Carbon::now()->startOfWeek();
-                $endDate = Carbon::now()->endOfWeek();
-                break;
-            case 'quarter':
-                $startDate = Carbon::now()->subMonths(3)->startOfDay();
-                $endDate = Carbon::now()->endOfDay();
-                break;
-            case 'year':
-                $startDate = Carbon::now()->startOfYear();
-                $endDate = Carbon::now()->endOfYear();
-                break;
-            case 'month':
-            default:
-                $startDate = Carbon::now()->startOfMonth();
-                $endDate = Carbon::now()->endOfMonth();
-                break;
+        if ($startDateReq && $endDateReq) {
+            $startDate = Carbon::parse($startDateReq)->startOfDay();
+            $endDate = Carbon::parse($endDateReq)->endOfDay();
+        } else {
+            // Calculate date range based on period
+            switch ($period) {
+                case 'week':
+                    $startDate = Carbon::now()->startOfWeek();
+                    $endDate = Carbon::now()->endOfWeek();
+                    break;
+                case 'quarter':
+                    $startDate = Carbon::now()->subMonths(3)->startOfDay();
+                    $endDate = Carbon::now()->endOfDay();
+                    break;
+                case 'year':
+                    $startDate = Carbon::now()->startOfYear();
+                    $endDate = Carbon::now()->endOfYear();
+                    break;
+                case 'month':
+                default:
+                    $startDate = Carbon::now()->startOfMonth();
+                    $endDate = Carbon::now()->endOfMonth();
+                    break;
+            }
         }
 
         $financialSummary = $this->getMonthlyFinancialSummary($startDate, $endDate);

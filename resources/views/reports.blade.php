@@ -4,7 +4,72 @@
 @section('active_page', 'reports')
 
 @section('content')
-<div class="space-y-6" x-data="reportsComponent()"
+<div class="space-y-6" x-data="{
+        showExpenseModal: false,
+        showAddExpenseForm: false,
+        isSavingExpense: false,
+        expenses: [],
+        totalPengeluaran: 0,
+        formattedNominal: '',
+        newExpense: {
+            nama_pengeluaran: '',
+            nominal: '',
+            tanggal: '{{ date('Y-m-d') }}',
+            deskripsi: ''
+        },
+        formatDate(dateStr) {
+            if (!dateStr) return '';
+            return dateStr.split('T')[0];
+        },
+        setNominal(value) {
+            const rawValue = value.replace(/\D/g, '');
+            this.newExpense.nominal = rawValue;
+            if (rawValue) {
+                this.formattedNominal = new Intl.NumberFormat('id-ID').format(rawValue);
+            } else {
+                this.formattedNominal = '';
+            }
+        },
+        async saveNewExpense() {
+            if (!this.newExpense.nama_pengeluaran || !this.newExpense.nominal || !this.newExpense.tanggal) {
+                this.$dispatch('show-toast', { message: 'Semua field wajib diisi!', type: 'danger' });
+                return;
+            }
+            this.isSavingExpense = true;
+            try {
+                const response = await axios.post('/api/expenses', this.newExpense);
+                this.expenses.unshift(response.data);
+                this.totalPengeluaran += parseFloat(response.data.nominal);
+                
+                this.newExpense.nama_pengeluaran = '';
+                this.newExpense.nominal = '';
+                this.newExpense.tanggal = '{{ date('Y-m-d') }}';
+                this.newExpense.deskripsi = '';
+                this.formattedNominal = '';
+                this.showAddExpenseForm = false;
+                
+                this.$dispatch('show-toast', { message: 'Pengeluaran berhasil dicatat!', type: 'success' });
+            } catch (error) {
+                console.error(error);
+                this.$dispatch('show-toast', { message: 'Gagal mencatat pengeluaran.', type: 'danger' });
+            } finally {
+                this.isSavingExpense = false;
+            }
+        },
+        async deleteExpense(expense) {
+            if (confirm('Apakah Anda yakin ingin menghapus catatan pengeluaran \'' + expense.nama_pengeluaran + '\'?')) {
+                try {
+                    await axios.delete('/api/expenses/' + expense.id);
+                    this.expenses = this.expenses.filter(e => e.id !== expense.id);
+                    this.totalPengeluaran -= parseFloat(expense.nominal);
+                    this.$dispatch('show-toast', { message: 'Catatan pengeluaran berhasil dihapus.', type: 'warning' });
+                } catch (error) {
+                    console.error(error);
+                    this.$dispatch('show-toast', { message: 'Gagal menghapus pengeluaran.', type: 'danger' });
+                }
+            }
+        }
+    }"
      x-init="
         const el = document.getElementById('reports-data');
         if (el) {
@@ -27,18 +92,18 @@
         <!-- Action Buttons (Export) -->
         <div class="flex items-center gap-2">
             <!-- Export PDF -->
-            <a href="{{ route($rolePrefix . '.reports.export.pdf', ['period' => $activePeriod]) }}"
-               class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-sm">
+            <button onclick="window.location.href='{{ route($rolePrefix . '.reports.export.pdf', array_merge(request()->query(), ['period' => $activePeriod])) }}'"
+               class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer">
                 <i data-lucide="file-text" class="w-4 h-4 text-rose-500"></i>
                 <span>Export PDF</span>
-            </a>
+            </button>
             
             <!-- Export Excel -->
-            <a href="{{ route($rolePrefix . '.reports.export.excel', ['period' => $activePeriod]) }}"
-               class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-sm">
+            <button onclick="window.location.href='{{ route($rolePrefix . '.reports.export.excel', array_merge(request()->query(), ['period' => $activePeriod])) }}'"
+               class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer">
                 <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-500"></i>
                 <span>Export Excel</span>
-            </a>
+            </button>
         </div>
     </div>
 
@@ -438,80 +503,6 @@
 <!-- Chart.js Library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<script>
-function reportsComponent() {
-    return {
-        showExpenseModal: false,
-        showAddExpenseForm: false,
-        isSavingExpense: false,
-        expenses: @json($expenses),
-        totalPengeluaran: {{ (float) $financialSummary['total_pengeluaran'] }},
-        formattedNominal: '',
-        newExpense: {
-            nama_pengeluaran: '',
-            nominal: '',
-            tanggal: '{{ date('Y-m-d') }}',
-            deskripsi: ''
-        },
-        formatDate(dateStr) {
-            if (!dateStr) return '';
-            return dateStr.split('T')[0];
-        },
-        setNominal(value) {
-            // Remove non-digits
-            const rawValue = value.replace(/\D/g, '');
-            this.newExpense.nominal = rawValue;
-            
-            // Format with thousand separators
-            if (rawValue) {
-                this.formattedNominal = new Intl.NumberFormat('id-ID').format(rawValue);
-            } else {
-                this.formattedNominal = '';
-            }
-        },
-        async saveNewExpense() {
-            if (!this.newExpense.nama_pengeluaran || !this.newExpense.nominal || !this.newExpense.tanggal) {
-                this.$dispatch('show-toast', { message: 'Semua field wajib diisi!', type: 'danger' });
-                return;
-            }
-            this.isSavingExpense = true;
-            try {
-                const response = await axios.post('/api/expenses', this.newExpense);
-                this.expenses.unshift(response.data);
-                this.totalPengeluaran += parseFloat(response.data.nominal);
-                
-                // Reset form
-                this.newExpense.nama_pengeluaran = '';
-                this.newExpense.nominal = '';
-                this.newExpense.tanggal = '{{ date('Y-m-d') }}';
-                this.newExpense.deskripsi = '';
-                this.formattedNominal = '';
-                this.showAddExpenseForm = false;
-                
-                this.$dispatch('show-toast', { message: 'Pengeluaran berhasil dicatat!', type: 'success' });
-            } catch (error) {
-                console.error(error);
-                this.$dispatch('show-toast', { message: 'Gagal mencatat pengeluaran.', type: 'danger' });
-            } finally {
-                this.isSavingExpense = false;
-            }
-        },
-        async deleteExpense(expense) {
-            if (confirm('Apakah Anda yakin ingin menghapus catatan pengeluaran "' + expense.nama_pengeluaran + '"?')) {
-                try {
-                    await axios.delete('/api/expenses/' + expense.id);
-                    this.expenses = this.expenses.filter(e => e.id !== expense.id);
-                    this.totalPengeluaran -= parseFloat(expense.nominal);
-                    this.$dispatch('show-toast', { message: 'Catatan pengeluaran berhasil dihapus.', type: 'warning' });
-                } catch (error) {
-                    console.error(error);
-                    this.$dispatch('show-toast', { message: 'Gagal menghapus pengeluaran.', type: 'danger' });
-                }
-            }
-        }
-    };
-}
-</script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
