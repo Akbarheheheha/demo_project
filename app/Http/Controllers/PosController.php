@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Setting;
 use App\Models\Transaction;
 use App\Services\PosService;
 use Carbon\Carbon;
@@ -45,8 +46,11 @@ class PosController extends Controller
         $products = Product::all();
         $categories = \App\Models\Category::pluck('name')->toArray();
         $paymentMethods = \App\Models\PaymentMethod::where('is_active', true)->get();
+        $defaultTaxPercent = (int) Setting::get('tax_percent', 11);
+        $defaultDiscount = (int) Setting::get('default_discount', 0);
+        $receiptSize = Setting::get('receipt_size', '80mm');
 
-        return view('pos.index', compact('products', 'categories', 'paymentMethods'));
+        return view('pos.index', compact('products', 'categories', 'paymentMethods', 'defaultTaxPercent', 'defaultDiscount', 'receiptSize'));
     }
 
     /**
@@ -135,6 +139,10 @@ class PosController extends Controller
 
         $cashReceived = (float) request()->query('cash', $transaction->total_harga);
         $change = max(0, $cashReceived - $transaction->total_harga);
+        $receiptSize = Setting::get('receipt_size', '80mm');
+        $shopName = Setting::get('store_name', 'Kios Berkah Raya');
+        $shopAddress = Setting::get('store_address', '');
+        $shopPhone = Setting::get('store_phone', '');
 
         return view('pos.receipt', [
             'invoice' => $transaction->invoice,
@@ -148,7 +156,11 @@ class PosController extends Controller
             'tax' => (float) $transaction->tax,
             'grandTotal' => (float) $transaction->total_harga,
             'cashReceived' => $cashReceived,
-            'change' => $change
+            'change' => $change,
+            'receiptSize' => $receiptSize,
+            'shopName' => $shopName,
+            'shopAddress' => $shopAddress,
+            'shopPhone' => $shopPhone,
         ]);
     }
 }

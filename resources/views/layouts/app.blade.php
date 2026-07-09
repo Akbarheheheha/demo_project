@@ -196,7 +196,6 @@
                 <!-- Inventaris Link -->
                 @hasanyrole('Super Admin|Manager|Gudang')
                 <a href="{{ route($rolePrefix . '.inventory') }}" 
-                   data-spa-ignore
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
                    :class="activePage === 'inventory' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'"
                    :title="!sidebarOpen ? 'Inventaris' : ''">
@@ -236,7 +235,6 @@
                 <!-- Pengaturan Link (Super Admin Only) -->
                 @role('Super Admin')
                 <a href="{{ route('admin.settings') }}" 
-                   data-spa-ignore
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
                    :class="activePage === 'settings' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'"
                    :title="!sidebarOpen ? 'Pengaturan' : ''">
@@ -277,7 +275,7 @@
                     <!-- Search Bar -->
                     <form action="{{ route($rolePrefix . '.inventory') }}" method="GET" class="hidden sm:flex items-center gap-2 rounded-xl px-3 py-1.5 w-64 text-slate-500 dark:text-slate-400 border border-indigo-500/60 focus-within:border-indigo-500/60 focus-within:ring-1 focus-within:ring-indigo-500/30 transition-all duration-200">
                         <i data-lucide="search" class="w-4 h-4 text-slate-400 dark:text-slate-500"></i>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="cari barang" class="bg-transparent border-none focus:outline-none w-full  placeholder-slate-400 dark:placeholder-slate-650 font-mono">
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari Barang" class="bg-transparent border-none focus:outline-none w-full  placeholder-slate-400 dark:placeholder-slate-650 font-mono">
                     </form>
                 </div>
                 
@@ -436,45 +434,28 @@
     @stack('scripts')
 
     <script>
-        // Save initial state for browser navigation
         window.history.replaceState({ url: window.location.href }, document.title, window.location.href);
 
-        // Intercept navigation clicks
+        const _loadedScripts = new Set();
+
         document.addEventListener('click', function(e) {
             const link = e.target.closest('a');
             if (!link) return;
-            
             const href = link.getAttribute('href');
             if (!href) return;
-            
-            // Ignore hashes, javascript:, external links, logout, and data-spa-ignore links
             if (href.startsWith('#') || href.startsWith('javascript:') || href.includes('logout') || link.getAttribute('target') === '_blank' || link.hasAttribute('data-spa-ignore')) return;
-            
-            // Validate internal origin
             try {
                 const url = new URL(link.href, window.location.href);
                 if (url.origin !== window.location.origin) return;
                 if (url.pathname === '/login' || url.pathname === '/logout') return;
-                
                 e.preventDefault();
                 spaNavigate(url.href);
-            } catch (err) {
-                console.error(err);
-            }
+            } catch (err) { console.error(err); }
         });
 
-        // Cache of already-loaded external script URLs
-        const _loadedScripts = new Set();
-
-        // Load an external script by URL, returns a Promise
         function loadExternalScript(src) {
-            // If already loaded (or currently in page), resolve immediately
             if (_loadedScripts.has(src)) return Promise.resolve();
-            // Also check if it already exists in the page <head>
-            if (document.querySelector('script[src="' + src + '"]')) {
-                _loadedScripts.add(src);
-                return Promise.resolve();
-            }
+            if (document.querySelector('script[src="' + src + '"]')) { _loadedScripts.add(src); return Promise.resolve(); }
             return new Promise(function(resolve, reject) {
                 const s = document.createElement('script');
                 s.src = src;
@@ -484,25 +465,18 @@
             });
         }
 
-        // Unwrap DOMContentLoaded listeners from inline script text so they run immediately
         function unwrapDCL(code) {
-            // Pattern: document.addEventListener('DOMContentLoaded', function() { ... });
             const re = /document\.addEventListener\(\s*['"]DOMContentLoaded['"]\s*,\s*function\s*\(\s*\)\s*\{/;
             if (!re.test(code)) return code;
-            // Remove the wrapper – find the opening and strip it, then remove the trailing });
             let unwrapped = code.replace(re, '(function(){');
-            // The closing of the wrapper is    });   at the end – replace last }); with })();
             const lastIdx = unwrapped.lastIndexOf('});');
-            if (lastIdx !== -1) {
-                unwrapped = unwrapped.substring(0, lastIdx) + '})();';
-            }
+            if (lastIdx !== -1) unwrapped = unwrapped.substring(0, lastIdx) + '})();';
             return unwrapped;
         }
 
-        // SPA Navigation Function
         function spaNavigate(url, pushState) {
             if (pushState === undefined) pushState = true;
-            
+
             let progress = document.getElementById('spa-progressbar');
             if (!progress) {
                 progress = document.createElement('div');
@@ -511,132 +485,89 @@
             }
             progress.style.width = '10%';
             progress.style.opacity = '1';
-            
+
             let w = 10;
             const interval = setInterval(function() {
-                if (w < 80) {
-                    w += 10;
-                    progress.style.width = w + '%';
-                }
+                if (w < 80) { w += 10; progress.style.width = w + '%'; }
             }, 100);
-            
-            axios.get(url, {
-                headers: {
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache',
-                    'Expires': '0'
-                }
-            })
+
+            axios.get(url, { headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache', 'Expires': '0' } })
                 .then(function(response) {
                     clearInterval(interval);
                     progress.style.width = '100%';
-                    
+
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(response.data, 'text/html');
-                    
-                    // --- Clean up existing Alpine components inside <main> ---
+
                     const currentMain = document.querySelector('main');
                     if (currentMain && window.Alpine) {
-                        // Destroy Alpine trees attached to old content
                         currentMain.querySelectorAll('[x-data]').forEach(function(el) {
-                            if (el._x_dataStack) {
-                                try { Alpine.destroyTree(el); } catch(e) {}
-                            }
+                            if (el._x_dataStack) { try { Alpine.destroyTree(el); } catch(e) {} }
                         });
                     }
-                    
-                    // Swap main content
+
                     const newMain = doc.querySelector('main');
                     if (newMain && currentMain) {
                         currentMain.innerHTML = newMain.innerHTML;
                     }
-                    
-                    // Update Title
+
                     document.title = doc.title;
-                    
-                    // Update history
-                    if (pushState) {
-                        window.history.pushState({ url: url }, doc.title, url);
-                    }
-                    
-                    // Update active page sidebar tab
+                    if (pushState) window.history.pushState({ url: url }, doc.title, url);
+
                     const activePage = doc.body.getAttribute('data-active-page') || 'dashboard';
                     window.dispatchEvent(new CustomEvent('set-active-page', { detail: activePage }));
-                    
-                    // --- Execute scripts inside swapped content ---
-                    // Separate external and inline scripts, maintain order
-                    if (newMain) {
-                        executeScriptsAsync(doc);
-                    }
-                    
-                    setTimeout(function() {
-                        progress.style.opacity = '0';
+
+                    const layoutScripts = ['function spaNavigate(', 'window.history.replaceState', 'window.Alpine = Alpine'];
+                    const scripts = Array.from(doc.querySelectorAll('script')).filter(function(s) {
+                        if (s.type === 'module') return false;
+                        const text = s.innerHTML;
+                        return !layoutScripts.some(function(p) { return text.includes(p); });
+                    });
+
+                    executeScriptsAsync(scripts).then(function() {
                         setTimeout(function() {
-                            progress.style.width = '0%';
-                        }, 300);
-                    }, 100);
+                            progress.style.opacity = '0';
+                            setTimeout(function() { progress.style.width = '0%'; }, 300);
+                        }, 100);
+                    });
                 })
                 .catch(function(err) {
                     clearInterval(interval);
-                    console.error('SPA load error, redirecting:', err);
+                    console.error('SPA error, redirecting:', err);
                     window.location.href = url;
                 });
         }
 
-        // Async script executor – loads external scripts first, then runs inline scripts
-        async function executeScriptsAsync(parsedDoc) {
-            const scripts = Array.from(parsedDoc.querySelectorAll('script')).filter(function(script) {
-                return script.type !== 'module'
-                    && !script.innerHTML.includes('function spaNavigate(')
-                    && !script.innerHTML.includes('window.history.replaceState');
-            });
-            const container = document.querySelector('main');
-            
-            // Phase 1: Load all external scripts (CDNs like Chart.js)
+        async function executeScriptsAsync(scripts) {
             const externalLoads = [];
             scripts.forEach(function(s) {
-                if (s.src) {
-                    externalLoads.push(loadExternalScript(s.src));
-                }
+                if (s.src) externalLoads.push(loadExternalScript(s.src));
             });
-            // Wait for all external scripts to finish loading
             if (externalLoads.length > 0) {
                 try { await Promise.all(externalLoads); } catch(e) { console.error('Failed to load external script:', e); }
             }
 
-            // Phase 2: Run inline scripts (with DOMContentLoaded unwrapped)
             scripts.forEach(function(oldScript) {
-                if (oldScript.src) return; // Skip externals, already loaded
+                if (oldScript.src) return;
                 const newScript = document.createElement('script');
                 Array.from(oldScript.attributes).forEach(function(attr) {
                     newScript.setAttribute(attr.name, attr.value);
                 });
-                // Unwrap DOMContentLoaded so the code executes immediately
-                const code = unwrapDCL(oldScript.innerHTML);
-                newScript.appendChild(document.createTextNode(code));
+                newScript.appendChild(document.createTextNode(unwrapDCL(oldScript.innerHTML)));
                 document.body.appendChild(newScript);
             });
 
-            // Phase 3: Initialize Alpine on new content AFTER inline scripts
-            // This ensures x-data="someFunction()" can find the function definition
+            const container = document.querySelector('main');
             if (window.Alpine) {
                 Alpine.initTree(container);
             }
 
-            // Re-create Lucide icons immediately (for sidebar & existing content)
             if (window.lucide) {
                 window.lucide.createIcons();
+                setTimeout(function() { window.lucide.createIcons(); }, 150);
             }
-
-            // Phase 4: Re-create Lucide icons again after Alpine x-for/x-if templates render
-            setTimeout(function() {
-                if (window.lucide) {
-                    window.lucide.createIcons();
-                }
-            }, 100);
         }
 
-        // Popstate listener for back/forward browser actions
         window.addEventListener('popstate', function(event) {
             if (event.state && event.state.url) {
                 spaNavigate(event.state.url, false);

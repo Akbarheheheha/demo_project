@@ -4,83 +4,7 @@
 @section('active_page', 'reports')
 
 @section('content')
-<div class="space-y-6" x-data="{
-        showExpenseModal: false,
-        showAddExpenseForm: false,
-        isSavingExpense: false,
-        expenses: [],
-        totalPengeluaran: 0,
-        formattedNominal: '',
-        newExpense: {
-            nama_pengeluaran: '',
-            nominal: '',
-            tanggal: '{{ date('Y-m-d') }}',
-            deskripsi: ''
-        },
-        formatDate(dateStr) {
-            if (!dateStr) return '';
-            return dateStr.split('T')[0];
-        },
-        setNominal(value) {
-            const rawValue = value.replace(/\D/g, '');
-            this.newExpense.nominal = rawValue;
-            if (rawValue) {
-                this.formattedNominal = new Intl.NumberFormat('id-ID').format(rawValue);
-            } else {
-                this.formattedNominal = '';
-            }
-        },
-        async saveNewExpense() {
-            if (!this.newExpense.nama_pengeluaran || !this.newExpense.nominal || !this.newExpense.tanggal) {
-                this.$dispatch('show-toast', { message: 'Semua field wajib diisi!', type: 'danger' });
-                return;
-            }
-            this.isSavingExpense = true;
-            try {
-                const response = await axios.post('/api/expenses', this.newExpense);
-                this.expenses.unshift(response.data);
-                this.totalPengeluaran += parseFloat(response.data.nominal);
-                
-                this.newExpense.nama_pengeluaran = '';
-                this.newExpense.nominal = '';
-                this.newExpense.tanggal = '{{ date('Y-m-d') }}';
-                this.newExpense.deskripsi = '';
-                this.formattedNominal = '';
-                this.showAddExpenseForm = false;
-                
-                this.$dispatch('show-toast', { message: 'Pengeluaran berhasil dicatat!', type: 'success' });
-            } catch (error) {
-                console.error(error);
-                this.$dispatch('show-toast', { message: 'Gagal mencatat pengeluaran.', type: 'danger' });
-            } finally {
-                this.isSavingExpense = false;
-            }
-        },
-        async deleteExpense(expense) {
-            if (confirm('Apakah Anda yakin ingin menghapus catatan pengeluaran \'' + expense.nama_pengeluaran + '\'?')) {
-                try {
-                    await axios.delete('/api/expenses/' + expense.id);
-                    this.expenses = this.expenses.filter(e => e.id !== expense.id);
-                    this.totalPengeluaran -= parseFloat(expense.nominal);
-                    this.$dispatch('show-toast', { message: 'Catatan pengeluaran berhasil dihapus.', type: 'warning' });
-                } catch (error) {
-                    console.error(error);
-                    this.$dispatch('show-toast', { message: 'Gagal menghapus pengeluaran.', type: 'danger' });
-                }
-            }
-        }
-    }"
-     x-init="
-        const el = document.getElementById('reports-data');
-        if (el) {
-            const data = JSON.parse(el.textContent);
-            totalPengeluaran = data.totalPengeluaran;
-            expenses = data.expenses;
-        }
-     ">
-
-    <!-- Embedded data for Alpine (avoids push script timing issues on SPA navigation) -->
-    <script id="reports-data" type="application/json">{!! json_encode(['totalPengeluaran' => (float) $financialSummary['total_pengeluaran'], 'expenses' => $expenses], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
+<div class="space-y-6" x-data="reportsComponent">
 
     <!-- Welcome Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -500,9 +424,82 @@
 </div>
 
 @push('scripts')
+<script>
+function reportsComponent() {
+    return {
+        showExpenseModal: false,
+        showAddExpenseForm: false,
+        isSavingExpense: false,
+        expenses: @json($expenses),
+        totalPengeluaran: {{ (float) $financialSummary['total_pengeluaran'] }},
+        formattedNominal: '',
+        newExpense: {
+            nama_pengeluaran: '',
+            nominal: '',
+            tanggal: '{{ date('Y-m-d') }}',
+            deskripsi: ''
+        },
+        formatDate(dateStr) {
+            if (!dateStr) return '';
+            return dateStr.split('T')[0];
+        },
+        setNominal(value) {
+            const rawValue = value.replace(/\D/g, '');
+            this.newExpense.nominal = rawValue;
+            if (rawValue) {
+                this.formattedNominal = new Intl.NumberFormat('id-ID').format(rawValue);
+            } else {
+                this.formattedNominal = '';
+            }
+        },
+        async saveNewExpense() {
+            if (!this.newExpense.nama_pengeluaran || !this.newExpense.nominal || !this.newExpense.tanggal) {
+                this.$dispatch('show-toast', { message: 'Semua field wajib diisi!', type: 'danger' });
+                return;
+            }
+            this.isSavingExpense = true;
+            try {
+                const response = await axios.post('/api/expenses', this.newExpense);
+                this.expenses.unshift(response.data);
+                this.totalPengeluaran += parseFloat(response.data.nominal);
+                this.newExpense = {
+                    nama_pengeluaran: '',
+                    nominal: '',
+                    tanggal: '{{ date('Y-m-d') }}',
+                    deskripsi: ''
+                };
+                this.formattedNominal = '';
+                this.showAddExpenseForm = false;
+                this.$dispatch('show-toast', { message: 'Pengeluaran berhasil dicatat!', type: 'success' });
+            } catch (error) {
+                console.error(error);
+                this.$dispatch('show-toast', { message: 'Gagal mencatat pengeluaran.', type: 'danger' });
+            } finally {
+                this.isSavingExpense = false;
+            }
+        },
+        async deleteExpense(expense) {
+            if (confirm('Apakah Anda yakin ingin menghapus catatan pengeluaran "' + expense.nama_pengeluaran + '"?')) {
+                try {
+                    await axios.delete('/api/expenses/' + expense.id);
+                    this.expenses = this.expenses.filter(e => e.id !== expense.id);
+                    this.totalPengeluaran -= parseFloat(expense.nominal);
+                    this.$dispatch('show-toast', { message: 'Catatan pengeluaran berhasil dihapus.', type: 'warning' });
+                } catch (error) {
+                    console.error(error);
+                    this.$dispatch('show-toast', { message: 'Gagal menghapus pengeluaran.', type: 'danger' });
+                }
+            }
+        }
+    };
+}
+if (typeof Alpine !== 'undefined') {
+    Alpine.data('reportsComponent', reportsComponent);
+}
+</script>
+
 <!-- Chart.js Library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
