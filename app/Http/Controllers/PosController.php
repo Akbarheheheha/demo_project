@@ -48,7 +48,7 @@ class PosController extends Controller
         $paymentMethods = \App\Models\PaymentMethod::where('is_active', true)->get();
         $defaultTaxPercent = (int) Setting::get('tax_percent', 11);
         $defaultDiscount = (int) Setting::get('default_discount', 0);
-        $receiptSize = Setting::get('receipt_size', '80mm');
+        $receiptSize = Setting::get('receipt_size', '58mm');
 
         return view('pos.index', compact('products', 'categories', 'paymentMethods', 'defaultTaxPercent', 'defaultDiscount', 'receiptSize'));
     }
@@ -139,7 +139,7 @@ class PosController extends Controller
 
         $cashReceived = (float) request()->query('cash', $transaction->total_harga);
         $change = max(0, $cashReceived - $transaction->total_harga);
-        $receiptSize = Setting::get('receipt_size', '80mm');
+        $receiptSize = Setting::get('receipt_size', '58mm');
         $shopName = Setting::get('store_name', 'Kios Berkah Raya');
         $shopAddress = Setting::get('store_address', '');
         $shopPhone = Setting::get('store_phone', '');
