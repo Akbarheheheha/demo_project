@@ -10,6 +10,8 @@ class Product extends Model
 {
     use HasFactory, BelongsToTenant;
 
+    protected $appends = ['category'];
+
     protected $fillable = [
         'store_id',
         'sku',
