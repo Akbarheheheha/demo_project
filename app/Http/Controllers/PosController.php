@@ -43,7 +43,7 @@ class PosController extends Controller
      */
     public function index()
     {
-        $products = Product::all();
+        $products = Product::with('categoryRelation')->get();
         $categories = \App\Models\Category::pluck('name')->toArray();
         $paymentMethods = \App\Models\PaymentMethod::where('is_active', true)->get();
         $defaultTaxPercent = (int) Setting::get('tax_percent', 11);

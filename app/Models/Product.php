@@ -9,6 +9,8 @@ class Product extends Model
 {
     use HasFactory;
 
+    protected $appends = ['category'];
+
     protected $fillable = [
         'sku',
         'name',
