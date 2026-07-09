@@ -18,47 +18,50 @@ use App\Http\Controllers\PaymentMethodController;
 Route::middleware(['guest.custom'])->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/register', \App\Http\Controllers\Auth\TenantRegisterController::class)->name('register');
 });
 
 // Protected ERP Routes
 Route::middleware(['auth.custom'])->group(function () {
 
-    // ─────────────────────────────────────────────
     // Logout
-    // ─────────────────────────────────────────────
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // ─────────────────────────────────────────────
     // Root — role-based redirect
-    // ─────────────────────────────────────────────
     Route::get('/', function () {
         $user = auth()->user();
         if ($user->hasRole('Kasir'))      return redirect()->route('pos');
         if ($user->hasRole('Gudang'))     return redirect()->route('gudang.inventory');
-        if ($user->hasRole('Super Admin')) return redirect()->route('admin.dashboard');
+        if ($user->hasRole('Super Admin')) return redirect()->route('platform.stores.index'); // Redirect Super Admin ke Platform
         if ($user->hasRole('Manager'))    return redirect()->route('manager.dashboard');
+        if ($user->hasRole('Tenant Owner')) return redirect()->route('admin.dashboard');
         return redirect()->route('login');
     })->name('home');
 
-    // ─────────────────────────────────────────────
     // Profile
-    // ─────────────────────────────────────────────
     Route::get('/profile', fn () => view('profile'))->name('profile');
 
-    // ─────────────────────────────────────────────
-    // POS — Kasir & Super Admin
-    // ─────────────────────────────────────────────
-    Route::middleware(['role:Kasir|Super Admin'])->group(function () {
+    // POS — Kasir, Super Admin, Tenant Owner
+    Route::middleware(['role:Kasir|Super Admin|Tenant Owner'])->group(function () {
         Route::get('/pos', [PosController::class, 'launcher'])->name('pos');
         Route::get('/pos/fullscreen', [PosController::class, 'index'])->name('pos.fullscreen');
         Route::post('/pos', [PosController::class, 'store'])->name('pos.store');
         Route::get('/pos/receipt/{transaction}', [PosController::class, 'receipt'])->name('pos.receipt');
+        Route::get('/api/pos/products', [PosController::class, 'apiProducts'])->name('pos.products');
     });
 
     // ─────────────────────────────────────────────
-    // Super Admin — /admin/*
+    // RUANG TAHTA SUPER ADMIN (TIDAK BOLEH ADA TENANT DI SINI)
     // ─────────────────────────────────────────────
-    Route::prefix('admin')->name('admin.')->middleware(['role:Super Admin'])->group(function () {
+    Route::prefix('platform')->name('platform.')->middleware(['role:Super Admin'])->group(function () {
+        Route::get('/stores', [\App\Http\Controllers\Platform\StoreController::class, 'index'])->name('stores.index');
+        Route::patch('/stores/{storeId}/toggle-status', [\App\Http\Controllers\Platform\StoreController::class, 'toggleStatus'])->name('stores.toggle-status');
+    });
+
+    // ─────────────────────────────────────────────
+    // TENANT ADMIN (Untuk Tenant Owner & Super Admin yang lagi mantau)
+    // ─────────────────────────────────────────────
+    Route::prefix('admin')->name('admin.')->middleware(['role:Super Admin|Tenant Owner'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory');
         Route::get('/reports', [ReportController::class, 'index'])->name('reports');
@@ -75,9 +78,7 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
     });
 
-    // ─────────────────────────────────────────────
-    // Manager — /manager/*
-    // ─────────────────────────────────────────────
+    // Manager
     Route::prefix('manager')->name('manager.')->middleware(['role:Manager'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory');
@@ -95,43 +96,34 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::patch('/payment-methods/{paymentMethod}/toggle', [PaymentMethodController::class, 'toggleActive'])->name('payment-methods.toggle');
     });
 
-
-    // ─────────────────────────────────────────────
-    // Dashboard API — Super Admin & Manager
-    // ─────────────────────────────────────────────
-    Route::middleware(['role:Super Admin|Manager'])->group(function () {
+    // Dashboard API
+    Route::middleware(['role:Super Admin|Manager|Tenant Owner'])->group(function () {
         Route::get('/admin/api/dashboard/low-stock', [DashboardController::class, 'getLowStockApi'])->name('dashboard.low-stock');
         Route::get('/admin/api/dashboard/sales-trend', [DashboardController::class, 'getSalesTrendApi'])->name('dashboard.sales-trend');
     });
 
-    // ─────────────────────────────────────────────
-    // Gudang — /gudang/*
-    // ─────────────────────────────────────────────
+    // Gudang
     Route::prefix('gudang')->name('gudang.')->middleware(['role:Gudang'])->group(function () {
         Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory');
     });
 
-    // ─────────────────────────────────────────────
     // Shared API Routes
-    // ─────────────────────────────────────────────
-    Route::middleware(['role:Super Admin|Manager|Gudang'])->group(function () {
+    Route::middleware(['role:Super Admin|Manager|Gudang|Tenant Owner'])->group(function () {
         Route::post('/api/inventory/store', [InventoryController::class, 'store']);
         Route::put('/api/inventory/update/{id}', [InventoryController::class, 'update']);
         Route::delete('/api/inventory/delete/{id}', [InventoryController::class, 'destroy']);
-    });
-
-    Route::middleware(['role:Super Admin|Manager|Gudang'])->group(function () {
         Route::post('/api/categories/store', [CategoryController::class, 'storeApi']);
         Route::put('/api/categories/update/{id}', [CategoryController::class, 'updateApi']);
         Route::delete('/api/categories/delete/{id}', [CategoryController::class, 'destroyApi']);
     });
 
-    Route::middleware(['role:Super Admin|Manager'])->group(function () {
+    Route::middleware(['role:Super Admin|Manager|Tenant Owner'])->group(function () {
         Route::post('/api/expenses', [ExpenseController::class, 'storeApi']);
         Route::delete('/api/expenses/{expense}', [ExpenseController::class, 'destroyApi']);
     });
 
-    Route::middleware(['role:Super Admin'])->group(function () {
+    // PERBAIKAN: Settings API sekarang bisa diakses oleh Tenant Owner & Manager!
+    Route::middleware(['role:Super Admin|Tenant Owner|Manager'])->group(function () {
         Route::post('/api/settings/save/{category}', [SettingsController::class, 'save']);
         Route::post('/api/settings/users/store', [SettingsController::class, 'storeUser']);
         Route::delete('/api/settings/users/delete/{id}', [SettingsController::class, 'deleteUser']);
@@ -140,9 +132,7 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::delete('/api/settings/payment-methods/{paymentMethod}', [PaymentMethodController::class, 'destroyApi']);
     });
 
-    // ─────────────────────────────────────────────
     // Notification Routes
-    // ─────────────────────────────────────────────
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
 });

@@ -256,22 +256,29 @@
                 showLog: false,
                 stokMenipis: {{ json_encode($stok_menipis) }},
                 timer: null,
-                init() {
-                    this.timer = setInterval(async () => {
-                        try {
-                            const response = await fetch('{{ route('dashboard.low-stock') }}');
-                            if (response.ok) {
-                                this.stokMenipis = await response.json();
-                                this.$nextTick(() => {
-                                    if (window.lucide) {
-                                        window.lucide.createIcons();
-                                    }
-                                });
-                            }
-                        } catch (e) {
-                            console.error('Error fetching low stock:', e);
+                async fetchStock() {
+                    try {
+                        const response = await fetch('{{ route('dashboard.low-stock') }}');
+                        if (response.ok) {
+                            this.stokMenipis = await response.json();
+                            this.$nextTick(() => {
+                                if (window.lucide) {
+                                    window.lucide.createIcons();
+                                }
+                            });
                         }
-                    }, 3000);
+                    } catch (e) {
+                        console.error('Error fetching low stock:', e);
+                    }
+                },
+                init() {
+                    const isVisible = () => !document.hidden;
+                    this.timer = setInterval(() => {
+                        if (isVisible()) this.fetchStock();
+                    }, 30000);
+                    document.addEventListener('visibilitychange', () => {
+                        if (isVisible()) this.fetchStock();
+                    });
                 },
                 destroy() {
                     if (this.timer) {
@@ -385,40 +392,35 @@
 </div>
 
 @push('scripts')
-<!-- Chart.js Library -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script>
+(function() {
     function initWeeklySalesChart() {
         const canvas = document.getElementById('weeklySalesChart');
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
+        if (!canvas || !window.Chart) return;
 
-        // Destroy previous instance to prevent "Canvas is already in use" and memory leaks
         if (window.weeklySalesChartInstance) {
             window.weeklySalesChartInstance.destroy();
         }
-        
-        // Setup gradient background untuk chart
+
+        const ctx = canvas.getContext('2d');
         const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-        gradient.addColorStop(0, 'rgba(79, 70, 229, 0.3)');  // Indigo dengan transparansi
-        gradient.addColorStop(1, 'rgba(79, 70, 229, 0.00)'); // Pudar ke transparan
- 
-        // Injeksi data tren mingguan dari backend menggunakan directive json
+        gradient.addColorStop(0, 'rgba(79, 70, 229, 0.3)');
+        gradient.addColorStop(1, 'rgba(79, 70, 229, 0.00)');
+
         const weeklySalesData = @json($tren_penjualan_mingguan);
- 
-        window.weeklySalesChartInstance = new Chart(ctx, {
+
+        window.weeklySalesChartInstance = new window.Chart(ctx, {
             type: 'line',
             data: {
                 labels: weeklySalesData.labels,
                 datasets: [{
                     label: 'Omset Penjualan',
                     data: weeklySalesData.data,
-                    borderColor: '#4f46e5', // Indigo-600
+                    borderColor: '#4f46e5',
                     borderWidth: 3.5,
                     backgroundColor: gradient,
                     fill: true,
-                    tension: 0.4, // Kurva mulus
+                    tension: 0.4,
                     pointBackgroundColor: '#ffffff',
                     pointBorderColor: '#4f46e5',
                     pointBorderWidth: 2.5,
@@ -433,29 +435,18 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        display: false
-                    },
+                    legend: { display: false },
                     tooltip: {
                         backgroundColor: '#0f172a',
-                        titleFont: {
-                            family: 'Outfit',
-                            size: 12,
-                            weight: 'bold'
-                        },
-                        bodyFont: {
-                            family: 'Outfit',
-                            size: 12
-                        },
+                        titleFont: { family: 'Outfit', size: 12, weight: 'bold' },
+                        bodyFont: { family: 'Outfit', size: 12 },
                         padding: 12,
                         cornerRadius: 12,
                         displayColors: false,
                         callbacks: {
                             label: function(context) {
                                 let label = context.dataset.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
+                                if (label) label += ': ';
                                 if (context.parsed.y !== null) {
                                     label += new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(context.parsed.y);
                                 }
@@ -466,30 +457,14 @@
                 },
                 scales: {
                     x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            font: {
-                                family: 'Outfit',
-                                size: 11
-                            },
-                            color: '#94a3b8'
-                        }
+                        grid: { display: false },
+                        ticks: { font: { family: 'Outfit', size: 11 }, color: '#94a3b8' }
                     },
                     y: {
-                        grid: {
-                            color: '#f1f5f9',
-                            drawTicks: false
-                        },
-                        border: {
-                            dash: [5, 5]
-                        },
+                        grid: { color: '#f1f5f9', drawTicks: false },
+                        border: { dash: [5, 5] },
                         ticks: {
-                            font: {
-                                family: 'Outfit',
-                                size: 10
-                            },
+                            font: { family: 'Outfit', size: 10 },
                             color: '#94a3b8',
                             callback: function(value) {
                                 return 'Rp ' + value.toLocaleString('id-ID');
@@ -510,12 +485,12 @@
         }
     }
 
-    // Run immediately for initial load and custom Axios SPA page insertion
-    initWeeklySalesChart();
-
-    // Listen to Livewire navigate event (Livewire 3 SPA mode support)
-    document.addEventListener('livewire:navigated', initWeeklySalesChart);
-
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initWeeklySalesChart);
+    } else {
+        initWeeklySalesChart();
+    }
+})();
 </script>
 @endpush
 @endsection

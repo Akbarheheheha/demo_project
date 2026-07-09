@@ -23,14 +23,13 @@ class AppServiceProvider extends ServiceProvider
         view()->composer('*', function ($view) {
             if (auth()->check()) {
                 $user = auth()->user();
-                $rolePrefix = 'app';
-                if ($user->hasRole('Super Admin')) {
-                    $rolePrefix = 'admin';
-                } elseif ($user->hasRole('Manager')) {
-                    $rolePrefix = 'manager';
-                } elseif ($user->hasRole('Gudang')) {
-                    $rolePrefix = 'gudang';
-                }
+                $rolePrefix = match (true) {
+                    $user->hasRole('Super Admin')  => 'admin',
+                    $user->hasRole('Manager')      => 'manager',
+                    $user->hasRole('Gudang')       => 'gudang',
+                    $user->hasRole('Tenant Owner') => 'admin',
+                    default                        => 'app',
+                };
                 $view->with([
                     'notifications' => $user->notifications()->take(10)->get(),
                     'unreadCount' => $user->unreadNotifications()->count(),

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Struk Belanja - #{{ $invoice ?? 'TRX-20260701-999' }}</title>
-    @vite(['resources/css/pos.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     @php
         $isA4 = $receiptSize === 'A4';
         $is58 = $receiptSize === '58mm';

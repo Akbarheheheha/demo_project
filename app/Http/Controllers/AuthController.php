@@ -57,6 +57,10 @@ class AuthController extends Controller
                 return redirect()->route('gudang.inventory')->with('login_success', 'Selamat datang kembali, ' . $user->name . ' (Gudang)!');
             }
 
+            if ($user->hasRole('Tenant Owner')) {
+                return redirect()->route('admin.dashboard')->with('login_success', 'Selamat datang kembali, ' . $user->name . '!');
+            }
+
             return redirect()->intended('/')->with('login_success', 'Selamat datang!');
         }
 

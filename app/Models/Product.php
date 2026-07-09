@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToTenant;
 
     protected $fillable = [
+        'store_id',
         'sku',
         'name',
         'category_id',
@@ -19,6 +21,10 @@ class Product extends Model
         'selling_price',
         'stock',
         'min_stock',
+    ];
+
+    protected $appends = [
+        'category',
     ];
 
     /**

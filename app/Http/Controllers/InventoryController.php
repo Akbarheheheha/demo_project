@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class InventoryController extends Controller
 {
@@ -70,7 +71,7 @@ class InventoryController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'sku' => 'required|string|unique:products,sku',
+            'sku' => ['required', 'string', Rule::unique('products')->where('store_id', auth()->user()->store_id)],          
             'name' => 'required|string|max:255',
             'category' => 'required|string',
             'stock' => 'required|integer|min:0',
@@ -112,7 +113,7 @@ class InventoryController extends Controller
         $product = Product::findOrFail($id);
 
         $validated = $request->validate([
-            'sku' => 'required|string|unique:products,sku,' . $product->id,
+            'sku' => ['required', 'string', Rule::unique('products')->where('store_id', auth()->user()->store_id)]->ignore($product->id),
             'name' => 'required|string|max:255',
             'category' => 'required|string',
             'stock' => 'required|integer|min:0',

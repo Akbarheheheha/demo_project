@@ -1,11 +1,12 @@
 <?php
 
+use App\Services\TenantManager;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 
-return Application::configure(basePath: dirname(__DIR__))
+$app = Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
@@ -19,9 +20,20 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
+
+        $middleware->validateCsrfTokens(except: [
+            'register',
+        ]);
+
+        $middleware->appendToGroup('web', \App\Http\Middleware\SetTenantStoreId::class);
+        $middleware->appendToGroup('web', \App\Http\Middleware\CheckStoreStatus::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
     })->create();
+
+$app->singleton(TenantManager::class, fn () => new TenantManager());
+
+return $app;

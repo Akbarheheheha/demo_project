@@ -1,12 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\PaymentMethod;
+use App\Services\TenantManager;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class PaymentMethodController extends Controller
 {
+    public function __construct(
+        private readonly TenantManager $tenantManager,
+    ) {}
+
     /**
      * Display a listing of the resource.
      */
@@ -22,7 +30,11 @@ class PaymentMethodController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nama_metode' => 'required|string|max:50|unique:payment_methods,nama_metode',
+            'nama_metode' => [
+                'required', 'string', 'max:50',
+                Rule::unique('payment_methods', 'nama_metode')
+                    ->where('store_id', $this->tenantManager->getStoreId()),
+            ],
         ]);
 
         PaymentMethod::create($validated);
@@ -37,7 +49,12 @@ class PaymentMethodController extends Controller
     public function update(Request $request, PaymentMethod $paymentMethod)
     {
         $validated = $request->validate([
-            'nama_metode' => 'required|string|max:50|unique:payment_methods,nama_metode,' . $paymentMethod->id,
+            'nama_metode' => [
+                'required', 'string', 'max:50',
+                Rule::unique('payment_methods', 'nama_metode')
+                    ->where('store_id', $this->tenantManager->getStoreId())
+                    ->ignore($paymentMethod->id),
+            ],
             'is_active' => 'required|boolean',
         ]);
 
@@ -66,7 +83,11 @@ class PaymentMethodController extends Controller
     public function storeApi(Request $request)
     {
         $validated = $request->validate([
-            'nama_metode' => 'required|string|max:50|unique:payment_methods,nama_metode',
+            'nama_metode' => [
+                'required', 'string', 'max:50',
+                Rule::unique('payment_methods', 'nama_metode')
+                    ->where('store_id', $this->tenantManager->getStoreId()),
+            ],
         ]);
 
         $validated['is_active'] = true;

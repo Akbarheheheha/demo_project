@@ -17,8 +17,10 @@ class RoleAndPermissionSeeder extends Seeder
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
+        Role::create(['name' => 'Tenant Owner', 'guard_name' => 'web']);
         // Create Roles
         $superAdminRole = Role::firstOrCreate(['name' => 'Super Admin']);
+        $tenantOwnerRole = Role::firstOrCreate(['name' => 'Tenant Owner']);
         $managerRole = Role::firstOrCreate(['name' => 'Manager']);
         $cashierRole = Role::firstOrCreate(['name' => 'Kasir']);
         $gudangRole = Role::firstOrCreate(['name' => 'Gudang']);
