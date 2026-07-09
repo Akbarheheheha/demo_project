@@ -5,19 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Expense extends Model
+class PaymentMethod extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'nama_pengeluaran',
-        'nominal',
-        'tanggal',
-        'deskripsi',
+        'nama_metode',
+        'is_active',
     ];
 
     protected $casts = [
-        'nominal' => 'decimal:2',
-        'tanggal' => 'date',
+        'is_active' => 'boolean',
     ];
 }

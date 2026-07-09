@@ -9,10 +9,13 @@ class Product extends Model
 {
     use HasFactory;
 
+    protected $appends = ['category'];
+
     protected $fillable = [
         'sku',
         'name',
         'category_id',
+        'category',
         'purchase_price',
         'price',
         'selling_price',

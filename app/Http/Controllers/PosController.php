@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Setting;
 use App\Models\Transaction;
 use App\Services\PosService;
 use Carbon\Carbon;
@@ -42,15 +43,14 @@ class PosController extends Controller
      */
     public function index()
     {
-        $products = Product::all();
-        $categories = Product::select('category')
-            ->distinct()
-            ->whereNotNull('category')
-            ->where('category', '!=', '')
-            ->pluck('category')
-            ->toArray();
+        $products = Product::with('categoryRelation')->get();
+        $categories = \App\Models\Category::pluck('name')->toArray();
+        $paymentMethods = \App\Models\PaymentMethod::where('is_active', true)->get();
+        $defaultTaxPercent = (int) Setting::get('tax_percent', 11);
+        $defaultDiscount = (int) Setting::get('default_discount', 0);
+        $receiptSize = Setting::get('receipt_size', '80mm');
 
-        return view('pos.index', compact('products', 'categories'));
+        return view('pos.index', compact('products', 'categories', 'paymentMethods', 'defaultTaxPercent', 'defaultDiscount', 'receiptSize'));
     }
 
     /**
@@ -68,7 +68,7 @@ class PosController extends Controller
             'discount_percent' => 'nullable|numeric|min:0|max:100',
             'tax_percent' => 'nullable|numeric|min:0|max:100',
             'cash_amount' => 'nullable|numeric|min:0',
-            'payment_method' => ['required', Rule::in(['Tunai', 'Transfer', 'QRIS'])],
+            'payment_method' => 'required|string|exists:payment_methods,nama_metode',
         ]);
 
         try {
@@ -90,11 +90,26 @@ class PosController extends Controller
 
             $cashAmount = (float) $request->input('cash_amount', $transaction->total_harga);
 
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Transaksi Berhasil! Nomor Invoice: '.$transaction->invoice,
+                    'print_url' => route('pos.receipt', $transaction->id) . '?cash=' . $cashAmount
+                ]);
+            }
+
             return redirect()->back()->with([
                 'success' => 'Transaksi Berhasil! Nomor Invoice: '.$transaction->invoice,
                 'print_url' => route('pos.receipt', $transaction->id) . '?cash=' . $cashAmount
             ]);
         } catch (Exception $e) {
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 422);
+            }
+
             return redirect()->back()->withInput()->withErrors(['checkout_error' => $e->getMessage()]);
         }
     }
@@ -124,6 +139,10 @@ class PosController extends Controller
 
         $cashReceived = (float) request()->query('cash', $transaction->total_harga);
         $change = max(0, $cashReceived - $transaction->total_harga);
+        $receiptSize = Setting::get('receipt_size', '80mm');
+        $shopName = Setting::get('store_name', 'Kios Berkah Raya');
+        $shopAddress = Setting::get('store_address', '');
+        $shopPhone = Setting::get('store_phone', '');
 
         return view('pos.receipt', [
             'invoice' => $transaction->invoice,
@@ -137,7 +156,11 @@ class PosController extends Controller
             'tax' => (float) $transaction->tax,
             'grandTotal' => (float) $transaction->total_harga,
             'cashReceived' => $cashReceived,
-            'change' => $change
+            'change' => $change,
+            'receiptSize' => $receiptSize,
+            'shopName' => $shopName,
+            'shopAddress' => $shopAddress,
+            'shopPhone' => $shopPhone,
         ]);
     }
 }

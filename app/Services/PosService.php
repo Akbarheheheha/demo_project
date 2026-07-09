@@ -72,8 +72,9 @@ class PosService
                 'discount' => $discountAmount,
                 'tax' => $taxAmount,
                 'status' => 'success',
-                'payment_method' => $paymentMethod,
             ]);
+
+            $productNames = [];
 
             // Insert Transaction Details
             foreach ($items as $item) {
@@ -85,6 +86,10 @@ class PosService
                 }
 
                 $product = Product::find($productId);
+                
+                if ($product) {
+                    $productNames[] = $product->name;
+                }
 
                 $transaction->details()->create([
                     'product_id' => $productId,
@@ -95,6 +100,20 @@ class PosService
                 ]);
             }
 
+            // Log activity
+            $description = sprintf(
+                "[%s] Membuat Pesanan : [%s] Dan No Invoice-nya: [%s]",
+                auth()->user()->name ?? 'Kasir',
+                implode(', ', $productNames),
+                $invoice
+            );
+
+            \App\Models\ActivityLog::create([
+                'user_id' => auth()->id(),
+                'action' => 'Create Transaction',
+                'description' => $description,
+            ]);
+
             // Check for low stock and trigger notifications to admins
             foreach ($items as $item) {
                 $productId = $item['id'] ?? null;
@@ -103,15 +122,14 @@ class PosService
                 }
                 $product = Product::find($productId);
                 if ($product && $product->stock <= 5) {
-                    $admins = \App\Models\User::role(['Super Admin', 'Manager'])->get();
-                    foreach ($admins as $admin) {
-                        // Check if an unread notification for this product already exists for the admin
-                        $alreadyNotified = $admin->unreadNotifications()
+                    $users = \App\Models\User::role(['Super Admin', 'Manager', 'Gudang'])->get();
+                    foreach ($users as $user) {
+                        $alreadyNotified = $user->unreadNotifications()
                             ->where('data->product_id', $product->id)
                             ->exists();
 
                         if (!$alreadyNotified) {
-                            $admin->notify(new \App\Notifications\LowStockNotification($product));
+                            $user->notify(new \App\Notifications\LowStockNotification($product));
                         }
                     }
                 }

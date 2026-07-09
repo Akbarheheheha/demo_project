@@ -46,30 +46,31 @@ class ProductObserver
 
         // Low stock/Out of stock checking logic
         if ($product->wasChanged('stock')) {
+            $notifiedRoles = ['Super Admin', 'Manager', 'Gudang'];
             if ($product->stock <= 0) {
                 // Out of stock
-                $admins = \App\Models\User::role(['Super Admin', 'Manager'])->get();
-                foreach ($admins as $admin) {
-                    $alreadyNotified = $admin->unreadNotifications()
+                $users = \App\Models\User::role($notifiedRoles)->get();
+                foreach ($users as $user) {
+                    $alreadyNotified = $user->unreadNotifications()
                         ->where('data->product_id', $product->id)
                         ->where('data->type', 'out_of_stock')
                         ->exists();
 
                     if (!$alreadyNotified) {
-                        $admin->notify(new \App\Notifications\LowStockNotification($product, 'out_of_stock'));
+                        $user->notify(new \App\Notifications\LowStockNotification($product, 'out_of_stock'));
                     }
                 }
             } elseif ($product->stock < $product->min_stock) {
                 // Low stock
-                $admins = \App\Models\User::role(['Super Admin', 'Manager'])->get();
-                foreach ($admins as $admin) {
-                    $alreadyNotified = $admin->unreadNotifications()
+                $users = \App\Models\User::role($notifiedRoles)->get();
+                foreach ($users as $user) {
+                    $alreadyNotified = $user->unreadNotifications()
                         ->where('data->product_id', $product->id)
                         ->where('data->type', 'low_stock')
                         ->exists();
 
                     if (!$alreadyNotified) {
-                        $admin->notify(new \App\Notifications\LowStockNotification($product, 'low_stock'));
+                        $user->notify(new \App\Notifications\LowStockNotification($product, 'low_stock'));
                     }
                 }
             }

@@ -79,8 +79,20 @@ class DashboardController extends Controller
         }
 
         // Fetch AI Business Insight (Cached for 30 minutes for performance)
-        $ai_insight = cache()->remember('ai_business_insight', 1800, function() {
-            return (new \App\Services\AiInsightService())->getBusinessInsights();
+        $ai_insight = cache()->remember('ai_business_insight', 1800, function() use ($tren_penjualan_mingguan) {
+            $dailyTrend = [];
+            foreach ($tren_penjualan_mingguan['labels'] ?? [] as $i => $label) {
+                if (!isset($tren_penjualan_mingguan['data'][$i])) continue;
+                $date = Carbon::now()->subDays(6 - $i)->toDateString();
+                $dailyTrend[] = [
+                    'day'   => $label,
+                    'date'  => $date,
+                    'total' => (float) $tren_penjualan_mingguan['data'][$i],
+                ];
+            }
+            return (new \App\Services\AiInsightService())->getBusinessInsights([
+                'daily_trend' => $dailyTrend,
+            ]);
         });
 
         return view('dashboard', compact(

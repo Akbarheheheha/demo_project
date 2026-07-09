@@ -68,7 +68,7 @@
                 <p class="text-xs text-slate-400 mt-0.5">Urut berdasarkan waktu terbaru</p>
             </div>
             
-            <form action="{{ route('admin.audit-logs') }}" method="GET" class="w-full sm:w-80 flex items-center gap-2">
+            <form action="{{ route($rolePrefix . '.audit-logs') }}" method="GET" class="w-full sm:w-80 flex items-center gap-2">
                 <div class="relative w-full">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <i data-lucide="search" class="h-4 w-4 text-slate-400"></i>
@@ -79,7 +79,7 @@
                            placeholder="Cari deskripsi, aksi, atau kasir..." 
                            class="w-full pl-9 pr-4 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder-slate-400 text-slate-700 shadow-xs">
                     @if($search)
-                        <a href="{{ route('admin.audit-logs') }}" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600" title="Bersihkan Pencarian">
+                        <a href="{{ route($rolePrefix . '.audit-logs') }}" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600" title="Bersihkan Pencarian">
                             <i data-lucide="x" class="h-4 w-4"></i>
                         </a>
                     @endif
@@ -181,7 +181,7 @@
                                         @endif
                                     </p>
                                     @if($search)
-                                        <a href="{{ route('admin.audit-logs') }}" class="mt-2 text-xs font-bold text-indigo-600 hover:text-indigo-850 flex items-center gap-1">
+                                        <a href="{{ route($rolePrefix . '.audit-logs') }}" class="mt-2 text-xs font-bold text-indigo-600 hover:text-indigo-850 flex items-center gap-1">
                                             <span>Lihat Semua Log</span>
                                             <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
                                         </a>

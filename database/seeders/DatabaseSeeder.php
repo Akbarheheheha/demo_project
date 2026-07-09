@@ -109,6 +109,7 @@ class DatabaseSeeder extends Seeder
                     'user_id' => rand(0, 1) ? $kasir->id : $admin->id,
                     'invoice' => 'TRX-' . $date->format('Ymd') . '-' . rand(1000, 9999),
                     'total_harga' => $subtotal,
+                    'payment_method' => 'Tunai',
                     'status' => 'success',
                     'created_at' => $date->copy()->subHours(rand(1, 10)),
                     'updated_at' => $date->copy()->subHours(rand(1, 10)),

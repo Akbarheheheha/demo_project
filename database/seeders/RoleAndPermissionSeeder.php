@@ -21,6 +21,7 @@ class RoleAndPermissionSeeder extends Seeder
         $superAdminRole = Role::firstOrCreate(['name' => 'Super Admin']);
         $managerRole = Role::firstOrCreate(['name' => 'Manager']);
         $cashierRole = Role::firstOrCreate(['name' => 'Kasir']);
+        $gudangRole = Role::firstOrCreate(['name' => 'Gudang']);
 
         // Create Users & Assign Roles
 
@@ -53,5 +54,15 @@ class RoleAndPermissionSeeder extends Seeder
             ]
         );
         $cashier->assignRole($cashierRole);
+
+        // 4. Gudang User
+        $gudangUser = User::updateOrCreate(
+            ['email' => 'gudang@demo.com'],
+            [
+                'name' => 'Staf Gudang',
+                'password' => Hash::make('password'),
+            ]
+        );
+        $gudangUser->assignRole($gudangRole);
     }
 }

@@ -17,17 +17,16 @@
             .no-print {
                 display: none !important;
             }
-            /* Hide general layout components if embedded */
             header, footer, aside, nav, #sidebar, .sidebar-animate-bg, #spa-progressbar {
                 display: none !important;
             }
             @page {
-                size: 80mm auto;
+                size: {{ $receiptSize }} auto;
                 margin: 0;
             }
             .print-container {
-                width: 80mm;
-                max-width: 80mm;
+                width: {{ $receiptSize }};
+                max-width: {{ $receiptSize }};
                 margin: 0;
                 padding: 4mm;
                 box-shadow: none !important;
@@ -35,7 +34,6 @@
             }
         }
         
-        /* Stylings for screen view */
         body {
             background-color: #f1f5f9;
         }
@@ -44,7 +42,7 @@
 <body class="font-mono text-slate-800 antialiased min-h-screen flex flex-col items-center justify-start p-4 sm:p-6">
 
     <!-- Action Bar (Hidden on Print) -->
-    <div class="no-print w-full max-w-[80mm] mb-4 flex gap-2">
+    <div class="no-print w-full" style="max-width: {{ $receiptSize }}; margin-bottom: 1rem; display: flex; gap: 0.5rem;">
         <button onclick="window.history.back()" class="flex-1 py-2 px-3 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-medium rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm">
             &larr; Kembali
         </button>
@@ -54,13 +52,14 @@
     </div>
 
     <!-- Receipt Thermal Paper Container -->
-    <div class="print-container w-[80mm] max-w-[80mm] bg-white p-5 border border-slate-200 shadow-sm rounded-2xl flex flex-col text-[11px] leading-relaxed">
+    <div class="print-container bg-white p-5 border border-slate-200 shadow-sm rounded-2xl flex flex-col text-[11px] leading-relaxed" 
+         style="width: {{ $receiptSize }}; max-width: {{ $receiptSize }};">
         
         <!-- Header / Shop Logo & Info -->
         <div class="text-center space-y-1 mb-4">
-            <h1 class="text-sm font-extrabold uppercase tracking-wide text-slate-900">{{ $shop_name ?? 'Kios Berkah Raya' }}</h1>
-            <p class="text-[10px] text-slate-500">Jl. Berkah No. 88, Jakarta Selatan</p>
-            <p class="text-[9px] text-slate-400">Telp: 0812-3456-7890</p>
+            <h1 class="text-sm font-extrabold uppercase tracking-wide text-slate-900">{{ $shopName }}</h1>
+            @if($shopAddress)<p class="text-[10px] text-slate-500">{{ $shopAddress }}</p>@endif
+            @if($shopPhone)<p class="text-[9px] text-slate-400">Telp: {{ $shopPhone }}</p>@endif
         </div>
         
         <!-- Divider (Dashed) -->
@@ -197,6 +196,17 @@
     </div>
 
     <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.self !== window.top) return; // Prevent auto-print if loaded inside iframe
+            setTimeout(() => {
+                window.print();
+            }, 300);
+        });
+
+        window.onafterprint = function() {
+            window.close();
+        };
+
         document.addEventListener('keydown', function(event) {
             if (event.key === 'x' || event.key === 'X') {
                 if (window.opener || window.history.length === 1) {

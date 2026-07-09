@@ -46,7 +46,7 @@ class CategoryController extends Controller
             'slug' => $slug,
         ]);
 
-        return redirect()->route('categories.index')
+        return redirect()->route($this->rolePrefix() . '.categories.index')
             ->with('success', 'Kategori produk berhasil ditambahkan.');
     }
 
@@ -79,7 +79,7 @@ class CategoryController extends Controller
             'slug' => $slug,
         ]);
 
-        return redirect()->route('categories.index')
+        return redirect()->route($this->rolePrefix() . '.categories.index')
             ->with('success', 'Kategori produk berhasil diperbarui.');
     }
 
@@ -91,7 +91,7 @@ class CategoryController extends Controller
         // Deleting category will set category_id on products to null due to nullOnDelete constraint
         $category->delete();
 
-        return redirect()->route('categories.index')
+        return redirect()->route($this->rolePrefix() . '.categories.index')
             ->with('success', 'Kategori produk berhasil dihapus.');
     }
 

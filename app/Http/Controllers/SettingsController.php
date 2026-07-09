@@ -6,7 +6,9 @@ use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
+use Illuminate\Validation\Rule;
+
+use App\Models\PaymentMethod;
 
 class SettingsController extends Controller
 {
@@ -30,8 +32,16 @@ class SettingsController extends Controller
             'tax_percent' => (int) Setting::get('tax_percent', 11),
             'default_discount' => (int) Setting::get('default_discount', 0),
             'receipt_size' => Setting::get('receipt_size', '58mm'),
-            'payment_methods' => ['Tunai', 'QRIS', 'Transfer Bank']
         ];
+
+        // Fetch payment methods from DB, seed if empty
+        $paymentMethods = PaymentMethod::all();
+        if ($paymentMethods->isEmpty()) {
+            PaymentMethod::create(['nama_metode' => 'Tunai', 'is_active' => true]);
+            PaymentMethod::create(['nama_metode' => 'QRIS', 'is_active' => true]);
+            PaymentMethod::create(['nama_metode' => 'Transfer Bank', 'is_active' => true]);
+            $paymentMethods = PaymentMethod::all();
+        }
 
         // Fetch users with their Spatie roles
         $usersFromDb = User::with('roles')->get();
@@ -40,13 +50,13 @@ class SettingsController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'role' => $user->roles->pluck('name')->first() ?? 'Kasir',
+                'role' => $user->getRoleNames()->first() ?? '-',
                 'avatar' => 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100&h=100',
                 'status' => 'Aktif'
             ];
         });
 
-        return view('settings', compact('store', 'posConfig', 'users'));
+        return view('settings', compact('store', 'posConfig', 'users', 'paymentMethods'));
     }
 
     /**
@@ -75,31 +85,27 @@ class SettingsController extends Controller
      */
     public function storeUser(Request $request)
     {
+        $allowedRoles = ['Super Admin', 'Manager', 'Kasir', 'Gudang'];
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'role' => 'required|string'
+            'role' => ['required', 'string', Rule::in($allowedRoles)],
         ]);
 
         $user = User::create([
             'name' => $request->input('name'),
             'email' => $request->input('email'),
-            'password' => Hash::make('password'), // default password
+            'password' => Hash::make('password'),
         ]);
 
-        // Assign Spatie Role
-        $roleName = $request->input('role');
-        if (in_array($roleName, ['Super Admin', 'Manager', 'Kasir'])) {
-            $user->assignRole($roleName);
-        } else {
-            $user->assignRole('Kasir'); // Fallback
-        }
+        $user->assignRole($request->input('role'));
 
         return response()->json([
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
-            'role' => $user->roles->pluck('name')->first() ?? $roleName,
+            'role' => $user->getRoleNames()->first(),
             'avatar' => 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100&h=100',
             'status' => 'Aktif'
         ]);
