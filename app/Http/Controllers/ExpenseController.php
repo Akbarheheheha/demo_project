@@ -49,7 +49,7 @@ class ExpenseController extends Controller
      */
     public function edit(Expense $expense)
     {
-        return view('admin.expenses.edit', compact('expense'));
+        return view('expenses.edit', compact('expense'));
     }
 
     /**
@@ -61,6 +61,7 @@ class ExpenseController extends Controller
             'tanggal' => 'required|date',
             'nama_pengeluaran' => 'required|string|max:255',
             'nominal' => 'required|numeric|min:0',
+            'deskripsi' => 'nullable|string',
         ]);
 
         $expense->update($validated);

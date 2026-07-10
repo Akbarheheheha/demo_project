@@ -499,26 +499,42 @@
 
             updateProgress(10);
 
-            const cached = _pageCache.get(url);
-            if (cached) {
-                updateProgress(60);
-                renderSPAContent(cached.html, url, pushState, cached.title, cached.activePage);
-                updateProgress(100);
-                setTimeout(function() {
-                    const bar = document.getElementById('spa-progressbar');
-                    if (bar) { bar.style.opacity = '0'; setTimeout(function() { bar.style.width = '0%'; }, 300); }
-                }, 100);
-                return;
-            }
+            // Disable SPA Cache to prevent stale data (e.g., Reports not updating after adding expenses)
+            // const cached = _pageCache.get(url);
+            // if (cached) {
+            //     updateProgress(60);
+            //     renderSPAContent(cached.html, url, pushState, cached.title, cached.activePage);
+            //     updateProgress(100);
+            //     setTimeout(function() {
+            //         const bar = document.getElementById('spa-progressbar');
+            //         if (bar) { bar.style.opacity = '0'; setTimeout(function() { bar.style.width = '0%'; }, 300); }
+            //     }, 100);
+            //     return;
+            // }
 
             let w = 10;
             const interval = setInterval(function() {
                 if (w < 70) { w += 8; updateProgress(w); }
             }, 120);
 
+<<<<<<< HEAD
             axios.get(url, {
                 signal: abortController.signal,
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
+=======
+            // Create a cache-busting URL to prevent browser disk cache from serving stale HTML
+            const fetchUrl = new URL(url);
+            fetchUrl.searchParams.set('_t', Date.now());
+
+            axios.get(fetchUrl.toString(), {
+                signal: abortController.signal,
+                headers: { 
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
+>>>>>>> a038f02 (fix bug di bagian halaman pengeluaran spam di bagian tambah pengeluaran dan menambah kolom kembalian di pos kasir)
             })
                 .then(function(response) {
                     clearInterval(interval);

@@ -437,22 +437,12 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Diskon (%)</label>
-                                <select x-model="discountPercent" class="w-full text-xs font-bold bg-white rounded-xl border border-slate-200 px-3 py-2 text-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all">
-                                    <option value="0">0%</option>
-                                    <option value="5">5%</option>
-                                    <option value="10">10%</option>
-                                    <option value="15">15%</option>
-                                    <option value="20">20%</option>
-                                </select>
+                                <input type="number" x-model.number="discountPercent" min="0" max="100" class="w-full text-xs font-bold bg-white rounded-xl border border-slate-200 px-3 py-2 text-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all" placeholder="0">
                             </div>
     
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">PPN (%)</label>
-                                <select x-model="taxPercent" class="w-full text-xs font-bold bg-white rounded-xl border border-slate-200 px-3 py-2 text-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all">
-                                    <option value="0">0%</option>
-                                    <option value="10">10%</option>
-                                    <option value="11">11%</option>
-                                </select>
+                                <input type="number" x-model.number="taxPercent" min="0" max="100" class="w-full text-xs font-bold bg-white rounded-xl border border-slate-200 px-3 py-2 text-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all" placeholder="0">
                             </div>
                         </div>
                     </div>
@@ -491,6 +481,16 @@
                     <div class="flex justify-between items-center bg-indigo-50/50 p-3.5 rounded-2xl border border-indigo-100/50">
                         <span class="text-xs font-bold text-indigo-900 uppercase">Total Tagihan</span>
                         <span class="text-lg font-black text-indigo-750 font-mono" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(grandTotal)">Rp 0</span>
+                    </div>
+
+                    <!-- Kembalian -->
+                    <div class="flex justify-between items-center bg-indigo-50/50 p-3.5 rounded-2xl border border-indigo-100/50" x-show="paymentMethod === 'Tunai'">
+                        <span class="text-xs font-bold text-emerald-900 uppercase">Kembalian</span>
+                        <span class="text-lg font-black font-mono" 
+                              :class="changeAmount < 0 ? 'text-rose-600' : 'text-emerald-700'"
+                              x-text="changeAmount < 0 ? '- Rp ' + new Intl.NumberFormat('id-ID').format(Math.abs(changeAmount)) : 'Rp ' + new Intl.NumberFormat('id-ID').format(changeAmount)">
+                            Rp 0
+                        </span>
                     </div>
                 </div>
                 
@@ -770,10 +770,12 @@
                     return this.cart.reduce((sum, item) => sum + (item.product.price * item.qty), 0);
                 },
                 get discountAmount() {
-                    return (this.subtotal * this.discountPercent) / 100;
+                    const discount = parseFloat(this.discountPercent) || 0;
+                    return (this.subtotal * discount) / 100;
                 },
                 get taxAmount() {
-                    return ((this.subtotal - this.discountAmount) * this.taxPercent) / 100;
+                    const tax = parseFloat(this.taxPercent) || 0;
+                    return ((this.subtotal - this.discountAmount) * tax) / 100;
                 },
                 get grandTotal() {
                     return this.subtotal - this.discountAmount + this.taxAmount;
