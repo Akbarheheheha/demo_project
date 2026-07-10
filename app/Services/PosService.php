@@ -101,11 +101,15 @@ class PosService
             }
 
             // Log activity
+            $customerText = $customerName ? " | Pelanggan: {$customerName}" : '';
             $description = sprintf(
-                "[%s] Membuat Pesanan : [%s] Dan No Invoice-nya: [%s]",
+                "User [%s] membuat transaksi penjualan | Invoice: %s | Items: %s | Total: Rp %s | Bayar: %s%s",
                 auth()->user()->name ?? 'Kasir',
+                $invoice,
                 implode(', ', $productNames),
-                $invoice
+                number_format((float) $totalHarga, 0, ',', '.'),
+                $paymentMethod,
+                $customerText
             );
 
             \App\Models\ActivityLog::create([
