@@ -877,7 +877,19 @@
                         },
                         body: new FormData(form),
                     })
-                    .then(res => res.json())
+                    .then(async (res) => {
+                        const text = await res.text();
+                        let data;
+                        try {
+                            data = JSON.parse(text);
+                        } catch (e) {
+                            const titleMatch = text.match(/<title>([^<]+)<\/title>/i);
+                            const bodyMatch = text.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+                            const cleanBody = bodyMatch ? bodyMatch[1].replace(/<[^>]+>/g, '').trim().substring(0, 200) : '';
+                            throw new Error(titleMatch ? titleMatch[1] : (cleanBody || 'Gagal terhubung ke server, silakan muat ulang halaman'));
+                        }
+                        return data;
+                    })
                     .then(data => {
                         if (data.success) {
                             // Update local stock in real-time so we don't need a page refresh
