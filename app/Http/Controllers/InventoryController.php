@@ -4,14 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Transaction;
+use App\Services\SubscriptionLimiter;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class InventoryController extends Controller
 {
-    /**
-     * Display inventory page.
-     */
+    public function __construct(
+        private readonly SubscriptionLimiter $limiter,
+    ) {}
+
     public function index(Request $request)
     {
         $search = $request->search;
@@ -79,6 +81,8 @@ class InventoryController extends Controller
             'purchase_price' => 'required|numeric|min:0',
             'selling_price' => 'required|numeric|min:0'
         ]);
+
+        $this->limiter->ensure('products');
 
         $product = Product::create([
             'sku' => $validated['sku'],
