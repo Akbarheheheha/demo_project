@@ -43,6 +43,11 @@
                 class="px-4 py-2.5 text-xs font-semibold whitespace-nowrap transition-all duration-150">
             Kelola Kategori
         </button>
+        <button @click="activeTab = 'notes'"
+                :class="activeTab === 'notes' ? 'border-indigo-600 text-indigo-600 font-bold border-b-2' : 'border-transparent text-slate-500 hover:text-slate-700'"
+                class="px-4 py-2.5 text-xs font-semibold whitespace-nowrap transition-all duration-150">
+            Catatan Barang
+        </button>
         @endhasanyrole
     </div>
     
@@ -295,6 +300,64 @@
                             <tr>
                                 <td colspan="4" class="px-6 py-12 text-center text-slate-400">
                                     Belum ada kategori terdaftar.
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANEL C: Catatan Barang -->
+    <div x-show="activeTab === 'notes'" class="space-y-6" style="display: none;">
+    
+       
+
+        <!-- Notes Table Card -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50/50 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                            <th class="px-6 py-4">Judul Catatan</th>
+                            <th class="px-6 py-4">Isi Catatan</th>
+                            <th class="px-6 py-4 text-center">Tanggal Dibuat</th>
+                            <th class="px-6 py-4 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-xs">
+                        <template x-for="note in itemNotes" :key="note.id">
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="px-6 py-3.5">
+                                    <span class="font-bold text-slate-800" x-text="note.title"></span>
+                                </td>
+                                <td class="px-6 py-3.5 text-slate-500" x-text="note.content"></td>
+                                <td class="px-6 py-3.5 text-center text-slate-500">
+                                    <span class="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg font-semibold text-[10px]" x-text="new Date(note.created_at).toLocaleDateString('id-ID')"></span>
+                                </td>
+                                <td class="px-6 py-3.5 text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <button @click="openEditNoteModal(note)" 
+                                                class="p-1.5 rounded-lg border border-slate-200 text-slate-650 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50/50 transition-all">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                        </button>
+                                        <button @click="deleteNote(note)" 
+                                                class="p-1.5 rounded-lg border border-slate-200 text-slate-650 hover:text-rose-600 hover:border-rose-100 hover:bg-rose-50/50 transition-all">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                        <template x-if="itemNotes.length === 0">
+                            <tr>
+                                <td colspan="4" class="px-6 py-12 text-center text-slate-400">
+                                    Belum ada catatan terdaftar.
                                 </td>
                             </tr>
                         </template>
@@ -708,6 +771,48 @@
         </div>
     </div>
 
+    <!-- MODAL 6: Tambah/Edit Catatan -->
+    <div x-show="showNoteModal" 
+         class="fixed inset-0 z-50 overflow-y-auto"
+         style="display: none;">
+         <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="if(!isSaving) showNoteModal = false"></div>
+        
+        <div class="flex min-h-screen items-center justify-center p-4 relative z-10">
+            <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-100 flex flex-col"
+                 x-show="showNoteModal"
+                 x-transition:enter="transition ease-out duration-300 transform scale-95"
+                 x-transition:enter-start="transform scale-95 opacity-0"
+                 x-transition:enter-end="transform scale-100 opacity-100">
+                <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <h3 class="font-bold text-slate-800 text-sm" x-text="noteForm.id ? 'Edit Catatan' : 'Tambah Catatan Baru'"></h3>
+                    <button @click="showNoteModal = false" :disabled="isSaving" class="text-slate-400 hover:text-slate-650">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-500">Judul Catatan</label>
+                        <input type="text" x-model="noteForm.title" placeholder="Contoh: Jadwal stok opname" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white text-slate-800 font-semibold">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-500">Isi Catatan</label>
+                        <textarea x-model="noteForm.content" rows="4" placeholder="Tulis catatan..." class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white text-slate-700"></textarea>
+                    </div>
+                </div>
+                <div class="p-6 border-t border-slate-100 bg-slate-50/50 flex gap-3">
+                    <button @click="showNoteModal = false" :disabled="isSaving" class="flex-1 py-3 border border-slate-200 hover:bg-slate-100 text-slate-650 font-semibold rounded-2xl text-xs transition-colors">
+                        Batal
+                    </button>
+                    <button @click="saveNote()" :disabled="isSaving" class="flex-[2] py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl text-xs flex items-center justify-center gap-2 transition-all">
+                        <span x-text="isSaving ? 'Menyimpan...' : 'Simpan Catatan'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 @push('scripts')
@@ -718,6 +823,7 @@ function inventoryComponent() {
         inventory: @json($inventory),
         mutations: @json($mutations),
         categories: @json($categories),
+        itemNotes: @json($itemNotes ?? []),
         
         // Navigation Tab
         activeTab: 'items', // 'items', 'categories'
@@ -738,10 +844,11 @@ function inventoryComponent() {
         // Modals State
         showAddModal: false,
         showEditModal: false,
-        showStockModal: false, // State baru modal stok
+        showStockModal: false,
         showMutationModal: false,
         showAddCategoryModal: false,
         showEditCategoryModal: false,
+        showNoteModal: false,
         isSaving: false,
         
         // Filters State
@@ -764,6 +871,12 @@ function inventoryComponent() {
         categoryForm: {
             id: null,
             name: ''
+        },
+
+        noteForm: {
+            id: null,
+            title: '',
+            content: ''
         },
 
         stockForm: { // Form fields baru modal stok
@@ -1041,6 +1154,11 @@ function inventoryComponent() {
                             operator: 'Sistem'
                         });
                     }
+                    
+                    // Jika ada catatan baru yang terbentuk di backend, masukkan juga ke panel Catatan Barang
+                    if (response.data.new_note) {
+                        this.itemNotes.unshift(response.data.new_note);
+                    }
                 }
                 this.$dispatch('show-toast', { message: 'Stok barang ' + this.stockForm.name + ' berhasil diupdate!', type: 'success' });
                 this.showStockModal = false;
@@ -1160,6 +1278,61 @@ function inventoryComponent() {
                 } catch (error) {
                     console.error(error);
                     this.$dispatch('show-toast', { message: 'Gagal menghapus kategori.', type: 'danger' });
+                }
+            }
+        },
+
+        // Item Notes CRUD API Helpers
+        openAddNoteModal() {
+            this.noteForm = { id: null, title: '', content: '' };
+            this.showNoteModal = true;
+            this.refreshIcons();
+        },
+
+        openEditNoteModal(note) {
+            this.noteForm = { id: note.id, title: note.title, content: note.content };
+            this.showNoteModal = true;
+            this.refreshIcons();
+        },
+
+        async saveNote() {
+            if (!this.noteForm.title.trim()) {
+                this.$dispatch('show-toast', { message: 'Judul catatan wajib diisi!', type: 'danger' });
+                return;
+            }
+            this.isSaving = true;
+            try {
+                if (this.noteForm.id) {
+                    // Update
+                    const response = await axios.put('/api/item-notes/update/' + this.noteForm.id, this.noteForm);
+                    const updatedNote = response.data.note;
+                    const index = this.itemNotes.findIndex(n => n.id === updatedNote.id);
+                    if (index > -1) this.itemNotes[index] = updatedNote;
+                    this.$dispatch('show-toast', { message: 'Catatan berhasil diperbarui!', type: 'success' });
+                } else {
+                    // Store
+                    const response = await axios.post('/api/item-notes/store', this.noteForm);
+                    this.itemNotes.unshift(response.data.note);
+                    this.$dispatch('show-toast', { message: 'Catatan berhasil dibuat!', type: 'success' });
+                }
+                this.showNoteModal = false;
+            } catch (error) {
+                console.error(error);
+                this.$dispatch('show-toast', { message: 'Gagal menyimpan catatan.', type: 'danger' });
+            } finally {
+                this.isSaving = false;
+            }
+        },
+
+        async deleteNote(note) {
+            if (confirm('Apakah Anda yakin ingin menghapus catatan "' + note.title + '"?')) {
+                try {
+                    await axios.delete('/api/item-notes/delete/' + note.id);
+                    this.itemNotes = this.itemNotes.filter(n => n.id !== note.id);
+                    this.$dispatch('show-toast', { message: 'Catatan telah dihapus!', type: 'danger' });
+                } catch (error) {
+                    console.error(error);
+                    this.$dispatch('show-toast', { message: 'Gagal menghapus catatan.', type: 'danger' });
                 }
             }
         }

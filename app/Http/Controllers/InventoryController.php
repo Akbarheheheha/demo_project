@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Transaction;
+use App\Models\ItemNote;
 use Illuminate\Http\Request;
 
 class InventoryController extends Controller
@@ -61,7 +62,9 @@ class InventoryController extends Controller
             ];
         })->toArray();
 
-        return view('inventory', compact('inventory', 'mutations', 'categories'));
+        $itemNotes = ItemNote::latest()->get();
+
+        return view('inventory', compact('inventory', 'mutations', 'categories', 'itemNotes'));
     }
 
     /**
@@ -135,8 +138,23 @@ class InventoryController extends Controller
         }
         
         // Kalkulasi ulang dengan aman di level backend
+        $newNote = null;
         if ($request->has('tambah_stok') || $request->has('stok_kadaluarsa')) {
             $validated['stock'] = max(0, $product->stock + $tambah - $rusak);
+            
+            if (!empty($request->input('catatan'))) {
+                $title = 'Catatan Stok: ' . $product->name;
+                if ($rusak > 0) {
+                    $title .= ' (Rusak/Expired: -' . $rusak . ')';
+                } elseif ($tambah > 0) {
+                    $title .= ' (Tambah: +' . $tambah . ')';
+                }
+
+                $newNote = ItemNote::create([
+                    'title' => $title,
+                    'content' => $request->input('catatan')
+                ]);
+            }
         }
 
         $product->update([
@@ -160,7 +178,8 @@ class InventoryController extends Controller
                 'min_stock' => $product->min_stock,
                 'purchase_price' => (float) $product->purchase_price,
                 'selling_price' => (float) $product->price
-            ]
+            ],
+            'new_note' => $newNote
         ]);
     }
 
@@ -171,6 +190,55 @@ class InventoryController extends Controller
     {
         $product = Product::findOrFail($id);
         $product->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Store a new item note.
+     */
+    public function storeNote(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'content' => 'nullable|string'
+        ]);
+
+        $note = ItemNote::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'note' => $note
+        ]);
+    }
+
+    /**
+     * Update an item note.
+     */
+    public function updateNote(Request $request, $id)
+    {
+        $note = ItemNote::findOrFail($id);
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'content' => 'nullable|string'
+        ]);
+
+        $note->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'note' => $note
+        ]);
+    }
+
+    /**
+     * Delete an item note.
+     */
+    public function destroyNote($id)
+    {
+        $note = ItemNote::findOrFail($id);
+        $note->delete();
 
         return response()->json(['success' => true]);
     }
