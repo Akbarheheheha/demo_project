@@ -371,7 +371,7 @@
                                 class="flex items-center gap-2.5 rounded-xl p-1.5 bg-white/20 border border-indigo-500/60 focus:outline-none transition-all duration-200">
                             <img class="h-8.5 w-8.5 rounded-lg object-cover border border-slate-200" 
                                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100&h=100" 
-                                  alt="Profile">
+                                  alt="Profile" width="34" height="34" loading="lazy">
                             <div class="hidden lg:block text-left pr-2">
                                 <h4 class="text-xs font-bold text-slate-800">{{ auth()->user()->name }}</h4>
                                 <p class="text-[9px] text-indigo-600 font-mono tracking-wider font-semibold uppercase">{{ auth()->user()->roles->pluck('name')->implode(', ') }}</p>

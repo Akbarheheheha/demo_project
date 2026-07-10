@@ -6,7 +6,8 @@
 @section('content')
 <div class="space-y-6"
      x-data="inventoryComponent()"
-     x-effect="stockFilter; selectedCategory; searchQuery; filteredInventory.length; refreshIcons()">
+     x-effect="refreshIcons()"
+     x-init="$watch('searchQuery', () => currentPage = 1); $watch('selectedCategory', () => currentPage = 1); $watch('stockFilter', () => currentPage = 1)">
 
     <!-- Page Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -129,7 +130,7 @@
                         </template>
                         
                         <!-- Table rows -->
-                        <template x-for="item in filteredInventory" :key="item.id">
+                        <template x-for="item in paginatedInventory" :key="item.id">
                             <tr class="hover:bg-slate-50/60 transition-colors">
                                 <!-- SKU -->
                                 <td class="px-6 py-3.5 font-bold text-slate-800" x-text="item.sku"></td>
@@ -224,6 +225,30 @@
                         </template>
                     </tbody>
                 </table>
+            </div>
+            
+            <!-- Pagination Controls -->
+            <div class="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/50 gap-4" x-show="filteredInventory.length > itemsPerPage">
+                <div class="text-xs text-slate-500">
+                    Menampilkan <span class="font-bold text-slate-700" x-text="filteredInventory.length === 0 ? 0 : ((currentPage - 1) * itemsPerPage + 1)"></span> - 
+                    <span class="font-bold text-slate-700" x-text="Math.min(currentPage * itemsPerPage, filteredInventory.length)"></span> 
+                    dari <span class="font-bold text-slate-700" x-text="filteredInventory.length"></span> barang
+                </div>
+                <div class="flex items-center gap-1">
+                    <button @click="if(currentPage > 1) currentPage--" 
+                            :disabled="currentPage === 1"
+                            class="px-2 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-semibold">
+                        Sebelumnya
+                    </button>
+                    
+                    <span class="text-xs font-semibold text-slate-500 px-2">Hal <span x-text="currentPage"></span> dari <span x-text="totalPages"></span></span>
+                    
+                    <button @click="if(currentPage < totalPages) currentPage++" 
+                            :disabled="currentPage === totalPages"
+                            class="px-2 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-semibold">
+                        Selanjutnya
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -786,6 +811,19 @@ function inventoryComponent() {
                 
                 return matchesCategory && matchesSearch && matchesStock;
             });
+        },
+        
+        // Pagination logic
+        currentPage: 1,
+        itemsPerPage: 15,
+        
+        get totalPages() {
+            return Math.ceil(this.filteredInventory.length / this.itemsPerPage) || 1;
+        },
+        
+        get paginatedInventory() {
+            const start = (this.currentPage - 1) * this.itemsPerPage;
+            return this.filteredInventory.slice(start, start + this.itemsPerPage);
         },
         
         // Helper to check stock status
