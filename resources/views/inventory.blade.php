@@ -527,12 +527,35 @@
 
                     <!-- Input Tambahan Qty -->
                     <div class="space-y-1.5">
-                        <label class="text-xs font-bold text-slate-500">jumlah stok yang ingin di tambah</label>
+                        <label class="text-xs font-bold text-slate-500">Jumlah Stok yang Ingin Ditambah</label>
                         <div class="flex items-center gap-2 bg-slate-105 border border-slate-200/50 rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:border-indigo-400 transition-all">
                             <input type="number" 
-                                   min="1" 
+                                   min="0" 
                                    x-model.number="stockForm.qty_add" 
-                                   placeholder="Masukkan qty tambahan..." 
+                                   placeholder="0" 
+                                   class="bg-transparent border-none text-xs focus:outline-none w-full text-slate-700 font-bold p-0">
+                        </div>
+                    </div>
+
+                    <!-- Input Stok Kadaluarsa/Rusak -->
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-500">Jumlah Stok Kadaluarsa/Rusak</label>
+                        <div class="flex items-center gap-2 bg-slate-105 border border-slate-200/50 rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:border-indigo-400 transition-all">
+                            <input type="number" 
+                                   min="0" 
+                                   x-model.number="stockForm.qty_expired" 
+                                   placeholder="0" 
+                                   class="bg-transparent border-none text-xs focus:outline-none w-full text-slate-700 font-bold p-0">
+                        </div>
+                    </div>
+
+                    <!-- Input Catatan (required if qty_expired > 0) -->
+                    <div class="space-y-1.5" x-show="stockForm.qty_expired > 0">
+                        <label class="text-xs font-bold text-slate-500">Catatan <span class="text-rose-500">*</span></label>
+                        <div class="flex items-center gap-2 bg-slate-105 border border-slate-200/50 rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:border-indigo-400 transition-all">
+                            <input type="text" 
+                                   x-model="stockForm.note" 
+                                   placeholder="Contoh: Barang kadaluarsa dibuang..." 
                                    class="bg-transparent border-none text-xs focus:outline-none w-full text-slate-700 font-bold p-0">
                         </div>
                     </div>
@@ -540,7 +563,7 @@
                     <!-- Info Total Stok Baru (Live Preview) -->
                     <div class="flex justify-between items-center p-3 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-100">
                         <span class="text-xs font-bold">Estimasi Stok Baru:</span>
-                        <span class="text-sm font-black" x-text="(parseInt(stockForm.stock) + (parseInt(stockForm.qty_add) || 0)) + ' pcs'"></span>
+                        <span class="text-sm font-black" x-text="Math.max(0, parseInt(stockForm.stock) + (parseInt(stockForm.qty_add) || 0) - (parseInt(stockForm.qty_expired) || 0)) + ' pcs'"></span>
                     </div>
                 </div>
                 
@@ -881,7 +904,9 @@ function inventoryComponent() {
                 sku: item.sku,
                 name: item.name,
                 stock: item.stock,
-                qty_add: 0
+                qty_add: 0,
+                qty_expired: 0,
+                note: ''
             };
             this.showStockModal = true;
             this.refreshIcons();
@@ -993,9 +1018,16 @@ function inventoryComponent() {
 
         // Add/Update Stock (Axios PUT)
         async addStock() {
-            const addQty = parseInt(this.stockForm.qty_add, 10);
-            if (Number.isNaN(addQty) || addQty <= 0) {
-                this.$dispatch('show-toast', { message: 'Jumlah tambahan stok harus minimal 1!', type: 'danger' });
+            const addQty = parseInt(this.stockForm.qty_add, 10) || 0;
+            const expiredQty = parseInt(this.stockForm.qty_expired, 10) || 0;
+            
+            if (addQty === 0 && expiredQty === 0) {
+                this.$dispatch('show-toast', { message: 'Masukkan jumlah tambah atau kadaluarsa!', type: 'danger' });
+                return;
+            }
+
+            if (expiredQty > 0 && !this.stockForm.note.trim()) {
+                this.$dispatch('show-toast', { message: 'Catatan wajib diisi jika ada stok kadaluarsa/rusak!', type: 'danger' });
                 return;
             }
             
@@ -1007,7 +1039,7 @@ function inventoryComponent() {
             
             this.isSaving = true;
             try {
-                const newTotalStock = parseInt(this.stockForm.stock, 10) + addQty;
+                const newTotalStock = Math.max(0, parseInt(this.stockForm.stock, 10) + addQty - expiredQty);
                 const response = await axios.put('/api/inventory/update/' + this.stockForm.id, {
                     sku: product.sku,
                     name: product.name,
@@ -1015,25 +1047,40 @@ function inventoryComponent() {
                     stock: newTotalStock,
                     min_stock: product.min_stock,
                     purchase_price: product.purchase_price,
-                    selling_price: product.selling_price || product.price
+                    selling_price: product.selling_price || product.price,
+                    tambah_stok: addQty,
+                    stok_kadaluarsa: expiredQty,
+                    catatan: this.stockForm.note
                 });
                 
                 const index = this.inventory.findIndex(item => item.id === this.stockForm.id);
                 if (index > -1) {
                     this.inventory[index].stock = newTotalStock;
                     
-                    // Add stock log to mutations timeline
-                    this.mutations.unshift({
-                        date: new Date().toISOString().slice(0, 16).replace('T', ' '),
-                        sku: this.stockForm.sku,
-                        name: this.stockForm.name,
-                        type: 'IN',
-                        qty: addQty,
-                        ref: 'TAMBAH-STOK',
-                        operator: 'Sistem'
-                    });
+                    if (addQty > 0) {
+                        this.mutations.unshift({
+                            date: new Date().toISOString().slice(0, 16).replace('T', ' '),
+                            sku: this.stockForm.sku,
+                            name: this.stockForm.name,
+                            type: 'IN',
+                            qty: addQty,
+                            ref: 'TAMBAH-STOK',
+                            operator: 'Sistem'
+                        });
+                    }
+                    if (expiredQty > 0) {
+                        this.mutations.unshift({
+                            date: new Date().toISOString().slice(0, 16).replace('T', ' '),
+                            sku: this.stockForm.sku,
+                            name: this.stockForm.name,
+                            type: 'OUT',
+                            qty: expiredQty,
+                            ref: 'RUSAK/EXP - ' + this.stockForm.note,
+                            operator: 'Sistem'
+                        });
+                    }
                 }
-                this.$dispatch('show-toast', { message: 'Stok barang ' + this.stockForm.name + ' berhasil ditambahkan!', type: 'success' });
+                this.$dispatch('show-toast', { message: 'Stok barang ' + this.stockForm.name + ' berhasil diupdate!', type: 'success' });
                 this.showStockModal = false;
             } catch (error) {
                 console.error(error);

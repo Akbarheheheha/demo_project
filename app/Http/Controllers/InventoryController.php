@@ -123,8 +123,26 @@ class InventoryController extends Controller
             'stock' => 'required|integer|min:0',
             'min_stock' => 'required|integer|min:0',
             'purchase_price' => 'required|numeric|min:0',
-            'selling_price' => 'required|numeric|min:0'
+            'selling_price' => 'required|numeric|min:0',
+            'tambah_stok' => 'nullable|integer|min:0',
+            'stok_kadaluarsa' => 'nullable|integer|min:0',
+            'catatan' => 'nullable|string'
         ]);
+
+        $tambah = $request->input('tambah_stok', 0);
+        $rusak = $request->input('stok_kadaluarsa', 0);
+
+        if ($rusak > 0 && empty($request->input('catatan'))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Catatan wajib diisi jika ada stok kadaluarsa/rusak.'
+            ], 422);
+        }
+        
+        // Kalkulasi ulang dengan aman di level backend
+        if ($request->has('tambah_stok') || $request->has('stok_kadaluarsa')) {
+            $validated['stock'] = max(0, $product->stock + $tambah - $rusak);
+        }
 
         $product->update([
             'sku' => $validated['sku'],
