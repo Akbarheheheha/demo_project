@@ -106,6 +106,15 @@
                         @php
                             $action = strtoupper($log->action);
                             
+                            // Human-readable action labels
+                            $actionLabels = [
+                                'product.created' => 'Tambah Barang',
+                                'product.updated' => 'Ubah Barang',
+                                'product.deleted' => 'Hapus Barang',
+                                'create transaction' => 'Transaksi Baru',
+                            ];
+                            $displayAction = $actionLabels[strtolower($log->action)] ?? $action;
+                            
                             // Color scheme mapping
                             $badgeClass = 'bg-slate-100 text-slate-700 border-slate-200';
                             $dotColor = 'bg-slate-400';
@@ -126,6 +135,11 @@
                                 $badgeClass = 'bg-slate-100 text-slate-650 border-slate-200';
                                 $dotColor = 'bg-slate-500';
                             }
+                            
+                            // Parse structured description details
+                            $descriptionParts = explode(' | ', $log->description);
+                            $mainDescription = $descriptionParts[0];
+                            $detailParts = array_slice($descriptionParts, 1);
                         @endphp
                         <tr class="hover:bg-slate-50/70 transition-colors">
                             <!-- Time Column -->
@@ -153,14 +167,31 @@
                             <td class="px-6 py-4.5 whitespace-nowrap">
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border {{ $badgeClass }}">
                                     <span class="h-1.5 w-1.5 rounded-full {{ $dotColor }}"></span>
-                                    <span>{{ $action }}</span>
+                                    <span>{{ $displayAction }}</span>
                                 </span>
                             </td>
                             
                             <!-- Description Column -->
                             <td class="px-6 py-4.5">
                                 <div class="text-slate-700 font-medium break-words max-w-xl">
-                                    {{ $log->description }}
+                                    <span>{{ $mainDescription }}</span>
+                                    @if(count($detailParts) > 0)
+                                        <div class="mt-1.5 flex flex-wrap gap-1.5">
+                                            @foreach($detailParts as $detail)
+                                                @php
+                                                    $parts = explode(': ', $detail, 2);
+                                                    $label = $parts[0] ?? '';
+                                                    $value = $parts[1] ?? $detail;
+                                                @endphp
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200 text-[11px] font-mono text-slate-600">
+                                                    @if($label && isset($parts[1]))
+                                                        <span class="text-slate-400 font-semibold">{{ $label }}:</span>
+                                                    @endif
+                                                    <span>{{ $value }}</span>
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

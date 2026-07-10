@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\ActivityLog;
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,33 +14,62 @@ class ProductObserver
         $this->record(
             'product.created',
             sprintf(
-                'User [%s] menambahkan barang [%s].',
+                'User [%s] menambahkan barang baru: [%s] | SKU: %s | Harga: Rp %s | Stok: %s | Stok Minimum: %s | Kategori: %s',
                 $this->userName(),
-                $product->name
+                $product->name,
+                $product->sku ?? '-',
+                number_format((float) $product->price, 0, ',', '.'),
+                $product->stock,
+                $product->min_stock,
+                $product->category ?? 'Umum'
             )
         );
     }
 
     public function updated(Product $product): void
     {
-        if ($product->wasChanged('price')) {
+        $changedFields = [];
+        $dirty = $product->getDirty();
+
+        foreach ($dirty as $field => $newValue) {
+            if (in_array($field, ['updated_at'])) {
+                continue;
+            }
+
+            $oldValue = $product->getOriginal($field);
+
+            $changedFields[] = match ($field) {
+                'name' => sprintf('nama dari "%s" menjadi "%s"', $oldValue, $newValue),
+                'sku' => sprintf('SKU dari %s menjadi %s', $oldValue ?: '-', $newValue ?: '-'),
+                'price' => sprintf(
+                    'harga jual dari Rp %s menjadi Rp %s',
+                    number_format((float) $oldValue, 0, ',', '.'),
+                    number_format((float) $newValue, 0, ',', '.')
+                ),
+                'purchase_price' => sprintf(
+                    'harga beli dari Rp %s menjadi Rp %s',
+                    number_format((float) $oldValue, 0, ',', '.'),
+                    number_format((float) $newValue, 0, ',', '.')
+                ),
+                'stock' => sprintf('stok dari %s menjadi %s', $oldValue, $newValue),
+                'min_stock' => sprintf('stok minimum dari %s menjadi %s', $oldValue, $newValue),
+                'category_id' => sprintf(
+                    'kategori dari %s menjadi %s',
+                    Category::find($oldValue)?->name ?? 'Umum',
+                    Category::find($newValue)?->name ?? 'Umum'
+                ),
+                default => sprintf('%s: %s → %s', $field, $oldValue, $newValue),
+            };
+        }
+
+        if (!empty($changedFields)) {
             $this->record(
                 'product.updated',
                 sprintf(
-                    'User [%s] mengubah harga barang [%s] dari Rp %s menjadi Rp %s.',
+                    'User [%s] mengubah data barang [%s] — %s.',
                     $this->userName(),
                     $product->name,
-                    number_format((float) $product->getOriginal('price'), 0, ',', '.'),
-                    number_format((float) $product->price, 0, ',', '.')
-                )
-            );
-        } else {
-            $this->record(
-                'product.updated',
-                sprintf(
-                    'User [%s] mengubah data barang [%s].',
-                    $this->userName(),
-                    $product->name
+                    implode('; ', $changedFields)
                 )
             );
         }
@@ -82,9 +112,13 @@ class ProductObserver
         $this->record(
             'product.deleted',
             sprintf(
-                'User [%s] menghapus barang [%s].',
+                'User [%s] menghapus barang: [%s] (SKU: %s | Harga: Rp %s | Stok: %s | Kategori: %s)',
                 $this->userName(),
-                $product->name
+                $product->name,
+                $product->sku ?? '-',
+                number_format((float) $product->price, 0, ',', '.'),
+                $product->stock,
+                $product->category ?? 'Umum'
             )
         );
     }
