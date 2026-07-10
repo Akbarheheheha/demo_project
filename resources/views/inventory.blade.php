@@ -37,7 +37,7 @@
                 class="px-4 py-2.5 text-xs font-semibold whitespace-nowrap transition-all duration-150">
             Daftar Inventaris
         </button>
-        @hasanyrole('Super Admin|Manager|Gudang')
+        @hasanyrole('Super Admin|Manager|Gudang|Tenant Owner')
         <button @click="activeTab = 'categories'"
                 :class="activeTab === 'categories' ? 'border-indigo-600 text-indigo-600 font-bold border-b-2' : 'border-transparent text-slate-500 hover:text-slate-700'"
                 class="px-4 py-2.5 text-xs font-semibold whitespace-nowrap transition-all duration-150">
@@ -190,7 +190,7 @@
                                             </svg>
                                         </button>
                                         
-                                        @hasanyrole('Super Admin|Manager|Gudang')
+                                        @hasanyrole('Super Admin|Manager|Gudang|Tenant Owner')
                                         <!-- Edit Info -->
                                         <button @click="openEditModal(item)"
                                                 title="Edit Informasi Barang"
@@ -229,7 +229,7 @@
     </div>
 
     <!-- PANEL B: Kelola Kategori -->
-    @hasanyrole('Super Admin|Manager|Gudang')
+    @hasanyrole('Super Admin|Manager|Gudang|Tenant Owner')
     <div x-show="activeTab === 'categories'" class="space-y-6" style="display: none;">
         <!-- Header Panel Kategori -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
@@ -263,17 +263,15 @@
                             <tr class="hover:bg-slate-50/50 transition-colors">
                                 <td class="px-6 py-3.5">
                                     <div class="flex items-center gap-3">
-                                        <div class="h-8 w-8 rounded-full border-2 border-indigo-500 bg-transparent flex items-center justify-center text-indigo-600 font-bold text-xs shadow-sm">
+                                        <div class="h-8 w-8 rounded-full bg-gradient-to-tr from-violet-500 to-indigo-500 flex items-center justify-center text-white font-bold text-xs shadow-sm">
                                             <span x-text="cat.name.substring(0, 2).toUpperCase()"></span>
                                         </div>
-                                        <span class="font-bold text-sm text-slate-800" x-text="cat.name"></span>
+                                        <span class="font-bold text-slate-800" x-text="cat.name"></span>
                                     </div>
                                 </td>
-                                <td class="px-6 py-3.5 text-slate-550 font-mono text-[11px]">
-                                    <span class="px-2.5 py-1 bg-slate-100 text-indigo-700 rounded-lg font-semibold text-xs" x-text="cat.slug"></span>
-                                </td>
+                                <td class="px-6 py-3.5 text-slate-550 font-mono text-[11px]" x-text="cat.slug"></td>
                                 <td class="px-6 py-3.5">
-                                    <span class="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg font-semibold text-xs" x-text="cat.products_count + ' Produk'"></span>
+                                    <span class="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg font-semibold text-[10px]" x-text="cat.products_count + ' Produk'"></span>
                                 </td>
                                 <td class="px-6 py-3.5 text-center">
                                     <div class="flex items-center justify-center gap-2">

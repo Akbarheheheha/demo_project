@@ -170,7 +170,7 @@
             <!-- Sidebar Navigation Links -->
             <nav class="flex-1 space-y-1.5 px-3 py-6" @click="if(window.innerWidth < 768) sidebarOpen = false">
                 <!-- Dashboard Link -->
-                @hasanyrole('Super Admin|Manager')
+                @hasanyrole('Super Admin|Manager|Tenant Owner')
                 <a href="{{ route($rolePrefix . '.dashboard') }}" 
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
                    :class="activePage === 'dashboard' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'"
@@ -182,7 +182,7 @@
 
                 
                 <!-- Kasir / POS Link -->
-                @hasanyrole('Kasir|Super Admin')
+                @hasanyrole('Kasir|Super Admin|Tenant Owner')
                 <a href="{{ route('pos') }}" 
                    data-spa-ignore
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
@@ -194,7 +194,7 @@
                 @endhasanyrole
                 
                 <!-- Inventaris Link -->
-                @hasanyrole('Super Admin|Manager|Gudang')
+                @hasanyrole('Super Admin|Manager|Gudang|Tenant Owner')
                 <a href="{{ route($rolePrefix . '.inventory') }}" 
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
                    :class="activePage === 'inventory' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'"
@@ -205,7 +205,7 @@
                 @endhasanyrole
                 
                 <!-- Laporan Link -->
-                @hasanyrole('Super Admin|Manager')
+                @hasanyrole('Super Admin|Manager|Tenant Owner')
                 <a href="{{ route($rolePrefix . '.reports') }}" 
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
                    :class="activePage === 'reports' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white' "
@@ -232,8 +232,8 @@
                 </a>
                 @endhasanyrole
                 
-                <!-- Pengaturan Link (Super Admin Only) -->
-                @role('Super Admin')
+                <!-- Pengaturan Link (Super Admin & Tenant Owner) -->
+                @hasanyrole('Super Admin|Tenant Owner')
                 <a href="{{ route('admin.settings') }}" 
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
                    :class="activePage === 'settings' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'"
@@ -241,18 +241,18 @@
                     <i data-lucide="settings" class="w-5 h-5 flex-shrink-0"></i>
                     <span x-show="sidebarOpen" x-transition.opacity>Pengaturan</span>
                 </a>
-                @endrole
+                @endhasanyrole
             </nav>
             
             <!-- Sidebar Footer / UMKM Info -->
             <div class="absolute bottom-0 w-full p-4 border-t border-slate-800 bg-slate-950/40">
                 <div class="flex items-center gap-3" :class="sidebarOpen ? 'justify-start' : 'justify-center'">
                     <div class="h-9 w-9 rounded-full bg-slate-800 flex items-center justify-center text-indigo-400 font-semibold border border-indigo-500/20 flex-shrink-0">
-                        KB
+                        {{ Str::upper(Str::substr(auth()->user()->store?->name ?? 'SmartBiz', 0, 2)) }}
                     </div>
                     <div class="overflow-hidden" x-show="sidebarOpen" x-transition.opacity>
-                        <h4 class="text-sm font-semibold text-white truncate">Kios Berkah Raya</h4>
-                        <p class="text-[10px] text-slate-400">UMKM Retail & Kelontong</p>
+                        <h4 class="text-sm font-semibold text-white truncate">{{ auth()->user()->store?->name ?? 'SmartBiz' }}</h4>
+                        <p class="text-[10px] text-slate-400">Mini ERP & Advanced POS</p>
                     </div>
                 </div>
             </div>
@@ -393,7 +393,7 @@
                                 Profil Saya
                             </a>
                             
-                            @hasanyrole('Super Admin|Manager')
+                            @hasanyrole('Super Admin|Manager|Tenant Owner')
                             <a href="{{ route($rolePrefix . '.settings') }}"
                                class="flex items-center gap-2.5 px-3 py-2.5 text-xs rounded-xl font-bold text-slate-200 hover:bg-white/10 hover:text-white transition-colors">
                                 <i data-lucide="settings" class="w-4 h-4 text-slate-355"></i>
@@ -437,6 +437,9 @@
         window.history.replaceState({ url: window.location.href }, document.title, window.location.href);
 
         const _loadedScripts = new Set();
+        const _pageCache = new Map();
+        const _CACHE_MAX = 10;
+        let _currentAbort = null;
 
         document.addEventListener('click', function(e) {
             const link = e.target.closest('a');
@@ -474,68 +477,119 @@
             return unwrapped;
         }
 
+        function updateProgress(pct) {
+            let bar = document.getElementById('spa-progressbar');
+            if (!bar) {
+                bar = document.createElement('div');
+                bar.id = 'spa-progressbar';
+                document.body.appendChild(bar);
+            }
+            bar.style.width = pct + '%';
+            bar.style.opacity = '1';
+        }
+
         function spaNavigate(url, pushState) {
             if (pushState === undefined) pushState = true;
 
-            let progress = document.getElementById('spa-progressbar');
-            if (!progress) {
-                progress = document.createElement('div');
-                progress.id = 'spa-progressbar';
-                document.body.appendChild(progress);
-            }
-            progress.style.width = '10%';
-            progress.style.opacity = '1';
+            if (_currentAbort) _currentAbort.abort();
+            const abortController = new AbortController();
+            _currentAbort = abortController;
+
+            if (url === window.location.href) return;
+
+            updateProgress(10);
+
+            // Disable SPA Cache to prevent stale data (e.g., Reports not updating after adding expenses)
+            // const cached = _pageCache.get(url);
+            // if (cached) {
+            //     updateProgress(60);
+            //     renderSPAContent(cached.html, url, pushState, cached.title, cached.activePage);
+            //     updateProgress(100);
+            //     setTimeout(function() {
+            //         const bar = document.getElementById('spa-progressbar');
+            //         if (bar) { bar.style.opacity = '0'; setTimeout(function() { bar.style.width = '0%'; }, 300); }
+            //     }, 100);
+            //     return;
+            // }
 
             let w = 10;
             const interval = setInterval(function() {
-                if (w < 80) { w += 10; progress.style.width = w + '%'; }
-            }, 100);
+                if (w < 70) { w += 8; updateProgress(w); }
+            }, 120);
 
-            axios.get(url, { headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache', 'Expires': '0' } })
+            // Create a cache-busting URL to prevent browser disk cache from serving stale HTML
+            const fetchUrl = new URL(url);
+            fetchUrl.searchParams.set('_t', Date.now());
+
+            axios.get(fetchUrl.toString(), {
+                signal: abortController.signal,
+                headers: { 
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
+            })
                 .then(function(response) {
                     clearInterval(interval);
-                    progress.style.width = '100%';
+                    updateProgress(100);
 
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(response.data, 'text/html');
-
-                    const currentMain = document.querySelector('main');
-                    if (currentMain && window.Alpine) {
-                        currentMain.querySelectorAll('[x-data]').forEach(function(el) {
-                            if (el._x_dataStack) { try { Alpine.destroyTree(el); } catch(e) {} }
-                        });
-                    }
-
-                    const newMain = doc.querySelector('main');
-                    if (newMain && currentMain) {
-                        currentMain.innerHTML = newMain.innerHTML;
-                    }
-
-                    document.title = doc.title;
-                    if (pushState) window.history.pushState({ url: url }, doc.title, url);
-
                     const activePage = doc.body.getAttribute('data-active-page') || 'dashboard';
-                    window.dispatchEvent(new CustomEvent('set-active-page', { detail: activePage }));
+                    const docTitle = doc.title;
 
-                    const layoutScripts = ['function spaNavigate(', 'window.history.replaceState', 'window.Alpine = Alpine'];
-                    const scripts = Array.from(doc.querySelectorAll('script')).filter(function(s) {
-                        if (s.type === 'module') return false;
-                        const text = s.innerHTML;
-                        return !layoutScripts.some(function(p) { return text.includes(p); });
-                    });
+                    if (_pageCache.size >= _CACHE_MAX) {
+                        const firstKey = _pageCache.keys().next().value;
+                        _pageCache.delete(firstKey);
+                    }
+                    _pageCache.set(url, { html: response.data, title: docTitle, activePage: activePage });
 
-                    executeScriptsAsync(scripts).then(function() {
-                        setTimeout(function() {
-                            progress.style.opacity = '0';
-                            setTimeout(function() { progress.style.width = '0%'; }, 300);
-                        }, 100);
-                    });
+                    renderSPAContent(response.data, url, pushState, docTitle, activePage);
+
+                    setTimeout(function() {
+                        const bar = document.getElementById('spa-progressbar');
+                        if (bar) { bar.style.opacity = '0'; setTimeout(function() { bar.style.width = '0%'; }, 300); }
+                    }, 100);
                 })
                 .catch(function(err) {
                     clearInterval(interval);
+                    if (err.name === 'CanceledError' || err.name === 'AbortError') return;
                     console.error('SPA error, redirecting:', err);
                     window.location.href = url;
                 });
+        }
+
+        function renderSPAContent(html, url, pushState, docTitle, activePage) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            const currentMain = document.querySelector('main');
+            if (currentMain && window.Alpine) {
+                currentMain.querySelectorAll('[x-data]').forEach(function(el) {
+                    if (el._x_dataStack) { try { Alpine.destroyTree(el); } catch(e) {} }
+                });
+            }
+
+            const newMain = doc.querySelector('main');
+            if (newMain && currentMain) {
+                currentMain.innerHTML = newMain.innerHTML;
+            }
+
+            document.title = docTitle || doc.title;
+            if (pushState) window.history.pushState({ url: url }, document.title, url);
+
+            const page = activePage || doc.body.getAttribute('data-active-page') || 'dashboard';
+            window.dispatchEvent(new CustomEvent('set-active-page', { detail: page }));
+
+            const layoutScripts = ['function spaNavigate(', 'window.history.replaceState', 'window.Alpine = Alpine'];
+            const scripts = Array.from(doc.querySelectorAll('script')).filter(function(s) {
+                if (s.type === 'module') return false;
+                const text = s.innerHTML;
+                return !layoutScripts.some(function(p) { return text.includes(p); });
+            });
+
+            executeScriptsAsync(scripts);
         }
 
         async function executeScriptsAsync(scripts) {
