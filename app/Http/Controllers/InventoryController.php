@@ -117,7 +117,7 @@ class InventoryController extends Controller
         $product = Product::findOrFail($id);
 
         $validated = $request->validate([
-            'sku' => ['required', 'string', Rule::unique('products')->where('store_id', auth()->user()->store_id)]->ignore($product->id),
+            'sku' => ['required', 'string', Rule::unique('products')->where('store_id', auth()->user()->store_id)->ignore($product->id)],
             'name' => 'required|string|max:255',
             'category' => 'required|string',
             'stock' => 'required|integer|min:0',
