@@ -25,10 +25,6 @@ class Product extends Model
         'min_stock',
     ];
 
-    protected $appends = [
-        'category',
-    ];
-
     /**
      * Get the category relationship.
      */
