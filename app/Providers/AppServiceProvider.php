@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Models\Product;
+use App\Models\Scopes\TenantScope;
 use App\Observers\ProductObserver;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -18,6 +20,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Builder::macro('withoutTenancy', function () {
+            return $this->withoutGlobalScope(TenantScope::class);
+        });
+
         Product::observe(ProductObserver::class);
 
         view()->composer('*', function ($view) {
