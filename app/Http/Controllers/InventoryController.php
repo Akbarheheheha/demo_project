@@ -79,8 +79,8 @@ class InventoryController extends Controller
             'sku' => ['required', 'string', Rule::unique('products')->where('store_id', auth()->user()->store_id)],          
             'name' => 'required|string|max:255',
             'category' => 'required|string',
-            'stock' => 'required|integer|min:0',
-            'min_stock' => 'required|integer|min:0',
+            'stock' => 'required|integer|min:1',
+            'min_stock' => 'required|integer|min:1',
             'purchase_price' => 'required|numeric|min:0',
             'selling_price' => 'required|numeric|min:0'
         ]);
@@ -124,7 +124,7 @@ class InventoryController extends Controller
             'name' => 'required|string|max:255',
             'category' => 'required|string',
             'stock' => 'required|integer|min:0',
-            'min_stock' => 'required|integer|min:0',
+            'min_stock' => 'required|integer|min:1',
             'purchase_price' => 'required|numeric|min:0',
             'selling_price' => 'required|numeric|min:0',
             'tambah_stok' => 'nullable|integer|min:0',

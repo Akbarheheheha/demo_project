@@ -32,7 +32,7 @@ Route::middleware(['auth.custom'])->group(function () {
         $user = auth()->user();
         if ($user->hasRole('Kasir'))      return redirect()->route('pos');
         if ($user->hasRole('Gudang'))     return redirect()->route('gudang.inventory');
-        if ($user->hasRole('Super Admin')) return redirect()->route('platform.stores.index'); // Redirect Super Admin ke Platform
+        if ($user->hasRole('Super Admin')) return redirect()->route('admin.dashboard');
         if ($user->hasRole('Manager'))    return redirect()->route('manager.dashboard');
         if ($user->hasRole('Tenant Owner')) return redirect()->route('admin.dashboard');
         return redirect()->route('login');

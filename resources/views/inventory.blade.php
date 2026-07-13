@@ -416,6 +416,23 @@
                 </div>
                 
                 <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                    <!-- Validation Errors -->
+                    <div x-show="showValidationErrors && validationErrors.length > 0"
+                         class="bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 text-[11px] space-y-1">
+                        <div class="font-bold flex items-center gap-1.5 mb-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span>Harap lengkapi data berikut:</span>
+                        </div>
+                        <template x-for="(error, index) in validationErrors" :key="index">
+                            <div class="flex items-start gap-2 pl-1">
+                                <span class="text-red-400 mt-0.5">•</span>
+                                <span x-text="error"></span>
+                            </div>
+                        </template>
+                    </div>
+
                     <!-- SKU Field -->
                     <div class="space-y-1.5">
                         <label class="text-xs font-bold text-slate-500">Kode SKU</label>
@@ -442,11 +459,11 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-slate-500">Stok Awal</label>
-                            <input type="number" x-model.number="form.stock" @focus="if(form.stock === 0 || form.stock === '0') form.stock = ''" @blur="if(form.stock === '') form.stock = 0" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white">
+                            <input type="number" x-model.number="form.stock" @focus="if(form.stock === 0 || form.stock === '0') form.stock = ''" @blur="if(form.stock === '') form.stock = 1" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white">
                         </div>
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-slate-500">Batas Stok Minimum</label>
-                            <input type="number" x-model.number="form.min_stock" @focus="if(form.min_stock === 0 || form.min_stock === '0') form.min_stock = ''" @blur="if(form.min_stock === '') form.min_stock = 0" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white">
+                            <input type="number" x-model.number="form.min_stock" @focus="if(form.min_stock === 0 || form.min_stock === '0') form.min_stock = ''" @blur="if(form.min_stock === '') form.min_stock = 1" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white">
                         </div>
                     </div>
                     
@@ -875,6 +892,8 @@ function inventoryComponent() {
         showEditCategoryModal: false,
         showNoteModal: false,
         isSaving: false,
+        showValidationErrors: false,
+        validationErrors: [],
         
         // Filters State
         searchQuery: '',
@@ -995,6 +1014,8 @@ function inventoryComponent() {
         
         // Open Add Modal
         openAddModal() {
+            this.validationErrors = [];
+            this.showValidationErrors = false;
             this.resetForm();
             // Generate Auto SKU
             const random = Math.floor(1000 + Math.random() * 9000);
@@ -1032,10 +1053,46 @@ function inventoryComponent() {
             this.refreshIcons();
         },
         
+        // Validate form fields before submitting
+        validateForm() {
+            const errors = [];
+
+            if (!this.form.sku || !this.form.sku.trim()) {
+                errors.push('Kode SKU wajib diisi.');
+            }
+
+            if (!this.form.name || !this.form.name.trim()) {
+                errors.push('Nama barang wajib diisi.');
+            }
+
+            if (!this.form.category || !this.form.category.trim()) {
+                errors.push('Kategori wajib dipilih.');
+            }
+
+            if (this.form.stock === null || this.form.stock === undefined || this.form.stock === '' || this.form.stock < 1) {
+                errors.push('Stok awal wajib diisi minimal 1.');
+            }
+
+            if (this.form.min_stock === null || this.form.min_stock === undefined || this.form.min_stock === '' || this.form.min_stock < 1) {
+                errors.push('Batas stok minimum wajib diisi minimal 1.');
+            }
+
+            if (!this.form.purchase_price || this.form.purchase_price <= 0) {
+                errors.push('Harga beli wajib diisi dan harus lebih dari 0.');
+            }
+
+            if (!this.form.selling_price || this.form.selling_price <= 0) {
+                errors.push('Harga jual wajib diisi dan harus lebih dari 0.');
+            }
+
+            return errors;
+        },
+
         // Save New Product (Axios POST)
         async addProduct() {
-            if (!this.form.name.trim() || !this.form.sku.trim()) {
-                this.$dispatch('show-toast', { message: 'Nama barang dan SKU wajib diisi!', type: 'danger' });
+            this.validationErrors = this.validateForm();
+            this.showValidationErrors = this.validationErrors.length > 0;
+            if (this.showValidationErrors) {
                 return;
             }
             this.isSaving = true;

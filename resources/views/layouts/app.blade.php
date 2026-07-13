@@ -171,7 +171,6 @@
             <nav class="flex-1 space-y-1.5 px-3 py-6" @click="if(window.innerWidth < 768) sidebarOpen = false">
                 <!-- Dashboard Link -->
                 @hasanyrole('Super Admin|Manager|Tenant Owner')
-                @hasanyrole('Super Admin|Manager|Tenant Owner')
                 <a href="{{ route($rolePrefix . '.dashboard') }}" 
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
                    :class="activePage === 'dashboard' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'"
