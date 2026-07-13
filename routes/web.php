@@ -119,7 +119,7 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::delete('/api/item-notes/delete/{id}', [InventoryController::class, 'destroyNote']);
     });
 
-    Route::middleware(['role:Super Admin|Manager|Gudang'])->group(function () {
+    Route::middleware(['role:Super Admin|Manager|Gudang|Tenant Owner'])->group(function () {
         Route::post('/api/categories/store', [CategoryController::class, 'storeApi']);
         Route::put('/api/categories/update/{id}', [CategoryController::class, 'updateApi']);
         Route::delete('/api/categories/delete/{id}', [CategoryController::class, 'destroyApi']);

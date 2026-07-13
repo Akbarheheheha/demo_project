@@ -171,6 +171,7 @@
             <nav class="flex-1 space-y-1.5 px-3 py-6" @click="if(window.innerWidth < 768) sidebarOpen = false">
                 <!-- Dashboard Link -->
                 @hasanyrole('Super Admin|Manager|Tenant Owner')
+                @hasanyrole('Super Admin|Manager|Tenant Owner')
                 <a href="{{ route($rolePrefix . '.dashboard') }}" 
                    class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200"
                    :class="activePage === 'dashboard' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-900/30' : 'hover:bg-slate-800/60 hover:text-white'"
@@ -514,28 +515,10 @@
 
             let w = 10;
             const interval = setInterval(function() {
-                if (w < 70) { w += 8; updateProgress(w); }
-            }, 120);
+                if (w < 80) { w += 10; progress.style.width = w + '%'; }
+            }, 100);
 
-<<<<<<< HEAD
-            axios.get(url, {
-                signal: abortController.signal,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-=======
-            // Create a cache-busting URL to prevent browser disk cache from serving stale HTML
-            const fetchUrl = new URL(url);
-            fetchUrl.searchParams.set('_t', Date.now());
-
-            axios.get(fetchUrl.toString(), {
-                signal: abortController.signal,
-                headers: { 
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache',
-                    'Expires': '0'
-                }
->>>>>>> a038f02 (fix bug di bagian halaman pengeluaran spam di bagian tambah pengeluaran dan menambah kolom kembalian di pos kasir)
-            })
+            axios.get(url, { headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache', 'Expires': '0' } })
                 .then(function(response) {
                     clearInterval(interval);
                     updateProgress(100);

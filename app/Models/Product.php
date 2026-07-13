@@ -12,6 +12,8 @@ class Product extends Model
 
     protected $appends = ['category'];
 
+    protected $appends = ['category'];
+
     protected $fillable = [
         'store_id',
         'sku',

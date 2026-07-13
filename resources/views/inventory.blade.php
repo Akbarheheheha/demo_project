@@ -442,11 +442,11 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-slate-500">Stok Awal</label>
-                            <input type="number" x-model="form.stock" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white">
+                            <input type="number" x-model.number="form.stock" @focus="if(form.stock === 0 || form.stock === '0') form.stock = ''" @blur="if(form.stock === '') form.stock = 0" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white">
                         </div>
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-slate-500">Batas Stok Minimum</label>
-                            <input type="number" x-model="form.min_stock" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white">
+                            <input type="number" x-model.number="form.min_stock" @focus="if(form.min_stock === 0 || form.min_stock === '0') form.min_stock = ''" @blur="if(form.min_stock === '') form.min_stock = 0" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white">
                         </div>
                     </div>
                     
@@ -454,11 +454,11 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-slate-500">Harga Beli</label>
-                            <input type="text" :value="formatRupiah(form.purchase_price)" @input="form.purchase_price = parseRupiah($event.target.value)" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
+                            <input type="text" :value="formatRupiah(form.purchase_price)" @input="form.purchase_price = parseRupiah($event.target.value); $event.target.value = formatRupiah(form.purchase_price)" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
                         </div>
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-slate-500">Harga Jual</label>
-                            <input type="text" :value="formatRupiah(form.selling_price)" @input="form.selling_price = parseRupiah($event.target.value)" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
+                            <input type="text" :value="formatRupiah(form.selling_price)" @input="form.selling_price = parseRupiah($event.target.value); $event.target.value = formatRupiah(form.selling_price)" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
                         </div>
                     </div>
                 </div>
@@ -524,18 +524,18 @@
                     <!-- Stock Numbers Grid (Only Minimum Stock editable here) -->
                     <div class="space-y-1.5">
                         <label class="text-xs font-bold text-slate-500">Batas Stok Minimum</label>
-                        <input type="number" x-model="form.min_stock" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
+                        <input type="number" x-model.number="form.min_stock" @focus="if(form.min_stock === 0 || form.min_stock === '0') form.min_stock = ''" @blur="if(form.min_stock === '') form.min_stock = 0" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
                     </div>
                     
                     <!-- Pricing Grid -->
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-slate-500">Harga Beli</label>
-                            <input type="text" :value="formatRupiah(form.purchase_price)" @input="form.purchase_price = parseRupiah($event.target.value)" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
+                            <input type="text" :value="formatRupiah(form.purchase_price)" @input="form.purchase_price = parseRupiah($event.target.value); $event.target.value = formatRupiah(form.purchase_price)" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
                         </div>
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-slate-500">Harga Jual</label>
-                            <input type="text" :value="formatRupiah(form.selling_price)" @input="form.selling_price = parseRupiah($event.target.value)" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
+                            <input type="text" :value="formatRupiah(form.selling_price)" @input="form.selling_price = parseRupiah($event.target.value); $event.target.value = formatRupiah(form.selling_price)" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
                         </div>
                     </div>
                 </div>
