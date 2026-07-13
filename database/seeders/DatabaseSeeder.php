@@ -21,6 +21,11 @@ class DatabaseSeeder extends Seeder
         // Seed Roles & Users
         $this->call(RoleAndPermissionSeeder::class);
 
+        // Seed default payment methods
+        \App\Models\PaymentMethod::firstOrCreate(['nama_metode' => 'Tunai', 'is_active' => true]);
+        \App\Models\PaymentMethod::firstOrCreate(['nama_metode' => 'QRIS', 'is_active' => true]);
+        \App\Models\PaymentMethod::firstOrCreate(['nama_metode' => 'Transfer Bank', 'is_active' => true]);
+
         // Seed dummy products
         $products = [
             [

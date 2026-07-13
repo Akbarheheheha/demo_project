@@ -28,7 +28,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-slate-50/50 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <tr class="bg-slate-50/50 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
                         <th class="px-6 py-4">Nama Kategori</th>
                         <th class="px-6 py-4">Slug (URL)</th>
                         <th class="px-6 py-4">Jumlah Produk</th>
@@ -37,7 +37,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs">
                     @forelse ($categories as $category)
-                        <tr class="hover:bg-slate-50/50 transition-colors">
+                        <tr class="hover:bg-slate-50/50 transition-colors whitespace-nowrap">
                             <!-- Category Name -->
                             <td class="px-6 py-3.5">
                                 <div class="flex items-center gap-3">

@@ -126,17 +126,17 @@
             <!-- Filters, Search & Barcode Bar -->
             <div class="flex flex-col sm:flex-row gap-3 mb-3 flex-shrink-0">
                 <!-- Product Search input -->
-                <div class="flex-1 flex items-center gap-2 bg-white rounded-xl px-3.5 py-2.5 text-slate-500 border border-slate-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 transition-all duration-200 shadow-sm">
-                    <i data-lucide="search" class="w-4 h-4 text-slate-450"></i>
+                <div class="flex-1 flex items-center gap-3 bg-white rounded-2xl px-5 py-3.5 text-slate-500 border-2 border-slate-200 focus-within:border-indigo-600 focus-within:ring-4 focus-within:ring-indigo-100 transition-all duration-200 shadow-sm">
+                    <i data-lucide="search" class="w-5 h-5 text-slate-400 flex-shrink-0"></i>
                     <input type="text" 
                            id="search-product"
-                           placeholder="Cari produk / SKU, lalu Enter untuk tambah cepat (F2)" 
+                           placeholder="Cari nama produk / SKU di sini... (Tekan F2)" 
                            x-model="searchQuery"
                            @keydown.enter.prevent="addFirstFilteredProduct()"
-                           class="bg-transparent border-none text-xs focus:outline-none w-full text-slate-700 placeholder-slate-400 font-medium">
+                           class="bg-transparent border-none text-sm focus:outline-none w-full text-slate-800 placeholder-slate-400 font-semibold">
                     <!-- Clear search query -->
-                    <button x-show="searchQuery !== ''" @click="searchQuery = ''" class="text-slate-450 hover:text-slate-700 transition-colors">
-                        <i data-lucide="x" class="w-4 h-4"></i>
+                    <button x-show="searchQuery !== ''" @click="searchQuery = ''" class="text-slate-400 hover:text-slate-600 transition-colors flex items-center justify-center p-0.5">
+                        <i data-lucide="x" class="w-5 h-5"></i>
                     </button>
                 </div>
             </div>

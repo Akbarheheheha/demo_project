@@ -36,7 +36,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-slate-100 text-slate-600 text-xs uppercase tracking-wider">
+                    <tr class="bg-slate-100 text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap">
                         <th class="px-6 py-4 font-bold border-b border-slate-200">Tanggal</th>
                         <th class="px-6 py-4 font-bold border-b border-slate-200">Keterangan</th>
                         <th class="px-6 py-4 font-bold border-b border-slate-200">Nominal</th>
@@ -45,7 +45,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-sm">
                     @forelse($expenses as $expense)
-                        <tr class="hover:bg-slate-50 transition-colors">
+                        <tr class="hover:bg-slate-50 transition-colors whitespace-nowrap">
                             <td class="px-6 py-4 text-slate-700 font-medium whitespace-nowrap">
                                 {{ \Carbon\Carbon::parse($expense->tanggal)->translatedFormat('d F Y') }}
                             </td>

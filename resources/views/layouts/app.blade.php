@@ -53,7 +53,7 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased font-sans" 
+<body class="bg-slate-50 text-slate-800 antialiased font-sans overflow-x-hidden" 
       data-active-page="@yield('active_page', 'dashboard')"
       x-data="{ sidebarOpen: window.innerWidth >= 768, activePage: '@yield('active_page', 'dashboard')' }"
       @set-active-page.window="activePage = $event.detail"
@@ -259,7 +259,7 @@
         </aside>
         @endunless
         <!-- Main Content Area -->
-        <div class="flex flex-1 flex-col transition-all duration-300"
+        <div class="flex flex-1 flex-col min-w-0 transition-all duration-300"
              @unless(auth()->user()->hasRole('Gudang')):class="sidebarOpen ? 'md:ml-64' : 'md:ml-20'"@endunless>
             
             <!-- Topbar sticky header -->
@@ -419,7 +419,7 @@
             </header>
             
             <!-- Page Main Content Slot -->
-            <main class="flex-1 p-6">
+            <main class="flex-1 p-6 min-w-0">
                 @yield('content')
             </main>
             

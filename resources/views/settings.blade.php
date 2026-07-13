@@ -248,7 +248,7 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="bg-slate-50/50 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                        <tr class="bg-slate-50/50 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
                             <th class="px-6 py-4">Nama Pengguna</th>
                             <th class="px-6 py-4">Alamat Email</th>
                             <th class="px-6 py-4">Peran Hak Akses</th>
@@ -258,7 +258,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-xs">
                         <template x-for="user in users" :key="user.id">
-                            <tr class="hover:bg-slate-50/50 transition-colors">
+                            <tr class="hover:bg-slate-50/50 transition-colors whitespace-nowrap">
                                 <!-- User name & avatar -->
                                 <td class="px-6 py-3.5">
                                     <div class="flex items-center gap-3">
