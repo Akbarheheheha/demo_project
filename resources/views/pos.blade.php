@@ -570,56 +570,25 @@ function posComponent() {
             this.paymentModalOpen = true;
         },
         
-        // Axios Mock Submission
+        // Local simulation (no server call)
         async processCheckout() {
             if (!this.isValidPayment) return;
             this.isProcessing = true;
             
-            try {
-                // Axios Async dummy request simulation
-                const response = await axios.post('/api/checkout-simulation', {
-                    invoice: this.invoiceNumber,
-                    items: this.cart.map(item => ({
-                        id: item.product.id,
-                        qty: item.qty,
-                        price: item.product.price
-                    })),
-                    subtotal: this.subtotal,
-                    discount: this.discountAmount,
-                    tax: this.taxAmount,
-                    total: this.grandTotal,
-                    payment_method: this.paymentMethod,
-                    cash_received: this.paymentMethod === 'cash' ? parseFloat(this.cashAmount) : this.grandTotal
-                });
-                
-                // If success: Update stock in local view
-                this.cart.forEach(item => {
-                    const prod = this.products.find(p => p.id === item.product.id);
-                    if (prod) {
-                        prod.stock -= item.qty;
-                    }
-                });
-                
-                this.$dispatch('show-toast', { message: 'Checkout Berhasil! Invoice ' + this.invoiceNumber + ' disimpan.', type: 'success' });
-                this.cart = [];
-                this.paymentModalOpen = false;
-                
-            } catch (error) {
-                console.error('Error checkout:', error);
-                this.$dispatch('show-toast', { message: 'Koneksi terganggu, transaksi disimpan ke database lokal.', type: 'warning' });
-                
-                // Fallback offline success
-                this.cart.forEach(item => {
-                    const prod = this.products.find(p => p.id === item.product.id);
-                    if (prod) {
-                        prod.stock -= item.qty;
-                    }
-                });
-                this.cart = [];
-                this.paymentModalOpen = false;
-            } finally {
-                this.isProcessing = false;
-            }
+            // Simulate processing delay
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            this.cart.forEach(item => {
+                const prod = this.products.find(p => p.id === item.product.id);
+                if (prod) {
+                    prod.stock -= item.qty;
+                }
+            });
+            
+            this.$dispatch('show-toast', { message: 'Checkout Berhasil! Invoice ' + this.invoiceNumber + ' disimpan.', type: 'success' });
+            this.cart = [];
+            this.paymentModalOpen = false;
+            this.isProcessing = false;
         }
     };
 }

@@ -45,15 +45,27 @@
                     </div>
                 </div>
 
+                <!-- Nama Pengeluaran -->
+                <div>
+                    <label for="nama_pengeluaran" class="block mb-2 text-xs font-bold text-slate-500 uppercase tracking-wider">Nama Pengeluaran</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-slate-400" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-notepad-text-icon lucide-notepad-text"><path d="M8 2v4"/><path d="M12 2v4"/><path d="M16 2v4"/><rect width="16" height="18" x="4" y="4" rx="2"/><path d="M8 10h6"/><path d="M8 14h8"/><path d="M8 18h5"/></svg>
+                        </div>
+                        <input type="text" id="nama_pengeluaran" name="nama_pengeluaran" value="{{ old('nama_pengeluaran', $expense->nama_pengeluaran) }}" placeholder="Contoh: Bayar listrik bulan ini..."
+                               class="bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 block w-full pl-11 p-3 transition duration-200 font-medium" required>
+                    </div>
+                </div>
+
                 <!-- Deskripsi -->
                 <div>
-                    <label for="deskripsi" class="block mb-2 text-xs font-bold text-slate-500 uppercase tracking-wider">Deskripsi Pengeluaran</label>
+                    <label for="deskripsi" class="block mb-2 text-xs font-bold text-slate-500 uppercase tracking-wider">Deskripsi Pengeluaran (OPSIONAL)</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <i data-lucide="file-text" class="w-5 h-5 text-slate-400"></i>
                         </div>
-                        <input type="text" id="deskripsi" name="deskripsi" value="{{ old('deskripsi', $expense->deskripsi) }}" placeholder="Contoh: Bayar listrik bulan ini..."
-                               class="bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 block w-full pl-11 p-3 transition duration-200 font-medium" required>
+                        <input type="text" id="deskripsi" name="deskripsi" value="{{ old('deskripsi', $expense->deskripsi) }}" placeholder="Contoh: Untuk membayar tagihan listrik bulan ini..."
+                               class="bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 block w-full pl-11 p-3 transition duration-200 font-medium">
                     </div>
                 </div>
 
@@ -98,8 +110,22 @@ document.addEventListener('DOMContentLoaded', function() {
         this.value = raw.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     });
 
-    input.closest('form').addEventListener('submit', function() {
+    const form = input.closest('form');
+    form.addEventListener('submit', function(e) {
+        if (form.dataset.submitted === 'true') {
+            e.preventDefault();
+            return;
+        }
+        form.dataset.submitted = 'true';
+        
         input.value = input.value.replace(/\./g, '');
+        
+        const btn = form.querySelector('button[type="submit"]');
+        if (btn) {
+            btn.disabled = true;
+            btn.classList.add('opacity-75', 'cursor-not-allowed');
+            btn.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Memproses...';
+        }
     });
 });
 </script>

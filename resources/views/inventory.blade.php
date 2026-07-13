@@ -6,7 +6,8 @@
 @section('content')
 <div class="space-y-6"
      x-data="inventoryComponent()"
-     x-effect="stockFilter; selectedCategory; searchQuery; filteredInventory.length; refreshIcons()">
+     x-effect="refreshIcons()"
+     x-init="$watch('searchQuery', () => currentPage = 1); $watch('selectedCategory', () => currentPage = 1); $watch('stockFilter', () => currentPage = 1)">
 
     <!-- Page Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -16,7 +17,7 @@
         </div>
         
         <!-- Action Buttons -->
-        @hasanyrole('Super Admin|Manager|Gudang')
+        @hasanyrole('Super Admin|Manager|Gudang|Tenant Owner')
         <div class="flex items-center gap-2">
             <!-- Add Product Button -->
             <button @click="openAddModal()" 
@@ -37,11 +38,16 @@
                 class="px-4 py-2.5 text-xs font-semibold whitespace-nowrap transition-all duration-150">
             Daftar Inventaris
         </button>
-        @hasanyrole('Super Admin|Manager|Gudang')
+        @hasanyrole('Super Admin|Manager|Gudang|Tenant Owner')
         <button @click="activeTab = 'categories'"
                 :class="activeTab === 'categories' ? 'border-indigo-600 text-indigo-600 font-bold border-b-2' : 'border-transparent text-slate-500 hover:text-slate-700'"
                 class="px-4 py-2.5 text-xs font-semibold whitespace-nowrap transition-all duration-150">
             Kelola Kategori
+        </button>
+        <button @click="activeTab = 'notes'"
+                :class="activeTab === 'notes' ? 'border-indigo-600 text-indigo-600 font-bold border-b-2' : 'border-transparent text-slate-500 hover:text-slate-700'"
+                class="px-4 py-2.5 text-xs font-semibold whitespace-nowrap transition-all duration-150">
+            Catatan Barang
         </button>
         @endhasanyrole
     </div>
@@ -190,7 +196,7 @@
                                             </svg>
                                         </button>
                                         
-                                        @hasanyrole('Super Admin|Manager|Gudang')
+                                        @hasanyrole('Super Admin|Manager|Gudang|Tenant Owner')
                                         <!-- Edit Info -->
                                         <button @click="openEditModal(item)"
                                                 title="Edit Informasi Barang"
@@ -225,11 +231,35 @@
                     </tbody>
                 </table>
             </div>
+            
+            <!-- Pagination Controls -->
+            <div class="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/50 gap-4" x-show="filteredInventory.length > itemsPerPage">
+                <div class="text-xs text-slate-500">
+                    Menampilkan <span class="font-bold text-slate-700" x-text="filteredInventory.length === 0 ? 0 : ((currentPage - 1) * itemsPerPage + 1)"></span> - 
+                    <span class="font-bold text-slate-700" x-text="Math.min(currentPage * itemsPerPage, filteredInventory.length)"></span> 
+                    dari <span class="font-bold text-slate-700" x-text="filteredInventory.length"></span> barang
+                </div>
+                <div class="flex items-center gap-1">
+                    <button @click="if(currentPage > 1) currentPage--" 
+                            :disabled="currentPage === 1"
+                            class="px-2 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-semibold">
+                        Sebelumnya
+                    </button>
+                    
+                    <span class="text-xs font-semibold text-slate-500 px-2">Hal <span x-text="currentPage"></span> dari <span x-text="totalPages"></span></span>
+                    
+                    <button @click="if(currentPage < totalPages) currentPage++" 
+                            :disabled="currentPage === totalPages"
+                            class="px-2 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-semibold">
+                        Selanjutnya
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- PANEL B: Kelola Kategori -->
-    @hasanyrole('Super Admin|Manager|Gudang')
+    @hasanyrole('Super Admin|Manager|Gudang|Tenant Owner')
     <div x-show="activeTab === 'categories'" class="space-y-6" style="display: none;">
         <!-- Header Panel Kategori -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
@@ -303,6 +333,64 @@
             </div>
         </div>
     </div>
+
+    <!-- PANEL C: Catatan Barang -->
+    <div x-show="activeTab === 'notes'" class="space-y-6" style="display: none;">
+    
+       
+
+        <!-- Notes Table Card -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50/50 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                            <th class="px-6 py-4">Judul Catatan</th>
+                            <th class="px-6 py-4">Isi Catatan</th>
+                            <th class="px-6 py-4 text-center">Tanggal Dibuat</th>
+                            <th class="px-6 py-4 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-xs">
+                        <template x-for="note in itemNotes" :key="note.id">
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="px-6 py-3.5">
+                                    <span class="font-bold text-slate-800" x-text="note.title"></span>
+                                </td>
+                                <td class="px-6 py-3.5 text-slate-500" x-text="note.content"></td>
+                                <td class="px-6 py-3.5 text-center text-slate-500">
+                                    <span class="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg font-semibold text-[10px]" x-text="new Date(note.created_at).toLocaleDateString('id-ID')"></span>
+                                </td>
+                                <td class="px-6 py-3.5 text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <button @click="openEditNoteModal(note)" 
+                                                class="p-1.5 rounded-lg border border-slate-200 text-slate-650 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50/50 transition-all">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                        </button>
+                                        <button @click="deleteNote(note)" 
+                                                class="p-1.5 rounded-lg border border-slate-200 text-slate-650 hover:text-rose-600 hover:border-rose-100 hover:bg-rose-50/50 transition-all">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                        <template x-if="itemNotes.length === 0">
+                            <tr>
+                                <td colspan="4" class="px-6 py-12 text-center text-slate-400">
+                                    Belum ada catatan terdaftar.
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
     @endhasanyrole
 
     <!-- MODAL 1: Tambah Barang -->
@@ -328,6 +416,23 @@
                 </div>
                 
                 <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                    <!-- Validation Errors -->
+                    <div x-show="showValidationErrors && validationErrors.length > 0"
+                         class="bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 text-[11px] space-y-1">
+                        <div class="font-bold flex items-center gap-1.5 mb-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span>Harap lengkapi data berikut:</span>
+                        </div>
+                        <template x-for="(error, index) in validationErrors" :key="index">
+                            <div class="flex items-start gap-2 pl-1">
+                                <span class="text-red-400 mt-0.5">•</span>
+                                <span x-text="error"></span>
+                            </div>
+                        </template>
+                    </div>
+
                     <!-- SKU Field -->
                     <div class="space-y-1.5">
                         <label class="text-xs font-bold text-slate-500">Kode SKU</label>
@@ -354,11 +459,11 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-slate-500">Stok Awal</label>
-                            <input type="number" x-model="form.stock" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white">
+                            <input type="number" x-model.number="form.stock" @focus="if(form.stock === 0 || form.stock === '0') form.stock = ''" @blur="if(form.stock === '') form.stock = 1" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white">
                         </div>
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-slate-500">Batas Stok Minimum</label>
-                            <input type="number" x-model="form.min_stock" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white">
+                            <input type="number" x-model.number="form.min_stock" @focus="if(form.min_stock === 0 || form.min_stock === '0') form.min_stock = ''" @blur="if(form.min_stock === '') form.min_stock = 1" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white">
                         </div>
                     </div>
                     
@@ -366,11 +471,11 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-slate-500">Harga Beli</label>
-                            <input type="text" :value="formatRupiah(form.purchase_price)" @input="form.purchase_price = parseRupiah($event.target.value)" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
+                            <input type="text" :value="formatRupiah(form.purchase_price)" @input="form.purchase_price = parseRupiah($event.target.value); $event.target.value = formatRupiah(form.purchase_price)" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
                         </div>
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-slate-500">Harga Jual</label>
-                            <input type="text" :value="formatRupiah(form.selling_price)" @input="form.selling_price = parseRupiah($event.target.value)" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
+                            <input type="text" :value="formatRupiah(form.selling_price)" @input="form.selling_price = parseRupiah($event.target.value); $event.target.value = formatRupiah(form.selling_price)" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
                         </div>
                     </div>
                 </div>
@@ -436,18 +541,18 @@
                     <!-- Stock Numbers Grid (Only Minimum Stock editable here) -->
                     <div class="space-y-1.5">
                         <label class="text-xs font-bold text-slate-500">Batas Stok Minimum</label>
-                        <input type="number" x-model="form.min_stock" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
+                        <input type="number" x-model.number="form.min_stock" @focus="if(form.min_stock === 0 || form.min_stock === '0') form.min_stock = ''" @blur="if(form.min_stock === '') form.min_stock = 0" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
                     </div>
                     
                     <!-- Pricing Grid -->
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-slate-500">Harga Beli</label>
-                            <input type="text" :value="formatRupiah(form.purchase_price)" @input="form.purchase_price = parseRupiah($event.target.value)" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
+                            <input type="text" :value="formatRupiah(form.purchase_price)" @input="form.purchase_price = parseRupiah($event.target.value); $event.target.value = formatRupiah(form.purchase_price)" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
                         </div>
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-slate-500">Harga Jual</label>
-                            <input type="text" :value="formatRupiah(form.selling_price)" @input="form.selling_price = parseRupiah($event.target.value)" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
+                            <input type="text" :value="formatRupiah(form.selling_price)" @input="form.selling_price = parseRupiah($event.target.value); $event.target.value = formatRupiah(form.selling_price)" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white font-semibold">
                         </div>
                     </div>
                 </div>
@@ -502,12 +607,35 @@
 
                     <!-- Input Tambahan Qty -->
                     <div class="space-y-1.5">
-                        <label class="text-xs font-bold text-slate-500">jumlah stok yang ingin di tambah</label>
+                        <label class="text-xs font-bold text-slate-500">Jumlah Stok yang Ingin Ditambah</label>
                         <div class="flex items-center gap-2 bg-slate-105 border border-slate-200/50 rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:border-indigo-400 transition-all">
                             <input type="number" 
-                                   min="1" 
+                                   min="0" 
                                    x-model.number="stockForm.qty_add" 
-                                   placeholder="Masukkan qty tambahan..." 
+                                   placeholder="0" 
+                                   class="bg-transparent border-none text-xs focus:outline-none w-full text-slate-700 font-bold p-0">
+                        </div>
+                    </div>
+
+                    <!-- Input Stok Kadaluarsa/Rusak -->
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-500">Jumlah Stok Kadaluarsa/Rusak</label>
+                        <div class="flex items-center gap-2 bg-slate-105 border border-slate-200/50 rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:border-indigo-400 transition-all">
+                            <input type="number" 
+                                   min="0" 
+                                   x-model.number="stockForm.qty_expired" 
+                                   placeholder="0" 
+                                   class="bg-transparent border-none text-xs focus:outline-none w-full text-slate-700 font-bold p-0">
+                        </div>
+                    </div>
+
+                    <!-- Input Catatan (required if qty_expired > 0) -->
+                    <div class="space-y-1.5" x-show="stockForm.qty_expired > 0">
+                        <label class="text-xs font-bold text-slate-500">Catatan <span class="text-rose-500">*</span></label>
+                        <div class="flex items-center gap-2 bg-slate-105 border border-slate-200/50 rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:border-indigo-400 transition-all">
+                            <input type="text" 
+                                   x-model="stockForm.note" 
+                                   placeholder="Contoh: Barang kadaluarsa dibuang..." 
                                    class="bg-transparent border-none text-xs focus:outline-none w-full text-slate-700 font-bold p-0">
                         </div>
                     </div>
@@ -515,7 +643,7 @@
                     <!-- Info Total Stok Baru (Live Preview) -->
                     <div class="flex justify-between items-center p-3 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-100">
                         <span class="text-xs font-bold">Estimasi Stok Baru:</span>
-                        <span class="text-sm font-black" x-text="(parseInt(stockForm.stock) + (parseInt(stockForm.qty_add) || 0)) + ' pcs'"></span>
+                        <span class="text-sm font-black" x-text="Math.max(0, parseInt(stockForm.stock) + (parseInt(stockForm.qty_add) || 0) - (parseInt(stockForm.qty_expired) || 0)) + ' pcs'"></span>
                     </div>
                 </div>
                 
@@ -685,6 +813,48 @@
         </div>
     </div>
 
+    <!-- MODAL 6: Tambah/Edit Catatan -->
+    <div x-show="showNoteModal" 
+         class="fixed inset-0 z-50 overflow-y-auto"
+         style="display: none;">
+         <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="if(!isSaving) showNoteModal = false"></div>
+        
+        <div class="flex min-h-screen items-center justify-center p-4 relative z-10">
+            <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-100 flex flex-col"
+                 x-show="showNoteModal"
+                 x-transition:enter="transition ease-out duration-300 transform scale-95"
+                 x-transition:enter-start="transform scale-95 opacity-0"
+                 x-transition:enter-end="transform scale-100 opacity-100">
+                <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <h3 class="font-bold text-slate-800 text-sm" x-text="noteForm.id ? 'Edit Catatan' : 'Tambah Catatan Baru'"></h3>
+                    <button @click="showNoteModal = false" :disabled="isSaving" class="text-slate-400 hover:text-slate-650">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-500">Judul Catatan</label>
+                        <input type="text" x-model="noteForm.title" placeholder="Contoh: Jadwal stok opname" class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white text-slate-800 font-semibold">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-500">Isi Catatan</label>
+                        <textarea x-model="noteForm.content" rows="4" placeholder="Tulis catatan..." class="w-full text-xs bg-slate-100 rounded-xl px-3 py-2.5 border border-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-white text-slate-700"></textarea>
+                    </div>
+                </div>
+                <div class="p-6 border-t border-slate-100 bg-slate-50/50 flex gap-3">
+                    <button @click="showNoteModal = false" :disabled="isSaving" class="flex-1 py-3 border border-slate-200 hover:bg-slate-100 text-slate-650 font-semibold rounded-2xl text-xs transition-colors">
+                        Batal
+                    </button>
+                    <button @click="saveNote()" :disabled="isSaving" class="flex-[2] py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl text-xs flex items-center justify-center gap-2 transition-all">
+                        <span x-text="isSaving ? 'Menyimpan...' : 'Simpan Catatan'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 @push('scripts')
@@ -695,6 +865,7 @@ function inventoryComponent() {
         inventory: @json($inventory),
         mutations: @json($mutations),
         categories: @json($categories),
+        itemNotes: @json($itemNotes ?? []),
         
         // Navigation Tab
         activeTab: 'items', // 'items', 'categories'
@@ -715,11 +886,14 @@ function inventoryComponent() {
         // Modals State
         showAddModal: false,
         showEditModal: false,
-        showStockModal: false, // State baru modal stok
+        showStockModal: false,
         showMutationModal: false,
         showAddCategoryModal: false,
         showEditCategoryModal: false,
+        showNoteModal: false,
         isSaving: false,
+        showValidationErrors: false,
+        validationErrors: [],
         
         // Filters State
         searchQuery: '',
@@ -741,6 +915,12 @@ function inventoryComponent() {
         categoryForm: {
             id: null,
             name: ''
+        },
+
+        noteForm: {
+            id: null,
+            title: '',
+            content: ''
         },
 
         stockForm: { // Form fields baru modal stok
@@ -788,6 +968,19 @@ function inventoryComponent() {
             });
         },
         
+        // Pagination logic
+        currentPage: 1,
+        itemsPerPage: 15,
+        
+        get totalPages() {
+            return Math.ceil(this.filteredInventory.length / this.itemsPerPage) || 1;
+        },
+        
+        get paginatedInventory() {
+            const start = (this.currentPage - 1) * this.itemsPerPage;
+            return this.filteredInventory.slice(start, start + this.itemsPerPage);
+        },
+        
         // Helper to check stock status
         getStockStatus(item) {
             const stock = Number(item.stock);
@@ -821,6 +1014,8 @@ function inventoryComponent() {
         
         // Open Add Modal
         openAddModal() {
+            this.validationErrors = [];
+            this.showValidationErrors = false;
             this.resetForm();
             // Generate Auto SKU
             const random = Math.floor(1000 + Math.random() * 9000);
@@ -843,7 +1038,9 @@ function inventoryComponent() {
                 sku: item.sku,
                 name: item.name,
                 stock: item.stock,
-                qty_add: 0
+                qty_add: 0,
+                qty_expired: 0,
+                note: ''
             };
             this.showStockModal = true;
             this.refreshIcons();
@@ -856,10 +1053,46 @@ function inventoryComponent() {
             this.refreshIcons();
         },
         
+        // Validate form fields before submitting
+        validateForm() {
+            const errors = [];
+
+            if (!this.form.sku || !this.form.sku.trim()) {
+                errors.push('Kode SKU wajib diisi.');
+            }
+
+            if (!this.form.name || !this.form.name.trim()) {
+                errors.push('Nama barang wajib diisi.');
+            }
+
+            if (!this.form.category || !this.form.category.trim()) {
+                errors.push('Kategori wajib dipilih.');
+            }
+
+            if (this.form.stock === null || this.form.stock === undefined || this.form.stock === '' || this.form.stock < 1) {
+                errors.push('Stok awal wajib diisi minimal 1.');
+            }
+
+            if (this.form.min_stock === null || this.form.min_stock === undefined || this.form.min_stock === '' || this.form.min_stock < 1) {
+                errors.push('Batas stok minimum wajib diisi minimal 1.');
+            }
+
+            if (!this.form.purchase_price || this.form.purchase_price <= 0) {
+                errors.push('Harga beli wajib diisi dan harus lebih dari 0.');
+            }
+
+            if (!this.form.selling_price || this.form.selling_price <= 0) {
+                errors.push('Harga jual wajib diisi dan harus lebih dari 0.');
+            }
+
+            return errors;
+        },
+
         // Save New Product (Axios POST)
         async addProduct() {
-            if (!this.form.name.trim() || !this.form.sku.trim()) {
-                this.$dispatch('show-toast', { message: 'Nama barang dan SKU wajib diisi!', type: 'danger' });
+            this.validationErrors = this.validateForm();
+            this.showValidationErrors = this.validationErrors.length > 0;
+            if (this.showValidationErrors) {
                 return;
             }
             this.isSaving = true;
@@ -955,9 +1188,16 @@ function inventoryComponent() {
 
         // Add/Update Stock (Axios PUT)
         async addStock() {
-            const addQty = parseInt(this.stockForm.qty_add, 10);
-            if (Number.isNaN(addQty) || addQty <= 0) {
-                this.$dispatch('show-toast', { message: 'Jumlah tambahan stok harus minimal 1!', type: 'danger' });
+            const addQty = parseInt(this.stockForm.qty_add, 10) || 0;
+            const expiredQty = parseInt(this.stockForm.qty_expired, 10) || 0;
+            
+            if (addQty === 0 && expiredQty === 0) {
+                this.$dispatch('show-toast', { message: 'Masukkan jumlah tambah atau kadaluarsa!', type: 'danger' });
+                return;
+            }
+
+            if (expiredQty > 0 && !this.stockForm.note.trim()) {
+                this.$dispatch('show-toast', { message: 'Catatan wajib diisi jika ada stok kadaluarsa/rusak!', type: 'danger' });
                 return;
             }
             
@@ -969,7 +1209,7 @@ function inventoryComponent() {
             
             this.isSaving = true;
             try {
-                const newTotalStock = parseInt(this.stockForm.stock, 10) + addQty;
+                const newTotalStock = Math.max(0, parseInt(this.stockForm.stock, 10) + addQty - expiredQty);
                 const response = await axios.put('/api/inventory/update/' + this.stockForm.id, {
                     sku: product.sku,
                     name: product.name,
@@ -977,25 +1217,45 @@ function inventoryComponent() {
                     stock: newTotalStock,
                     min_stock: product.min_stock,
                     purchase_price: product.purchase_price,
-                    selling_price: product.selling_price || product.price
+                    selling_price: product.selling_price || product.price,
+                    tambah_stok: addQty,
+                    stok_kadaluarsa: expiredQty,
+                    catatan: this.stockForm.note
                 });
                 
                 const index = this.inventory.findIndex(item => item.id === this.stockForm.id);
                 if (index > -1) {
                     this.inventory[index].stock = newTotalStock;
                     
-                    // Add stock log to mutations timeline
-                    this.mutations.unshift({
-                        date: new Date().toISOString().slice(0, 16).replace('T', ' '),
-                        sku: this.stockForm.sku,
-                        name: this.stockForm.name,
-                        type: 'IN',
-                        qty: addQty,
-                        ref: 'TAMBAH-STOK',
-                        operator: 'Sistem'
-                    });
+                    if (addQty > 0) {
+                        this.mutations.unshift({
+                            date: new Date().toISOString().slice(0, 16).replace('T', ' '),
+                            sku: this.stockForm.sku,
+                            name: this.stockForm.name,
+                            type: 'IN',
+                            qty: addQty,
+                            ref: 'TAMBAH-STOK',
+                            operator: 'Sistem'
+                        });
+                    }
+                    if (expiredQty > 0) {
+                        this.mutations.unshift({
+                            date: new Date().toISOString().slice(0, 16).replace('T', ' '),
+                            sku: this.stockForm.sku,
+                            name: this.stockForm.name,
+                            type: 'OUT',
+                            qty: expiredQty,
+                            ref: 'RUSAK/EXP - ' + this.stockForm.note,
+                            operator: 'Sistem'
+                        });
+                    }
+                    
+                    // Jika ada catatan baru yang terbentuk di backend, masukkan juga ke panel Catatan Barang
+                    if (response.data.new_note) {
+                        this.itemNotes.unshift(response.data.new_note);
+                    }
                 }
-                this.$dispatch('show-toast', { message: 'Stok barang ' + this.stockForm.name + ' berhasil ditambahkan!', type: 'success' });
+                this.$dispatch('show-toast', { message: 'Stok barang ' + this.stockForm.name + ' berhasil diupdate!', type: 'success' });
                 this.showStockModal = false;
             } catch (error) {
                 console.error(error);
@@ -1113,6 +1373,61 @@ function inventoryComponent() {
                 } catch (error) {
                     console.error(error);
                     this.$dispatch('show-toast', { message: 'Gagal menghapus kategori.', type: 'danger' });
+                }
+            }
+        },
+
+        // Item Notes CRUD API Helpers
+        openAddNoteModal() {
+            this.noteForm = { id: null, title: '', content: '' };
+            this.showNoteModal = true;
+            this.refreshIcons();
+        },
+
+        openEditNoteModal(note) {
+            this.noteForm = { id: note.id, title: note.title, content: note.content };
+            this.showNoteModal = true;
+            this.refreshIcons();
+        },
+
+        async saveNote() {
+            if (!this.noteForm.title.trim()) {
+                this.$dispatch('show-toast', { message: 'Judul catatan wajib diisi!', type: 'danger' });
+                return;
+            }
+            this.isSaving = true;
+            try {
+                if (this.noteForm.id) {
+                    // Update
+                    const response = await axios.put('/api/item-notes/update/' + this.noteForm.id, this.noteForm);
+                    const updatedNote = response.data.note;
+                    const index = this.itemNotes.findIndex(n => n.id === updatedNote.id);
+                    if (index > -1) this.itemNotes[index] = updatedNote;
+                    this.$dispatch('show-toast', { message: 'Catatan berhasil diperbarui!', type: 'success' });
+                } else {
+                    // Store
+                    const response = await axios.post('/api/item-notes/store', this.noteForm);
+                    this.itemNotes.unshift(response.data.note);
+                    this.$dispatch('show-toast', { message: 'Catatan berhasil dibuat!', type: 'success' });
+                }
+                this.showNoteModal = false;
+            } catch (error) {
+                console.error(error);
+                this.$dispatch('show-toast', { message: 'Gagal menyimpan catatan.', type: 'danger' });
+            } finally {
+                this.isSaving = false;
+            }
+        },
+
+        async deleteNote(note) {
+            if (confirm('Apakah Anda yakin ingin menghapus catatan "' + note.title + '"?')) {
+                try {
+                    await axios.delete('/api/item-notes/delete/' + note.id);
+                    this.itemNotes = this.itemNotes.filter(n => n.id !== note.id);
+                    this.$dispatch('show-toast', { message: 'Catatan telah dihapus!', type: 'danger' });
+                } catch (error) {
+                    console.error(error);
+                    this.$dispatch('show-toast', { message: 'Gagal menghapus catatan.', type: 'danger' });
                 }
             }
         }

@@ -4,13 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Transaction;
+use App\Models\ItemNote;
+use App\Services\SubscriptionLimiter;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class InventoryController extends Controller
 {
-    /**
-     * Display inventory page.
-     */
+    public function __construct(
+        private readonly SubscriptionLimiter $limiter,
+    ) {}
+
     public function index(Request $request)
     {
         $search = $request->search;
@@ -61,7 +65,9 @@ class InventoryController extends Controller
             ];
         })->toArray();
 
-        return view('inventory', compact('inventory', 'mutations', 'categories'));
+        $itemNotes = ItemNote::latest()->get();
+
+        return view('inventory', compact('inventory', 'mutations', 'categories', 'itemNotes'));
     }
 
     /**
@@ -70,14 +76,16 @@ class InventoryController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'sku' => 'required|string|unique:products,sku',
+            'sku' => ['required', 'string', Rule::unique('products')->where('store_id', auth()->user()->store_id)],          
             'name' => 'required|string|max:255',
             'category' => 'required|string',
-            'stock' => 'required|integer|min:0',
-            'min_stock' => 'required|integer|min:0',
+            'stock' => 'required|integer|min:1',
+            'min_stock' => 'required|integer|min:1',
             'purchase_price' => 'required|numeric|min:0',
             'selling_price' => 'required|numeric|min:0'
         ]);
+
+        $this->limiter->ensure('products');
 
         $product = Product::create([
             'sku' => $validated['sku'],
@@ -112,14 +120,47 @@ class InventoryController extends Controller
         $product = Product::findOrFail($id);
 
         $validated = $request->validate([
-            'sku' => 'required|string|unique:products,sku,' . $product->id,
+            'sku' => ['required', 'string', Rule::unique('products')->where('store_id', auth()->user()->store_id)->ignore($product->id)],
             'name' => 'required|string|max:255',
             'category' => 'required|string',
             'stock' => 'required|integer|min:0',
-            'min_stock' => 'required|integer|min:0',
+            'min_stock' => 'required|integer|min:1',
             'purchase_price' => 'required|numeric|min:0',
-            'selling_price' => 'required|numeric|min:0'
+            'selling_price' => 'required|numeric|min:0',
+            'tambah_stok' => 'nullable|integer|min:0',
+            'stok_kadaluarsa' => 'nullable|integer|min:0',
+            'catatan' => 'nullable|string'
         ]);
+
+        $tambah = $request->input('tambah_stok', 0);
+        $rusak = $request->input('stok_kadaluarsa', 0);
+
+        if ($rusak > 0 && empty($request->input('catatan'))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Catatan wajib diisi jika ada stok kadaluarsa/rusak.'
+            ], 422);
+        }
+        
+        // Kalkulasi ulang dengan aman di level backend
+        $newNote = null;
+        if ($request->has('tambah_stok') || $request->has('stok_kadaluarsa')) {
+            $validated['stock'] = max(0, $product->stock + $tambah - $rusak);
+            
+            if (!empty($request->input('catatan'))) {
+                $title = 'Catatan Stok: ' . $product->name;
+                if ($rusak > 0) {
+                    $title .= ' (Rusak/Expired: -' . $rusak . ')';
+                } elseif ($tambah > 0) {
+                    $title .= ' (Tambah: +' . $tambah . ')';
+                }
+
+                $newNote = ItemNote::create([
+                    'title' => $title,
+                    'content' => $request->input('catatan')
+                ]);
+            }
+        }
 
         $product->update([
             'sku' => $validated['sku'],
@@ -142,7 +183,8 @@ class InventoryController extends Controller
                 'min_stock' => $product->min_stock,
                 'purchase_price' => (float) $product->purchase_price,
                 'selling_price' => (float) $product->price
-            ]
+            ],
+            'new_note' => $newNote
         ]);
     }
 
@@ -153,6 +195,55 @@ class InventoryController extends Controller
     {
         $product = Product::findOrFail($id);
         $product->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Store a new item note.
+     */
+    public function storeNote(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'content' => 'nullable|string'
+        ]);
+
+        $note = ItemNote::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'note' => $note
+        ]);
+    }
+
+    /**
+     * Update an item note.
+     */
+    public function updateNote(Request $request, $id)
+    {
+        $note = ItemNote::findOrFail($id);
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'content' => 'nullable|string'
+        ]);
+
+        $note->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'note' => $note
+        ]);
+    }
+
+    /**
+     * Delete an item note.
+     */
+    public function destroyNote($id)
+    {
+        $note = ItemNote::findOrFail($id);
+        $note->delete();
 
         return response()->json(['success' => true]);
     }

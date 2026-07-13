@@ -5,7 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>SmartBiz POS - Kasir Profesional</title>
-    @vite(['resources/css/app.css', 'resources/css/pos.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        .heading-font { font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased overflow-hidden h-screen flex flex-col" x-data="posEngine()">
 
@@ -21,6 +28,10 @@
                 SmartBiz POS   
             </h1>
                 <p class="text-[10px] text-slate-400">Sistem Kasir Pintar UMKM</p>
+                <p class="text-[10px] font-bold text-indigo-600 flex items-center gap-1 mt-0.5">
+                    <i data-lucide="store" class="w-3 h-3"></i>
+                    <span>{{ auth()->user()->store?->name ?? 'Toko Default' }}</span>
+                </p>
             </div>
         </div>
 
@@ -126,17 +137,18 @@
             <!-- Filters, Search & Barcode Bar -->
             <div class="flex flex-col sm:flex-row gap-3 mb-3 flex-shrink-0">
                 <!-- Product Search input -->
-                <div class="flex-1 flex items-center gap-3 bg-white rounded-2xl px-5 py-3.5 text-slate-500 border-2 border-slate-200 focus-within:border-indigo-600 focus-within:ring-4 focus-within:ring-indigo-100 transition-all duration-200 shadow-sm">
-                    <i data-lucide="search" class="w-5 h-5 text-slate-400 flex-shrink-0"></i>
+                <div class="flex-1 flex items-center gap-4 bg-white rounded-2xl px-6 py-4.5 text-slate-500 border-2 border-slate-300 focus-within:border-indigo-600 focus-within:ring-4 focus-within:ring-indigo-100 transition-all duration-200 shadow-md">
+                    <i data-lucide="search" class="w-6 h-6 text-slate-400 flex-shrink-0"></i>
                     <input type="text" 
                            id="search-product"
-                           placeholder="Cari nama produk / SKU di sini... (Tekan F2)" 
+                           placeholder="Ketik nama produk atau scan SKU... (Tekan F2)" 
                            x-model="searchQuery"
+                           @input="handleSearchInput()"
                            @keydown.enter.prevent="addFirstFilteredProduct()"
-                           class="bg-transparent border-none text-sm focus:outline-none w-full text-slate-800 placeholder-slate-400 font-semibold">
+                           class="bg-transparent border-none text-base focus:outline-none w-full text-slate-850 placeholder-slate-400 font-bold tracking-wide">
                     <!-- Clear search query -->
-                    <button x-show="searchQuery !== ''" @click="searchQuery = ''" class="text-slate-400 hover:text-slate-600 transition-colors flex items-center justify-center p-0.5">
-                        <i data-lucide="x" class="w-5 h-5"></i>
+                    <button x-show="searchQuery !== ''" @click="clearSearch()" class="text-slate-400 hover:text-slate-650 transition-colors flex items-center justify-center p-1 cursor-pointer">
+                        <i data-lucide="x" class="w-6 h-6"></i>
                     </button>
                 </div>
             </div>
@@ -144,28 +156,37 @@
             <!-- Categories Horizontal Pills -->
             <div class="flex items-center justify-between gap-3 mb-3 flex-shrink-0">
                 <div class="flex gap-2 overflow-x-auto pb-1 whitespace-nowrap">
-                <button @click="selectedCategory = 'all'"
+                <button @click="handleCategoryChange('all')"
                         :class="selectedCategory === 'all' ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-650/15' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'"
                         class="px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200">
                     Semua Kategori
                 </button>
-                <template x-for="cat in categories" :key="cat">
-                    <button @click="selectedCategory = cat"
+                <template x-for="cat in allCategories" :key="cat">
+                    <button @click="handleCategoryChange(cat)"
                             :class="selectedCategory === cat ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-650/15' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'"
                             class="px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200"
                             x-text="cat">
                     </button>
                 </template>
                 </div>
-                <span class="hidden sm:inline-flex flex-shrink-0 text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-3 py-2 rounded-xl">
-                    <span x-text="filteredProducts.length"></span>&nbsp;produk
-                </span>
+                    <span class="hidden sm:inline-flex flex-shrink-0 text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-3 py-2 rounded-xl">
+                        <span x-text="totalProducts"></span>&nbsp;produk
+                    </span>
             </div>
 
             <!-- Products List (Scrollable Grid) -->
-            <div class="flex-1 overflow-y-auto min-h-0 pr-1">
+            <div class="flex-1 overflow-y-auto min-h-0 pr-1" x-data="{ scrollEl: null }" x-init="scrollEl = $el" @scroll="if ($event.target.scrollHeight - $event.target.scrollTop - $event.target.clientHeight < 200) loadMore()">
+                <!-- Loading State -->
+                <div x-show="isLoadingProducts && products.length === 0" class="flex flex-col items-center justify-center h-full text-center py-10">
+                    <svg class="animate-spin h-8 w-8 text-indigo-600 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <h4 class="font-bold text-slate-700 text-sm">Memuat Produk...</h4>
+                </div>
+
                 <!-- If search result is empty -->
-                <div x-show="filteredProducts.length === 0" class="flex flex-col items-center justify-center h-full text-center py-10" style="display: none;">
+                <div x-show="!isLoadingProducts && filteredProducts.length === 0" class="flex flex-col items-center justify-center h-full text-center py-10" style="display: none;">
                     <div class="p-4 bg-white text-slate-400 rounded-2xl border border-slate-200/50 shadow-sm mb-3">
                         <i data-lucide="package-search" class="w-10 h-10"></i>
                     </div>
@@ -197,13 +218,26 @@
                                         <p class="text-[10px] font-semibold text-slate-400 mt-0.5" x-text="'Stok: ' + prod.stock"></p>
                                     </div>
                                     <div class="h-7 w-7 rounded-xl bg-slate-150 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center text-slate-500 border border-slate-200/50 transition-all duration-200">
-                                        <i data-lucide="plus" class="w-4 h-4"></i>
+                                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                     </div>
                                 </div>
                             </div>
 
                         </div>
                     </template>
+                </div>
+
+                <!-- Load More Indicator -->
+                <div x-show="currentPage < lastPage && !isLoadingProducts && products.length > 0" class="text-center py-4">
+                    <button @click="loadMore()" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-4 py-2 rounded-xl transition-colors">
+                        Muat lebih banyak...
+                    </button>
+                </div>
+                <div x-show="isLoadingProducts && products.length > 0" class="text-center py-4">
+                    <svg class="animate-spin h-5 w-5 text-indigo-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
                 </div>
             </div>
             
@@ -403,22 +437,12 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Diskon (%)</label>
-                                <select x-model="discountPercent" class="w-full text-xs font-bold bg-white rounded-xl border border-slate-200 px-3 py-2 text-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all">
-                                    <option value="0">0%</option>
-                                    <option value="5">5%</option>
-                                    <option value="10">10%</option>
-                                    <option value="15">15%</option>
-                                    <option value="20">20%</option>
-                                </select>
+                                <input type="number" x-model.number="discountPercent" min="0" max="100" class="w-full text-xs font-bold bg-white rounded-xl border border-slate-200 px-3 py-2 text-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all" placeholder="0">
                             </div>
     
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">PPN (%)</label>
-                                <select x-model="taxPercent" class="w-full text-xs font-bold bg-white rounded-xl border border-slate-200 px-3 py-2 text-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all">
-                                    <option value="0">0%</option>
-                                    <option value="10">10%</option>
-                                    <option value="11">11%</option>
-                                </select>
+                                <input type="number" x-model.number="taxPercent" min="0" max="100" class="w-full text-xs font-bold bg-white rounded-xl border border-slate-200 px-3 py-2 text-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all" placeholder="0">
                             </div>
                         </div>
                     </div>
@@ -458,6 +482,16 @@
                         <span class="text-xs font-bold text-indigo-900 uppercase">Total Tagihan</span>
                         <span class="text-lg font-black text-indigo-750 font-mono" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(grandTotal)">Rp 0</span>
                     </div>
+
+                    <!-- Kembalian -->
+                    <div class="flex justify-between items-center bg-indigo-50/50 p-3.5 rounded-2xl border border-indigo-100/50" x-show="paymentMethod === 'Tunai'">
+                        <span class="text-xs font-bold text-emerald-900 uppercase">Kembalian</span>
+                        <span class="text-lg font-black font-mono" 
+                              :class="changeAmount < 0 ? 'text-rose-600' : 'text-emerald-700'"
+                              x-text="changeAmount < 0 ? '- Rp ' + new Intl.NumberFormat('id-ID').format(Math.abs(changeAmount)) : 'Rp ' + new Intl.NumberFormat('id-ID').format(changeAmount)">
+                            Rp 0
+                        </span>
+                    </div>
                 </div>
                 
                 <div class="flex gap-3 pt-3 border-t border-slate-100">
@@ -472,8 +506,8 @@
     <script>
         function posEngine() {
             return {
-                products: @json($products),
-                categories: @json($categories),
+                products: [],
+                allCategories: @json($categories),
                 selectedCategory: 'all',
                 searchQuery: '',
                 cart: [],
@@ -486,13 +520,75 @@
                 isModalOpen: false,
                 isSubmitting: false,
                 currentTime: '00:00:00',
+                isLoadingProducts: false,
+                currentPage: 1,
+                lastPage: 1,
+                totalProducts: 0,
+                searchTimer: null,
+
+                async fetchProducts(page = 1) {
+                    this.isLoadingProducts = true;
+                    try {
+                        const params = new URLSearchParams();
+                        params.append('page', page);
+                        if (this.searchQuery) params.append('search', this.searchQuery);
+                        if (this.selectedCategory !== 'all') params.append('category', this.selectedCategory);
+
+                        const res = await fetch('{{ route('pos.products') }}?' + params.toString());
+                        const json = await res.json();
+
+                        if (page === 1) {
+                            this.products = json.data;
+                        } else {
+                            this.products = this.products.concat(json.data);
+                        }
+                        this.currentPage = json.current_page;
+                        this.lastPage = json.last_page;
+                        this.totalProducts = json.total;
+
+                        this.$nextTick(() => {
+                            if (window.lucide) window.lucide.createIcons();
+                        });
+                    } catch (e) {
+                        console.error('Gagal memuat produk:', e);
+                    } finally {
+                        this.isLoadingProducts = false;
+                    }
+                },
+
+                loadMore() {
+                    if (this.currentPage < this.lastPage && !this.isLoadingProducts) {
+                        this.fetchProducts(this.currentPage + 1);
+                    }
+                },
+
+                handleSearchInput() {
+                    if (this.searchTimer) clearTimeout(this.searchTimer);
+                    this.searchTimer = setTimeout(() => {
+                        this.currentPage = 1;
+                        this.fetchProducts(1);
+                    }, 300);
+                },
+
+                handleCategoryChange(cat) {
+                    this.selectedCategory = cat;
+                    this.currentPage = 1;
+                    this.fetchProducts(1);
+                },
+
+                clearSearch() {
+                    this.searchQuery = '';
+                    this.currentPage = 1;
+                    this.fetchProducts(1);
+                },
 
                 init() {
+                    this.fetchProducts(1);
+
                     window.addEventListener('keydown', (e) => {
                         const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
                         const typing = ['input', 'textarea', 'select'].includes(activeTag) || document.activeElement?.isContentEditable;
 
-                        // Trap navigation if modal is open
                         if (this.isModalOpen) {
                             if (!typing && (e.key === 'x' || e.key === 'X')) {
                                 e.preventDefault();
@@ -514,14 +610,12 @@
                                 e.preventDefault();
                                 this.payExact();
                             }
-                            // Block POS background shortcuts when modal is active
                             if (['F2', 'F4', 'F9'].includes(e.key) || e.altKey) {
                                 e.preventDefault();
                             }
                             return;
                         }
 
-                        // POS Main shortcuts
                         if (e.key === 'F2') {
                             e.preventDefault();
                             const searchEl = document.getElementById('search-product');
@@ -537,8 +631,6 @@
                             }
                         }
 
-
-                        // Quick Cash keyboard combos: Alt + 1, Alt + 2, Alt + 3, Alt + 4
                         if (e.altKey) {
                             if (e.key === '1') {
                                 e.preventDefault();
@@ -559,7 +651,6 @@
                         }
                         if (e.ctrlKey && e.key.toLowerCase() === 'q') {
                             e.preventDefault();
-                            // Focus to first quantity input
                             const qtyInput = document.querySelector('[data-qty-input]');
                             if (qtyInput) {
                                 qtyInput.focus();
@@ -568,23 +659,16 @@
                         }
                     });
 
-                    // Initialize Lucide icons
                     setTimeout(() => lucide.createIcons(), 100);
 
-                    // Start digital clock
                     setInterval(() => {
                         const date = new Date();
                         this.currentTime = date.toTimeString().split(' ')[0];
                     }, 1000);
                 },
 
-                // Filters
                 get filteredProducts() {
-                    return this.products.filter(p => {
-                        const matchesCategory = this.selectedCategory === 'all' || p.category === this.selectedCategory;
-                        const matchesSearch = p.name.toLowerCase().includes(this.searchQuery.toLowerCase()) || p.sku.toLowerCase().includes(this.searchQuery.toLowerCase());
-                        return matchesCategory && matchesSearch;
-                    });
+                    return this.products;
                 },
 
                 // Cart actions
@@ -686,10 +770,12 @@
                     return this.cart.reduce((sum, item) => sum + (item.product.price * item.qty), 0);
                 },
                 get discountAmount() {
-                    return (this.subtotal * this.discountPercent) / 100;
+                    const discount = parseFloat(this.discountPercent) || 0;
+                    return (this.subtotal * discount) / 100;
                 },
                 get taxAmount() {
-                    return ((this.subtotal - this.discountAmount) * this.taxPercent) / 100;
+                    const tax = parseFloat(this.taxPercent) || 0;
+                    return ((this.subtotal - this.discountAmount) * tax) / 100;
                 },
                 get grandTotal() {
                     return this.subtotal - this.discountAmount + this.taxAmount;
@@ -793,7 +879,19 @@
                         },
                         body: new FormData(form),
                     })
-                    .then(res => res.json())
+                    .then(async (res) => {
+                        const text = await res.text();
+                        let data;
+                        try {
+                            data = JSON.parse(text);
+                        } catch (e) {
+                            const titleMatch = text.match(/<title>([^<]+)<\/title>/i);
+                            const bodyMatch = text.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+                            const cleanBody = bodyMatch ? bodyMatch[1].replace(/<[^>]+>/g, '').trim().substring(0, 200) : '';
+                            throw new Error(titleMatch ? titleMatch[1] : (cleanBody || 'Gagal terhubung ke server, silakan muat ulang halaman'));
+                        }
+                        return data;
+                    })
                     .then(data => {
                         if (data.success) {
                             // Update local stock in real-time so we don't need a page refresh

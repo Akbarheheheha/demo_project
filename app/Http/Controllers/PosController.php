@@ -48,9 +48,54 @@ class PosController extends Controller
         $paymentMethods = \App\Models\PaymentMethod::where('is_active', true)->get();
         $defaultTaxPercent = (int) Setting::get('tax_percent', 11);
         $defaultDiscount = (int) Setting::get('default_discount', 0);
-        $receiptSize = Setting::get('receipt_size', '80mm');
+        $receiptSize = Setting::get('receipt_size', '58mm');
 
-        return view('pos.index', compact('products', 'categories', 'paymentMethods', 'defaultTaxPercent', 'defaultDiscount', 'receiptSize'));
+        return view('pos.index', compact('categories', 'paymentMethods', 'defaultTaxPercent', 'defaultDiscount', 'receiptSize'));
+    }
+
+    /**
+     * API: Get products for POS with optional search and category filter.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function apiProducts(Request $request)
+    {
+        $search = $request->input('search', '');
+        $category = $request->input('category', '');
+        $page = (int) $request->input('page', 1);
+        $perPage = 50;
+
+        $query = Product::query();
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('sku', 'like', '%' . $search . '%');
+            });
+        }
+
+        if (!empty($category) && $category !== 'all') {
+            $categoryModel = \App\Models\Category::where('name', $category)->first();
+            if ($categoryModel) {
+                $query->where('category_id', $categoryModel->id);
+            } else {
+                $query->whereNull('category_id');
+            }
+        }
+
+        $query->orderBy('name', 'asc');
+
+        $products = $query->paginate($perPage, ['id', 'sku', 'name', 'category_id', 'price', 'stock'], 'page', $page);
+
+        $products->getCollection()->transform(fn ($p) => $p->makeHidden('categoryRelation'));
+
+        return response()->json([
+            'data' => $products->items(),
+            'current_page' => $products->currentPage(),
+            'last_page' => $products->lastPage(),
+            'total' => $products->total(),
+            'per_page' => $products->perPage(),
+        ]);
     }
 
     /**
@@ -139,10 +184,11 @@ class PosController extends Controller
 
         $cashReceived = (float) request()->query('cash', $transaction->total_harga);
         $change = max(0, $cashReceived - $transaction->total_harga);
-        $receiptSize = Setting::get('receipt_size', '80mm');
-        $shopName = Setting::get('store_name', 'Kios Berkah Raya');
-        $shopAddress = Setting::get('store_address', '');
-        $shopPhone = Setting::get('store_phone', '');
+        $store = auth()->user()->store;
+        $receiptSize = Setting::get('receipt_size', '58mm');
+        $shopName = $store?->name ?? Setting::get('store_name', 'Kios Berkah Raya');
+        $shopAddress = $store?->address ?? Setting::get('store_address', '');
+        $shopPhone = $store?->phone ?? Setting::get('store_phone', '');
 
         return view('pos.receipt', [
             'invoice' => $transaction->invoice,

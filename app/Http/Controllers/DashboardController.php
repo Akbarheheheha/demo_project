@@ -79,7 +79,7 @@ class DashboardController extends Controller
         }
 
         // Fetch AI Business Insight (Cached for 30 minutes for performance)
-        $ai_insight = cache()->remember('ai_business_insight', 1800, function() use ($tren_penjualan_mingguan) {
+        $ai_insight = cache()->remember('ai_business_insight_store_' . auth()->user()->store_id, 1800, function() use ($tren_penjualan_mingguan) {
             $dailyTrend = [];
             foreach ($tren_penjualan_mingguan['labels'] ?? [] as $i => $label) {
                 if (!isset($tren_penjualan_mingguan['data'][$i])) continue;

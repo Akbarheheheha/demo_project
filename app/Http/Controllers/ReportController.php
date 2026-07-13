@@ -254,11 +254,7 @@ class ReportController extends Controller
 
     private function getMonthlyFinancialSummary(Carbon $startDate, Carbon $endDate): array
     {
-        $cacheKey = sprintf(
-            'reports:sales-summary:%s:%s',
-            $startDate->toDateString(),
-            $endDate->toDateString()
-        );
+        $cacheKey = sprintf('reports:sales-summary:store:%s:%s:%s', auth()->user()->store_id, $startDate->toDateString(), $endDate->toDateString());
 
         return Cache::remember($cacheKey, now()->addHour(), function () use ($startDate, $endDate): array {
             $successfulTransactions = Transaction::query()

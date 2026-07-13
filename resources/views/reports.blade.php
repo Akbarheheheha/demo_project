@@ -498,23 +498,22 @@ if (typeof Alpine !== 'undefined') {
 }
 </script>
 
-<!-- Chart.js Library -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // --- 1. Monthly Comparison Chart (Line / Area) ---
+(function() {
+    function initReportsCharts() {
         const comparisonCanvas = document.getElementById('monthlyComparisonChart');
-        if (comparisonCanvas) {
+        if (comparisonCanvas && window.Chart) {
+            if (comparisonCanvas._chart) {
+                comparisonCanvas._chart.destroy();
+            }
             const comparisonCtx = comparisonCanvas.getContext('2d');
             const compData = @json($monthlyComparison);
-            
-            // Gradients
+
             const gradThisYear = comparisonCtx.createLinearGradient(0, 0, 0, 240);
             gradThisYear.addColorStop(0, 'rgba(79, 70, 229, 0.25)');
             gradThisYear.addColorStop(1, 'rgba(79, 70, 229, 0.0)');
-            
-            new Chart(comparisonCtx, {
+
+            comparisonCanvas._chart = new window.Chart(comparisonCtx, {
                 type: 'line',
                 data: {
                     labels: compData.labels,
@@ -578,13 +577,15 @@ if (typeof Alpine !== 'undefined') {
             });
         }
 
-        // --- 2. Category Performance Chart (Bar Chart) ---
         const categoryCanvas = document.getElementById('categoryPerformanceChart');
-        if (categoryCanvas) {
+        if (categoryCanvas && window.Chart) {
+            if (categoryCanvas._chart) {
+                categoryCanvas._chart.destroy();
+            }
             const categoryCtx = categoryCanvas.getContext('2d');
             const catData = @json($categoryPerformance);
-            
-            new Chart(categoryCtx, {
+
+            categoryCanvas._chart = new window.Chart(categoryCtx, {
                 type: 'bar',
                 data: {
                     labels: catData.labels,
@@ -592,11 +593,11 @@ if (typeof Alpine !== 'undefined') {
                         label: 'Omset Penjualan',
                         data: catData.data,
                         backgroundColor: [
-                            '#10b981', // Sembako (Emerald)
-                            '#f59e0b', // Makanan (Amber)
-                            '#0ea5e9', // Minuman (Sky)
-                            '#8b5cf6', // Cemilan (Purple)
-                            '#ec4899'  // Rumah Tangga (Pink)
+                            '#10b981',
+                            '#f59e0b',
+                            '#0ea5e9',
+                            '#8b5cf6',
+                            '#ec4899'
                         ],
                         borderRadius: 8,
                         maxBarThickness: 32
@@ -626,7 +627,14 @@ if (typeof Alpine !== 'undefined') {
                 }
             });
         }
-    });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initReportsCharts);
+    } else {
+        initReportsCharts();
+    }
+})();
 </script>
 @endpush
 @endsection

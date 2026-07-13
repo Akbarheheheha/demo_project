@@ -1,13 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Services\TenantManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class CategoryController extends Controller
 {
+    public function __construct(
+        private readonly TenantManager $tenantManager,
+    ) {}
+
     /**
      * Display a listing of categories.
      */
@@ -31,7 +39,11 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name',
+            'name' => [
+                'required', 'string', 'max:255',
+                Rule::unique('categories', 'name')
+                    ->where('store_id', $this->tenantManager->getStoreId()),
+            ],
         ]);
 
         $slug = Str::slug($request->name);
@@ -64,7 +76,12 @@ class CategoryController extends Controller
     public function update(Request $request, Category $category)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
+            'name' => [
+                'required', 'string', 'max:255',
+                Rule::unique('categories', 'name')
+                    ->where('store_id', $this->tenantManager->getStoreId())
+                    ->ignore($category->id),
+            ],
         ]);
 
         $slug = Str::slug($request->name);
@@ -88,7 +105,6 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
-        // Deleting category will set category_id on products to null due to nullOnDelete constraint
         $category->delete();
 
         return redirect()->route($this->rolePrefix() . '.categories.index')
@@ -101,7 +117,11 @@ class CategoryController extends Controller
     public function storeApi(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name',
+            'name' => [
+                'required', 'string', 'max:255',
+                Rule::unique('categories', 'name')
+                    ->where('store_id', $this->tenantManager->getStoreId()),
+            ],
         ]);
 
         $slug = Str::slug($request->name);
@@ -132,7 +152,12 @@ class CategoryController extends Controller
         $category = Category::findOrFail($id);
 
         $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
+            'name' => [
+                'required', 'string', 'max:255',
+                Rule::unique('categories', 'name')
+                    ->where('store_id', $this->tenantManager->getStoreId())
+                    ->ignore($category->id),
+            ],
         ]);
 
         $slug = Str::slug($request->name);
